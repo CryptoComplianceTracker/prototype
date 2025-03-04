@@ -1,0 +1,53 @@
+Build a **Crypto Regulatory Compliance Web Application** with the following components:
+
+## **1️⃣ Frontend (User Interface)**
+- **Framework:** React.js with Next.js (for server-side rendering and SEO optimization).
+- **Styling:** Tailwind CSS for modern, responsive design.
+- **UI Features:**
+  - Registration & Compliance Form UI with validation.
+  - Real-time AML & risk monitoring dashboard.
+  - Crypto wallet address lookup and transaction history display.
+  - Web3 login integration for MetaMask and WalletConnect.
+  - Dynamic reporting dashboard with API integration.
+
+## **2️⃣ Backend (APIs & Business Logic)**
+- **Framework:** Node.js with Express.js for REST API development.
+- **Authentication:** OAuth2.0 / JWT for user authentication.
+- **Database:**
+  - PostgreSQL for structured regulatory data (user submissions, compliance reports).
+  - MongoDB for semi-structured blockchain event tracking.
+- **Endpoints:**
+  - `POST /register` → User registration for compliance reporting.
+  - `POST /submit-report` → Submit AML/KYC compliance data.
+  - `GET /user-reports/:id` → Retrieve a user’s compliance reports.
+  - `GET /transactions/:wallet` → Fetch blockchain transaction data.
+
+## **3️⃣ Blockchain & Compliance Integration**
+- **Blockchain APIs:** Use Web3.js and Alchemy API for Ethereum-based transactions.
+- **Smart Contract Audits:** Integrate Chainalysis API or TRM Labs for risk assessment.
+- **AML & Risk Monitoring:**
+  - Implement AI-based fraud detection using TensorFlow.js or OpenAI API.
+  - Monitor high-risk transactions based on wallet behavior.
+
+## **4️⃣ Real-Time Analytics & Monitoring**
+- **Graphing Library:** Recharts.js or Chart.js for data visualization.
+- **Streaming:** Implement WebSockets for live transaction updates.
+- **Risk Analysis:**
+  - Track large crypto transfers in real-time.
+  - Highlight suspicious transaction patterns.
+
+## **5️⃣ Security & Deployment**
+- **Encryption:** Use AES-256 for sensitive user data.
+- **Hosting:** Vercel (Frontend) + AWS EC2 or Firebase (Backend).
+- **Database Management:** Host PostgreSQL on AWS RDS, MongoDB on MongoDB Atlas.
+- **DevOps:** Use GitHub Actions for CI/CD, with Docker containerization.
+
+### **📌 Expected Output from Replit AI:**
+1. A fully functional **React.js frontend** with form submission and data visualization.
+2. A **Node.js backend API** with endpoints for regulatory compliance.
+3. A **database setup** with PostgreSQL and MongoDB.
+4. **Blockchain integration** for wallet tracking and smart contract audits.
+5. **Automated AML transaction monitoring** using AI.
+6. A **secure authentication system** with OAuth2.0 and Web3 login.
+
+Build the entire project in a structured and modular way, making it easy for further expansion.
