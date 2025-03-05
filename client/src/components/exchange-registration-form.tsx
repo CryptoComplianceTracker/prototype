@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useEffect } from "react";
 
 export function ExchangeRegistrationForm() {
   const { toast } = useToast();
@@ -74,7 +75,17 @@ export function ExchangeRegistrationForm() {
         userFundSegregation: false,
       },
     },
+    mode: "onChange", // Enable real-time validation
   });
+
+  // Watch form values for real-time validation
+  const formWatch = form.watch();
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      form.trigger(); // Trigger validation on changes
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const onSubmit = async (data: InsertExchangeInfo) => {
     try {
@@ -97,7 +108,8 @@ export function ExchangeRegistrationForm() {
       <CardHeader>
         <CardTitle>Exchange Registration</CardTitle>
         <CardDescription>
-          Please provide detailed information about your cryptocurrency exchange
+          Please provide detailed information about your cryptocurrency exchange.
+          Fields will be validated as you type.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -115,7 +127,11 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Exchange Name</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input
+                              {...field}
+                              className={form.formState.errors.exchangeName ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("exchangeName")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -129,7 +145,11 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Legal Entity Name</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input
+                              {...field}
+                              className={form.formState.errors.legalEntityName ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("legalEntityName")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -143,7 +163,11 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Business Registration Number</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input
+                              {...field}
+                              className={form.formState.errors.registrationNumber ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("registrationNumber")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -157,7 +181,12 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Headquarters Location</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Country, City" />
+                            <Input
+                              {...field}
+                              placeholder="Country, City"
+                              className={form.formState.errors.headquartersLocation ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("headquartersLocation")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -171,9 +200,18 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Website URL</FormLabel>
                           <FormControl>
-                            <Input {...field} type="url" placeholder="https://" />
+                            <Input
+                              {...field}
+                              type="url"
+                              placeholder="https://"
+                              className={form.formState.errors.websiteUrl ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("websiteUrl")}
+                            />
                           </FormControl>
                           <FormMessage />
+                          {!form.formState.errors.websiteUrl && field.value && (
+                            <p className="text-sm text-green-600">Valid URL format</p>
+                          )}
                         </FormItem>
                       )}
                     />
@@ -185,7 +223,12 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Year Established</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="YYYY" />
+                            <Input
+                              {...field}
+                              placeholder="YYYY"
+                              className={form.formState.errors.yearEstablished ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("yearEstablished")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -231,7 +274,11 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Contact Name</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input
+                              {...field}
+                              className={form.formState.errors.complianceContactName ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("complianceContactName")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -245,7 +292,12 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Contact Email</FormLabel>
                           <FormControl>
-                            <Input {...field} type="email" />
+                            <Input
+                              {...field}
+                              type="email"
+                              className={form.formState.errors.complianceContactEmail ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("complianceContactEmail")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -259,7 +311,12 @@ export function ExchangeRegistrationForm() {
                         <FormItem>
                           <FormLabel>Contact Phone</FormLabel>
                           <FormControl>
-                            <Input {...field} type="tel" />
+                            <Input
+                              {...field}
+                              type="tel"
+                              className={form.formState.errors.complianceContactPhone ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("complianceContactPhone")}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -327,6 +384,8 @@ export function ExchangeRegistrationForm() {
                               min="0"
                               max="100"
                               onChange={(e) => field.onChange(Number(e.target.value))}
+                              className={form.formState.errors["custodyArrangements.coldStoragePercentage"] ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("custodyArrangements.coldStoragePercentage")}
                             />
                           </FormControl>
                           <FormMessage />
@@ -347,6 +406,8 @@ export function ExchangeRegistrationForm() {
                               min="0"
                               max="100"
                               onChange={(e) => field.onChange(Number(e.target.value))}
+                              className={form.formState.errors["custodyArrangements.hotWalletPercentage"] ? "border-red-500" : ""}
+                              onBlur={() => form.trigger("custodyArrangements.hotWalletPercentage")}
                             />
                           </FormControl>
                           <FormMessage />
@@ -433,9 +494,22 @@ export function ExchangeRegistrationForm() {
               </AccordionItem>
             </Accordion>
 
-            <Button type="submit" className="w-full">
-              Submit Registration
-            </Button>
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                {Object.keys(form.formState.errors).length > 0 && (
+                  <p className="text-red-500">
+                    Please fix the validation errors before submitting
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!form.formState.isValid || form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? "Submitting..." : "Submit Registration"}
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>

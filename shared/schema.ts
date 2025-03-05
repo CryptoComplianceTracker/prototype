@@ -73,11 +73,46 @@ export const transactions = pgTable("transactions", {
 export const exchangeInfoSchema = createInsertSchema(exchangeInfo)
   .omit({ id: true, userId: true, createdAt: true })
   .extend({
-    exchangeType: z.enum(["CEX", "DEX"]),
-    websiteUrl: z.string().url(),
-    complianceContactEmail: z.string().email(),
-    complianceContactPhone: z.string().min(10),
-    yearEstablished: z.string().regex(/^\d{4}$/),
+    exchangeType: z.enum(["CEX", "DEX"], {
+      required_error: "Please select an exchange type",
+      invalid_type_error: "Exchange type must be either CEX or DEX",
+    }),
+    websiteUrl: z.string().url({
+      message: "Please enter a valid website URL starting with http:// or https://",
+    }),
+    complianceContactEmail: z.string().email({
+      message: "Please enter a valid email address",
+    }),
+    complianceContactPhone: z.string().min(10, {
+      message: "Phone number must be at least 10 digits long",
+    }).regex(/^\+?[\d\s-()]+$/, {
+      message: "Please enter a valid phone number",
+    }),
+    yearEstablished: z.string().regex(/^\d{4}$/, {
+      message: "Please enter a valid 4-digit year",
+    }).refine((year) => {
+      const yearNum = parseInt(year);
+      const currentYear = new Date().getFullYear();
+      return yearNum >= 1990 && yearNum <= currentYear;
+    }, {
+      message: "Year must be between 1990 and current year",
+    }),
+    exchangeName: z.string().min(2, {
+      message: "Exchange name must be at least 2 characters long",
+    }),
+    legalEntityName: z.string().min(2, {
+      message: "Legal entity name must be at least 2 characters long",
+    }),
+    registrationNumber: z.string().min(1, {
+      message: "Registration number is required",
+    }),
+    headquartersLocation: z.string().min(2, {
+      message: "Please enter a valid location (City, Country)",
+    }),
+    regulatoryLicenses: z.string().optional(),
+    complianceContactName: z.string().min(2, {
+      message: "Contact name must be at least 2 characters long",
+    }),
     tradingPairs: z.array(z.object({
       pair: z.string(),
       volume: z.number(),
