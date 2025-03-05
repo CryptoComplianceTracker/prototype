@@ -18,6 +18,8 @@ export const users = pgTable("users", {
 export const exchangeInfo = pgTable("exchange_info", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
+
+  // General Exchange Information
   exchangeName: text("exchange_name").notNull(),
   legalEntityName: text("legal_entity_name").notNull(),
   registrationNumber: text("registration_number").notNull(),
@@ -26,9 +28,34 @@ export const exchangeInfo = pgTable("exchange_info", {
   yearEstablished: text("year_established").notNull(),
   exchangeType: text("exchange_type").notNull(),
   regulatoryLicenses: text("regulatory_licenses"),
+
+  // Compliance Contact
   complianceContactName: text("compliance_contact_name").notNull(),
   complianceContactEmail: text("compliance_contact_email").notNull(),
   complianceContactPhone: text("compliance_contact_phone").notNull(),
+
+  // Trading & Market Data
+  tradingPairs: jsonb("trading_pairs"), // Array of trading pairs and volumes
+  leverageAndMargin: jsonb("leverage_and_margin"), // Leverage settings
+  hftActivityMetrics: jsonb("hft_activity_metrics"), // HFT related data
+
+  // Security & Risk
+  washTradingDetection: jsonb("wash_trading_detection"), // Wash trading prevention details
+  securityMeasures: jsonb("security_measures"), // Security protocols
+  riskManagement: jsonb("risk_management"), // Risk management details
+
+  // AML & KYC
+  kycVerificationMetrics: jsonb("kyc_verification_metrics"), // KYC statistics
+  sanctionsCompliance: jsonb("sanctions_compliance"), // Sanctions compliance details
+
+  // Custody & Insurance
+  custodyArrangements: jsonb("custody_arrangements"), // Custody details
+  insuranceCoverage: jsonb("insurance_coverage"), // Insurance information
+
+  // Blockchain Integration
+  supportedBlockchains: jsonb("supported_blockchains"), // Supported networks
+  blockchainAnalytics: jsonb("blockchain_analytics"), // Analytics tools used
+
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -51,6 +78,56 @@ export const exchangeInfoSchema = createInsertSchema(exchangeInfo)
     complianceContactEmail: z.string().email(),
     complianceContactPhone: z.string().min(10),
     yearEstablished: z.string().regex(/^\d{4}$/),
+    tradingPairs: z.array(z.object({
+      pair: z.string(),
+      volume: z.number(),
+      volatility: z.number(),
+    })).optional(),
+    leverageAndMargin: z.object({
+      maxLeverage: z.number(),
+      marginAccountsPercentage: z.number(),
+    }).optional(),
+    hftActivityMetrics: z.object({
+      hftBotsAllowed: z.boolean(),
+      hftVolumePercentage: z.number(),
+    }).optional(),
+    washTradingDetection: z.object({
+      automatedBotDetection: z.boolean(),
+      timeStampGranularity: z.enum(["milliseconds", "seconds"]),
+      spoofingDetection: z.boolean(),
+    }).optional(),
+    kycVerificationMetrics: z.object({
+      verifiedUsers: z.number(),
+      nonVerifiedUsers: z.number(),
+      highRiskJurisdictionPercentage: z.number(),
+    }).optional(),
+    sanctionsCompliance: z.object({
+      ofacCompliant: z.boolean(),
+      fatfCompliant: z.boolean(),
+      euCompliant: z.boolean(),
+    }).optional(),
+    custodyArrangements: z.object({
+      coldStoragePercentage: z.number(),
+      hotWalletPercentage: z.number(),
+      userFundSegregation: z.boolean(),
+    }).optional(),
+    insuranceCoverage: z.object({
+      hasInsurance: z.boolean(),
+      coverageLimit: z.number().optional(),
+      lastPenetrationTest: z.string().optional(),
+    }).optional(),
+    supportedBlockchains: z.array(z.enum([
+      "Ethereum",
+      "Bitcoin",
+      "Binance Smart Chain",
+      "Solana",
+      "Polygon"
+    ])).optional(),
+    blockchainAnalytics: z.object({
+      realTimeAnalytics: z.boolean(),
+      proofOfReserves: z.boolean(),
+      monitoringTools: z.array(z.string()),
+    }).optional(),
   });
 
 export const insertUserSchema = createInsertSchema(users)
