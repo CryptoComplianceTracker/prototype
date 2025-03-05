@@ -26,7 +26,7 @@ async function comparePasswords(supplied: string, stored: string) {
   try {
     const [hashedStored, salt] = stored.split(".");
     const hashedBuf = Buffer.from(hashedStored, "hex");
-    const suppliedBuf = await scryptAsync(supplied, salt, 64) as Buffer;
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error("Password comparison error:", error);
