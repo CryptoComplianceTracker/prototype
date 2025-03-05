@@ -20,7 +20,13 @@ async function hashPassword(password: string) {
   try {
     const salt = randomBytes(16).toString("hex");
     const derivedKey = await scryptAsync(password, salt, 32) as Buffer;
-    return `${derivedKey.toString("hex")}.${salt}`;
+    const hash = derivedKey.toString("hex");
+    console.log("Password hashing:", {
+      salt,
+      hashLength: hash.length,
+      hash
+    });
+    return `${hash}.${salt}`;
   } catch (error) {
     console.error("Error hashing password:", error);
     throw new Error("Failed to hash password");
@@ -32,7 +38,15 @@ async function comparePasswords(supplied: string, stored: string) {
     const [hash, salt] = stored.split(".");
     const hashBuffer = Buffer.from(hash, "hex");
     const suppliedHash = await scryptAsync(supplied, salt, 32) as Buffer;
-    return timingSafeEqual(hashBuffer, suppliedHash);
+    console.log("Password comparison:", {
+      suppliedLength: suppliedHash.length,
+      storedLength: hashBuffer.length,
+      suppliedHash: suppliedHash.toString("hex"),
+      storedHash: hash,
+      salt
+    });
+    const result = timingSafeEqual(hashBuffer, suppliedHash);
+    return result;
   } catch (error) {
     console.error("Password comparison error:", error);
     return false;
@@ -104,7 +118,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/register", async (req, res) => {
     try {
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
@@ -112,13 +126,14 @@ export function setupAuth(app: Express) {
       }
 
       const hashedPassword = await hashPassword(req.body.password);
+      console.log("Creating user with hashed password:", hashedPassword);
       const user = await storage.createUser({
         ...req.body,
         password: hashedPassword,
       });
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) return res.status(500).json({ message: "Failed to create session" });
         res.status(201).json(user);
       });
     } catch (error) {
