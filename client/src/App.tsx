@@ -12,6 +12,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import ExchangeRegistrationPage from "@/pages/exchange-registration";
 import StablecoinRegistrationPage from "@/pages/stablecoin-registration";
 import DefiRegistrationPage from "@/pages/defi-registration";
+import NftRegistrationPage from "@/pages/nft-registration";
 import CompliancePage from "@/pages/compliance";
 import NotFound from "@/pages/not-found";
 
@@ -26,6 +27,7 @@ function Router() {
         <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
         <ProtectedRoute path="/stablecoin/register" component={StablecoinRegistrationPage} />
         <ProtectedRoute path="/defi/register" component={DefiRegistrationPage} />
+        <ProtectedRoute path="/nft/register" component={NftRegistrationPage} />
         <ProtectedRoute path="/compliance" component={CompliancePage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
