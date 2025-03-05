@@ -34,7 +34,7 @@ export function NavBar() {
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container px-4 md:px-6 lg:px-8 mx-auto flex h-14 items-center justify-between">
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex items-center gap-12 text-sm">
           <Link href="/">
             <a className="flex items-center space-x-2">
               <span className="text-2xl font-bold tracking-tight hover:text-primary transition-colors">DARA</span>
