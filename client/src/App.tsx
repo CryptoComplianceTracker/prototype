@@ -11,6 +11,7 @@ import DashboardPage from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ExchangeRegistrationPage from "@/pages/exchange-registration";
 import StablecoinRegistrationPage from "@/pages/stablecoin-registration";
+import DefiRegistrationPage from "@/pages/defi-registration";
 import CompliancePage from "@/pages/compliance";
 import NotFound from "@/pages/not-found";
 
@@ -24,6 +25,7 @@ function Router() {
         <AdminProtectedRoute path="/admin" component={AdminDashboard} />
         <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
         <ProtectedRoute path="/stablecoin/register" component={StablecoinRegistrationPage} />
+        <ProtectedRoute path="/defi/register" component={DefiRegistrationPage} />
         <ProtectedRoute path="/compliance" component={CompliancePage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
