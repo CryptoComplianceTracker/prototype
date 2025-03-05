@@ -6,9 +6,9 @@ export default function CompliancePage() {
   const { data: newsArticles, isLoading: isLoadingNews } = useComplianceNews();
 
   return (
-    <div className="container py-8">
+    <div className="container px-4 md:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-8">Compliance Center</h1>
-      
+
       <div className="grid gap-6">
         <Card>
           <CardHeader>
