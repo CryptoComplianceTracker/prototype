@@ -1,12 +1,30 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ConnectWallet } from "@/components/ui/button";
+import { connectWallet } from "@/lib/web3";
 import { MoonIcon, SunIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function NavBar() {
   const { user, logoutMutation } = useAuth();
-  
+  const { toast } = useToast();
+
+  const handleConnectWallet = async () => {
+    try {
+      const address = await connectWallet();
+      toast({
+        title: "Wallet Connected",
+        description: `Connected to ${address.slice(0, 6)}...${address.slice(-4)}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Connection Failed",
+        description: error instanceof Error ? error.message : "Failed to connect wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
@@ -24,10 +42,17 @@ export function NavBar() {
             </>
           )}
         </div>
-        
+
         <div className="flex items-center gap-4">
           {user ? (
             <>
+              <Button
+                variant="outline"
+                onClick={handleConnectWallet}
+                className="hidden sm:inline-flex"
+              >
+                Connect Wallet
+              </Button>
               <Button
                 variant="ghost"
                 onClick={() => logoutMutation.mutate()}

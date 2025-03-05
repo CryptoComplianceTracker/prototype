@@ -1,5 +1,11 @@
 import { ethers } from "ethers";
 
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export async function connectWallet(): Promise<string> {
   if (!window.ethereum) {
     throw new Error("MetaMask is not installed");
@@ -16,7 +22,7 @@ export async function connectWallet(): Promise<string> {
 
 export async function getWalletBalance(address: string): Promise<string> {
   if (!window.ethereum) return "0";
-  
+
   const provider = new ethers.BrowserProvider(window.ethereum);
   const balance = await provider.getBalance(address);
   return ethers.formatEther(balance);

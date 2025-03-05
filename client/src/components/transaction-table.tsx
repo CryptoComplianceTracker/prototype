@@ -63,8 +63,8 @@ export function TransactionTable() {
                   tx.riskLevel === "high"
                     ? "destructive"
                     : tx.riskLevel === "medium"
-                    ? "warning"
-                    : "success"
+                    ? "secondary"
+                    : "default"
                 }
               >
                 {tx.riskLevel}

@@ -1,8 +1,11 @@
-import { transactions, users, type User, type InsertUser, type Transaction } from "@shared/schema";
+import { users, transactions, type User, type InsertUser, type Transaction } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // User operations
@@ -10,77 +13,59 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserKYC(id: number, data: Partial<User>): Promise<void>;
-  
+
   // Transaction operations
   getTransactionsByUserId(userId: number): Promise<Transaction[]>;
   createTransaction(transaction: Omit<Transaction, "id">): Promise<Transaction>;
-  
+
   // Session store
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private transactions: Map<number, Transaction>;
-  private currentUserId: number;
-  private currentTransactionId: number;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.transactions = new Map();
-    this.currentUserId = 1;
-    this.currentTransactionId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const now = new Date();
-    const user: User = {
-      ...insertUser,
-      id,
-      kycVerified: false,
-      riskScore: 0,
-      complianceData: null,
-      createdAt: now,
-      walletAddress: null
-    };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async updateUserKYC(id: number, data: Partial<User>): Promise<void> {
-    const user = await this.getUser(id);
-    if (!user) throw new Error("User not found");
-    
-    this.users.set(id, { ...user, ...data });
+    await db.update(users)
+      .set(data)
+      .where(eq(users.id, id));
   }
 
   async getTransactionsByUserId(userId: number): Promise<Transaction[]> {
-    return Array.from(this.transactions.values()).filter(
-      (tx) => tx.userId === userId
-    );
+    return await db.select()
+      .from(transactions)
+      .where(eq(transactions.userId, userId));
   }
 
   async createTransaction(transaction: Omit<Transaction, "id">): Promise<Transaction> {
-    const id = this.currentTransactionId++;
-    const newTransaction = { ...transaction, id };
-    this.transactions.set(id, newTransaction);
+    const [newTransaction] = await db
+      .insert(transactions)
+      .values(transaction)
+      .returning();
     return newTransaction;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
