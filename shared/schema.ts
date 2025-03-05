@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   kycVerified: boolean("kyc_verified").default(false),
   riskScore: integer("risk_score").default(0),
   complianceData: jsonb("compliance_data"),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

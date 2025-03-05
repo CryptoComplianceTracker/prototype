@@ -9,6 +9,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
 
+  // Admin routes
+  app.get("/api/admin/exchanges", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.user.isAdmin) return res.sendStatus(403);
+
+    try {
+      const exchanges = await storage.getAllExchangeInfo();
+      res.json(exchanges);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Transaction routes
   app.get("/api/transactions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

@@ -1,4 +1,4 @@
-import { users, transactions, exchangeInfo, type User, type InsertUser, type Transaction, type InsertExchangeInfo } from "@shared/schema";
+import { users, transactions, exchangeInfo, type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -24,6 +24,9 @@ export interface IStorage {
 
   // Session store
   sessionStore: session.Store;
+
+  // Admin operations
+  getAllExchangeInfo(): Promise<ExchangeInfo[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -78,6 +81,10 @@ export class DatabaseStorage implements IStorage {
       .values(transaction)
       .returning();
     return newTransaction;
+  }
+
+  async getAllExchangeInfo(): Promise<ExchangeInfo[]> {
+    return await db.select().from(exchangeInfo);
   }
 }
 
