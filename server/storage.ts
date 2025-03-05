@@ -1,4 +1,4 @@
-import { users, transactions, type User, type InsertUser, type Transaction } from "@shared/schema";
+import { users, transactions, exchangeInfo, type User, type InsertUser, type Transaction, type InsertExchangeInfo } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -13,6 +13,10 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserKYC(id: number, data: Partial<User>): Promise<void>;
+
+  // Exchange operations
+  createExchangeInfo(userId: number, info: InsertExchangeInfo): Promise<void>;
+  getExchangeInfo(userId: number): Promise<InsertExchangeInfo | undefined>;
 
   // Transaction operations
   getTransactionsByUserId(userId: number): Promise<Transaction[]>;
@@ -51,6 +55,15 @@ export class DatabaseStorage implements IStorage {
     await db.update(users)
       .set(data)
       .where(eq(users.id, id));
+  }
+
+  async createExchangeInfo(userId: number, info: InsertExchangeInfo): Promise<void> {
+    await db.insert(exchangeInfo).values({ ...info, userId });
+  }
+
+  async getExchangeInfo(userId: number): Promise<InsertExchangeInfo | undefined> {
+    const [info] = await db.select().from(exchangeInfo).where(eq(exchangeInfo.userId, userId));
+    return info;
   }
 
   async getTransactionsByUserId(userId: number): Promise<Transaction[]> {

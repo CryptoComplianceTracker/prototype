@@ -1,0 +1,111 @@
+Crypto Exchange Registration & Compliance Form (CEX & DEX)
+🔹 Purpose:
+This form collects detailed regulatory data from Centralized & Decentralized Crypto Exchanges to ensure compliance with AML, trading transparency, market surveillance, and security policies.
+
+🔹 Section 1: General Exchange Information
+Exchange Name: _________________________
+Legal Entity Name: _________________________
+Business Registration Number: _________________________
+Headquarters Location (Country, City): _________________________
+Website URL: _________________________
+Year Established: _________________________
+Exchange Type:
+ Centralized (CEX)
+ Decentralized (DEX)
+Regulatory Licenses Held (if any): _________________________
+Compliance Contact Person:
+Name: _________________________
+Email: _________________________
+Phone: _________________________
+🔹 Section 2: Trading & Market Data
+1️⃣ Trade Reporting Enhancement
+Top 10 Trading Pairs & Daily Volume (USD equivalent):
+
+Trading Pair	24h Volume (USD)	Volatility (%)
+BTC/USDT	_________	_________
+ETH/USDT	_________	_________
+SOL/USDT	_________	_________
+…	…	…
+Total Open Interest (Derivatives, if applicable): ______________ USD
+
+Leverage & Margin Usage Statistics:
+
+Max Leverage: X
+% of Margin Accounts: X
+High-Frequency Trading (HFT) Activity Metrics:
+
+HFT Bots Allowed? [ ] Yes [ ] No
+% of Volume from HFT: X%
+🔹 Section 3: Wash Trading & Spoofing Detection
+Automated bot detection systems in place? [ ] Yes [ ] No
+Trade time-stamp granularity:
+ Milliseconds
+ Seconds
+Internal algorithms to detect spoof orders? [ ] Yes [ ] No
+Historical data on detected wash trades (last 6 months) (if applicable)
+Total Cases: X
+Total Amount Flagged: X USD
+🔹 Section 4: AML/KYC & Sanctions Compliance
+1️⃣ KYC Verification Metrics
+Number of Verified Users: X
+Number of Non-Verified Users: X
+% of Verified Users from High-Risk Jurisdictions: X%
+2️⃣ Sanctions Screening
+Does the exchange comply with the following sanction lists?
+OFAC (U.S. Sanctions List) [ ] Yes [ ] No
+FATF (Financial Action Task Force Blacklist) [ ] Yes [ ] No
+EU Sanctions [ ] Yes [ ] No
+Other (Specify): ____________
+3️⃣ Suspicious Activity Reporting
+Total Suspicious Activity Reports (SARs) Filed in the Last 12 Months: X
+Transaction Monitoring System in Place? [ ] Yes [ ] No
+Crypto Mixer/Tumbler Detection in Place? [ ] Yes [ ] No
+Source of Funds Verification for Large Transactions? [ ] Yes [ ] No
+🔹 Section 5: Custody & Risk Management Reporting
+1️⃣ Fund Storage & Segregation
+% of User Funds Held in Cold Storage vs. Hot Wallets:
+Cold Storage: X%
+Hot Wallets: X%
+User Fund Segregation? [ ] Yes [ ] No
+Third-Party Custodian Used? [ ] Yes [ ] No (If Yes, specify: __________)
+Total Assets Under Custody (USD Equivalent): X USD
+2️⃣ Insurance & Risk Disclosure
+Does the exchange provide insurance coverage for user funds? [ ] Yes [ ] No
+If Yes, Coverage Limit (USD): X USD
+Cybersecurity Framework in Place? [ ] Yes [ ] No
+Last Penetration Test Conducted: DD/MM/YYYY
+History of Security Breaches (if any)? [ ] Yes [ ] No (If Yes, details: __________)
+🔹 Section 6: Blockchain & Compliance Integration
+1️⃣ Blockchain & Smart Contract Integration
+Blockchain Networks Supported:
+
+ Ethereum
+ Bitcoin
+ Binance Smart Chain
+ Solana
+ Polygon
+Other: __________
+Does the exchange provide real-time blockchain analytics to regulators? [ ] Yes [ ] No
+
+Web3 API Used for Blockchain Transactions: [ ] Alchemy [ ] Infura [ ] TheGraph
+
+On-Chain Proof of Reserves Provided? [ ] Yes [ ] No
+
+2️⃣ Compliance & Audit Trails
+AML Monitoring Tools Used:
+ Chainalysis
+ TRM Labs
+ Elliptic
+ Other: __________
+AI-Based Fraud Detection System in Place? [ ] Yes [ ] No
+Last Compliance Audit Conducted: DD/MM/YYYY
+🔹 Section 7: Real-Time Analytics & Automated Reporting
+Live Risk Scoring Dashboard Available? [ ] Yes [ ] No
+24/7 Transaction Monitoring? [ ] Yes [ ] No
+Regulatory Reporting API Available? [ ] Yes [ ] No
+Data Retention Policy (in years): X
+🔹 Section 8: Attestation & Submission
+I, (Authorized Representative Name), certify that the information provided in this form is accurate and complete. I understand that any false or misleading statements may result in regulatory penalties.
+
+Signature: _______________
+Date: DD/MM/YYYY
