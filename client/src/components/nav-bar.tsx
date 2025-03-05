@@ -47,55 +47,55 @@ export function NavBar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="px-4 flex items-center gap-2">
                     Register
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[300px]">
                   <DropdownMenuItem asChild>
                     <Link href="/exchange/register">
-                      <div className="w-full">
-                        <div className="font-medium">Crypto Exchange Registration</div>
-                        <span className="text-sm text-muted-foreground">CEX & DEX platforms</span>
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Crypto Exchange Registration</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">CEX & DEX platforms</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/stablecoin/register">
-                      <div className="w-full">
-                        <div className="font-medium">Stablecoin Issuer Disclosure</div>
-                        <span className="text-sm text-muted-foreground">For stablecoin providers</span>
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Stablecoin Issuer Disclosure</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">For stablecoin providers</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/defi/register">
-                      <div className="w-full">
-                        <div className="font-medium">DeFi Protocol Registration</div>
-                        <span className="text-sm text-muted-foreground">Decentralized finance protocols</span>
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">DeFi Protocol Registration</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Decentralized finance protocols</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/nft/register">
-                      <div className="w-full">
-                        <div className="font-medium">NFT Marketplace Registration</div>
-                        <span className="text-sm text-muted-foreground">Digital collectibles platforms</span>
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">NFT Marketplace Registration</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Digital collectibles platforms</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/fund/register">
-                      <div className="w-full">
-                        <div className="font-medium">Crypto Fund Registration</div>
-                        <span className="text-sm text-muted-foreground">Institutional investors & funds</span>
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Crypto Fund Registration</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Institutional investors & funds</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/kyc/register">
-                      <div className="w-full">
-                        <div className="font-medium">AML/KYC Reporting</div>
-                        <span className="text-sm text-muted-foreground">Compliance reporting forms</span>
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">AML/KYC Reporting</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance reporting forms</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
