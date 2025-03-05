@@ -21,19 +21,21 @@ function Router() {
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
-      <Switch>
-        <ProtectedRoute path="/" component={DashboardPage} />
-        <ProtectedRoute path="/dashboard" component={DashboardPage} />
-        <AdminProtectedRoute path="/admin" component={AdminDashboard} />
-        <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
-        <ProtectedRoute path="/stablecoin/register" component={StablecoinRegistrationPage} />
-        <ProtectedRoute path="/defi/register" component={DefiRegistrationPage} />
-        <ProtectedRoute path="/nft/register" component={NftRegistrationPage} />
-        <ProtectedRoute path="/fund/register" component={FundRegistrationPage} />
-        <ProtectedRoute path="/compliance" component={CompliancePage} />
-        <Route path="/auth" component={AuthPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <main className="container mx-auto max-w-7xl px-8 py-8">
+        <Switch>
+          <ProtectedRoute path="/" component={DashboardPage} />
+          <ProtectedRoute path="/dashboard" component={DashboardPage} />
+          <AdminProtectedRoute path="/admin" component={AdminDashboard} />
+          <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
+          <ProtectedRoute path="/stablecoin/register" component={StablecoinRegistrationPage} />
+          <ProtectedRoute path="/defi/register" component={DefiRegistrationPage} />
+          <ProtectedRoute path="/nft/register" component={NftRegistrationPage} />
+          <ProtectedRoute path="/fund/register" component={FundRegistrationPage} />
+          <ProtectedRoute path="/compliance" component={CompliancePage} />
+          <Route path="/auth" component={AuthPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
     </div>
   );
 }
