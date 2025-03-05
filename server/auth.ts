@@ -17,9 +17,14 @@ declare global {
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const derivedKey = await scryptAsync(password, salt, 32) as Buffer;
-  return `${derivedKey.toString("hex")}.${salt}`;
+  try {
+    const salt = randomBytes(16).toString("hex");
+    const derivedKey = await scryptAsync(password, salt, 32) as Buffer;
+    return `${derivedKey.toString("hex")}.${salt}`;
+  } catch (error) {
+    console.error("Error hashing password:", error);
+    throw new Error("Failed to hash password");
+  }
 }
 
 async function comparePasswords(supplied: string, stored: string) {
@@ -106,9 +111,10 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
+      const hashedPassword = await hashPassword(req.body.password);
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
+        password: hashedPassword,
       });
 
       req.login(user, (err) => {
@@ -122,7 +128,8 @@ export function setupAuth(app: Express) {
           errors: error.errors,
         });
       }
-      next(error);
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -130,7 +137,7 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err, user, info) => {
       if (err) {
         console.error("Login error:", err);
-        return next(err);
+        return res.status(500).json({ message: "Internal server error" });
       }
       if (!user) {
         console.log("Login failed:", info?.message);
@@ -139,7 +146,7 @@ export function setupAuth(app: Express) {
       req.login(user, (err) => {
         if (err) {
           console.error("Session creation error:", err);
-          return next(err);
+          return res.status(500).json({ message: "Failed to create session" });
         }
         res.status(200).json(user);
       });
