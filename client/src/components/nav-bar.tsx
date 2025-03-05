@@ -37,7 +37,7 @@ export function NavBar() {
         <div className="flex items-center gap-6 text-sm">
           <Link href="/">
             <a className="flex items-center space-x-2">
-              <span className="font-bold">CryptoCompliance</span>
+              <span className="text-2xl font-bold tracking-tight hover:text-primary transition-colors">DARA</span>
             </a>
           </Link>
           {user && (
