@@ -9,11 +9,15 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, CheckCircle, AlertCircle } from "lucide-react";
 import type { ExchangeInfo } from "@shared/schema";
+import { useComplianceNews } from "@/lib/news-service";
+import { ComplianceNewsFeed } from "@/components/compliance-news-feed";
 
 export default function AdminDashboard() {
   const { data: exchangeRegistrations, isLoading } = useQuery<ExchangeInfo[]>({
     queryKey: ["/api/admin/exchanges"],
   });
+
+  const { data: newsArticles, isLoading: isLoadingNews } = useComplianceNews();
 
   if (isLoading) {
     return (
@@ -71,7 +75,7 @@ export default function AdminDashboard() {
                         <div>
                           <span className="text-sm text-muted-foreground">Website:</span>
                           <p className="truncate">
-                            <a href={registration.websiteUrl} target="_blank" rel="noopener noreferrer" 
+                            <a href={registration.websiteUrl} target="_blank" rel="noopener noreferrer"
                                className="text-primary hover:underline">
                               {registration.websiteUrl}
                             </a>
@@ -161,16 +165,19 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="compliance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Compliance Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div>Coming soon...</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Latest Compliance News & Regulations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ComplianceNewsFeed 
+                  articles={newsArticles || []}
+                  isLoading={isLoadingNews}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
