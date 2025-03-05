@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { connectWallet } from "@/lib/web3";
-import { MoonIcon, SunIcon } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export function NavBar() {
@@ -37,6 +37,7 @@ export function NavBar() {
           {user && (
             <>
               <Link href="/dashboard">Dashboard</Link>
+              <Link href="/exchange/register">Register Exchange</Link>
               <Link href="/transactions">Transactions</Link>
               <Link href="/compliance">Compliance</Link>
             </>
@@ -51,6 +52,7 @@ export function NavBar() {
                 onClick={handleConnectWallet}
                 className="hidden sm:inline-flex"
               >
+                <Wallet className="mr-2 h-4 w-4" />
                 Connect Wallet
               </Button>
               <Button

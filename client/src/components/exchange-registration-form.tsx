@@ -27,11 +27,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
 
 export function ExchangeRegistrationForm() {
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const form = useForm<InsertExchangeInfo>({
     resolver: zodResolver(exchangeInfoSchema),
