@@ -100,103 +100,138 @@ export function ExchangeRegistrationForm() {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Exchange Registration</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-4xl mx-auto bg-gradient-to-b from-background to-muted/20 shadow-xl">
+      <CardHeader className="space-y-2 pb-8 border-b">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Exchange Registration
+        </CardTitle>
+        <CardDescription className="text-muted-foreground/80">
           Please provide detailed information about your cryptocurrency exchange.
           Fields will be validated as you type.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Accordion type="single" collapsible defaultValue="general">
-              <AccordionItem value="general">
-                <AccordionTrigger>General Information</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid gap-4 py-4">
+            <Accordion
+              type="single"
+              collapsible
+              defaultValue="general"
+              className="space-y-4"
+            >
+              <AccordionItem value="general" className="border rounded-lg px-6 shadow-sm transition-all duration-200 data-[state=open]:shadow-md data-[state=open]:bg-muted/5">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-lg font-semibold">General Information</span>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-6">
+                  <div className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="exchangeName"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Exchange Name</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Exchange Name</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              className={shouldShowError("exchangeName") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("exchangeName")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="legalEntityName"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Legal Entity Name</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Legal Entity Name</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              className={shouldShowError("legalEntityName") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("legalEntityName")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="registrationNumber"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Business Registration Number</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Business Registration Number</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              className={shouldShowError("registrationNumber") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("registrationNumber")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="headquartersLocation"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Headquarters Location</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Headquarters Location</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="Country, City"
-                              className={shouldShowError("headquartersLocation") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("headquartersLocation")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="websiteUrl"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Website URL</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Website URL</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="url"
                               placeholder="https://"
-                              className={shouldShowError("websiteUrl") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("websiteUrl")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
@@ -206,31 +241,35 @@ export function ExchangeRegistrationForm() {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="yearEstablished"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Year Established</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Year Established</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="YYYY"
-                              className={shouldShowError("yearEstablished") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("yearEstablished")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="exchangeType"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Exchange Type</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Exchange Type</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -252,57 +291,74 @@ export function ExchangeRegistrationForm() {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-
-              <AccordionItem value="compliance">
-                <AccordionTrigger>Compliance Contact</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid gap-4 py-4">
+              <AccordionItem value="compliance" className="border rounded-lg px-6 shadow-sm transition-all duration-200 data-[state=open]:shadow-md data-[state=open]:bg-muted/5">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-lg font-semibold">Compliance Contact</span>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-6">
+                  <div className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="complianceContactName"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Name</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Contact Name</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              className={shouldShowError("complianceContactName") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("complianceContactName")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="complianceContactEmail"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Email</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Contact Email</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="email"
-                              className={shouldShowError("complianceContactEmail") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("complianceContactEmail")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="complianceContactPhone"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Phone</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Contact Phone</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               type="tel"
-                              className={shouldShowError("complianceContactPhone") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("complianceContactPhone")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
@@ -312,16 +368,17 @@ export function ExchangeRegistrationForm() {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-
-              <AccordionItem value="security">
-                <AccordionTrigger>Security & Risk Management</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid gap-4 py-4">
+              <AccordionItem value="security" className="border rounded-lg px-6 shadow-sm transition-all duration-200 data-[state=open]:shadow-md data-[state=open]:bg-muted/5">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-lg font-semibold">Security & Risk Management</span>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-6">
+                  <div className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="washTradingDetection.automatedBotDetection"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 transition-all duration-200">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -333,12 +390,11 @@ export function ExchangeRegistrationForm() {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="washTradingDetection.spoofingDetection"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 transition-all duration-200">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -353,17 +409,18 @@ export function ExchangeRegistrationForm() {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-
-              <AccordionItem value="custody">
-                <AccordionTrigger>Custody & Storage</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid gap-4 py-4">
+              <AccordionItem value="custody" className="border rounded-lg px-6 shadow-sm transition-all duration-200 data-[state=open]:shadow-md data-[state=open]:bg-muted/5">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-lg font-semibold">Custody & Storage</span>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-6">
+                  <div className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="custodyArrangements.coldStoragePercentage"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cold Storage Percentage</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Cold Storage Percentage</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -371,20 +428,25 @@ export function ExchangeRegistrationForm() {
                               min="0"
                               max="100"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className={shouldShowError("custodyArrangements.coldStoragePercentage") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("custodyArrangements.coldStoragePercentage")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="custodyArrangements.hotWalletPercentage"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Hot Wallet Percentage</FormLabel>
+                        <FormItem className="transition-all duration-200">
+                          <FormLabel className="font-medium">Hot Wallet Percentage</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -392,19 +454,24 @@ export function ExchangeRegistrationForm() {
                               min="0"
                               max="100"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className={shouldShowError("custodyArrangements.hotWalletPercentage") ? "border-red-500" : ""}
+                              className={`transition-all duration-200 ${
+                                shouldShowError("custodyArrangements.hotWalletPercentage")
+                                  ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]"
+                                  : field.value
+                                  ? "border-green-500/20 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]"
+                                  : ""
+                              }`}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="custodyArrangements.userFundSegregation"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 transition-all duration-200">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -419,16 +486,17 @@ export function ExchangeRegistrationForm() {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-
-              <AccordionItem value="sanctions">
-                <AccordionTrigger>Sanctions Compliance</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid gap-4 py-4">
+              <AccordionItem value="sanctions" className="border rounded-lg px-6 shadow-sm transition-all duration-200 data-[state=open]:shadow-md data-[state=open]:bg-muted/5">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-lg font-semibold">Sanctions Compliance</span>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-6">
+                  <div className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="sanctionsCompliance.ofacCompliant"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 transition-all duration-200">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -440,12 +508,11 @@ export function ExchangeRegistrationForm() {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="sanctionsCompliance.fatfCompliant"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 transition-all duration-200">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -457,12 +524,11 @@ export function ExchangeRegistrationForm() {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="sanctionsCompliance.euCompliant"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 transition-all duration-200">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -478,19 +544,18 @@ export function ExchangeRegistrationForm() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
-            <div className="space-y-4">
+            <div className="space-y-4 pt-6">
               <div className="text-sm text-muted-foreground">
                 {Object.keys(form.formState.touchedFields).length > 0 &&
                   Object.keys(form.formState.errors).length > 0 && (
-                    <p className="text-red-500">
+                    <p className="text-red-500/90 bg-red-500/5 px-4 py-2 rounded-md">
                       Please fix the validation errors before submitting
                     </p>
                   )}
               </div>
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full transition-all duration-200 shadow-lg hover:shadow-primary/20"
                 disabled={!form.formState.isValid || form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting ? "Submitting..." : "Submit Registration"}
