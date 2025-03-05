@@ -42,10 +42,10 @@ export function NavBar() {
           </Link>
           {user && (
             <>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="px-4 flex items-center gap-2">
+                  <Button variant="ghost" className="px-3 flex items-center gap-1">
                     Register
                     <ChevronDown className="h-4 w-4 transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180" />
                   </Button>
@@ -101,7 +101,7 @@ export function NavBar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/compliance">Compliance</Link>
+              <Link href="/compliance" className="hover:text-primary transition-colors">Compliance</Link>
             </>
           )}
         </div>
