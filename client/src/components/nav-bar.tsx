@@ -2,8 +2,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { connectWallet } from "@/lib/web3";
-import { Wallet } from "lucide-react";
+import { Wallet, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function NavBar() {
   const { user, logoutMutation } = useAuth();
@@ -37,7 +43,64 @@ export function NavBar() {
           {user && (
             <>
               <Link href="/dashboard">Dashboard</Link>
-              <Link href="/exchange/register">Register Exchange</Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="px-4 flex items-center gap-2">
+                    Register
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[300px]">
+                  <DropdownMenuItem asChild>
+                    <Link href="/exchange/register">
+                      <div className="w-full">
+                        <div className="font-medium">Crypto Exchange Registration</div>
+                        <span className="text-sm text-muted-foreground">CEX & DEX platforms</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/stablecoin/register">
+                      <div className="w-full">
+                        <div className="font-medium">Stablecoin Issuer Disclosure</div>
+                        <span className="text-sm text-muted-foreground">For stablecoin providers</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/defi/register">
+                      <div className="w-full">
+                        <div className="font-medium">DeFi Protocol Registration</div>
+                        <span className="text-sm text-muted-foreground">Decentralized finance protocols</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/nft/register">
+                      <div className="w-full">
+                        <div className="font-medium">NFT Marketplace Registration</div>
+                        <span className="text-sm text-muted-foreground">Digital collectibles platforms</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/fund/register">
+                      <div className="w-full">
+                        <div className="font-medium">Crypto Fund Registration</div>
+                        <span className="text-sm text-muted-foreground">Institutional investors & funds</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/kyc/register">
+                      <div className="w-full">
+                        <div className="font-medium">AML/KYC Reporting</div>
+                        <span className="text-sm text-muted-foreground">Compliance reporting forms</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link href="/transactions">Transactions</Link>
               <Link href="/compliance">Compliance</Link>
             </>
