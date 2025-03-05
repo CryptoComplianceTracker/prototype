@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AdminProtectedRoute } from "@/lib/admin-protected-route";
 import { NavBar } from "@/components/nav-bar";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard";
@@ -18,7 +19,7 @@ function Router() {
       <Switch>
         <ProtectedRoute path="/" component={DashboardPage} />
         <ProtectedRoute path="/dashboard" component={DashboardPage} />
-        <ProtectedRoute path="/admin" component={AdminDashboard} />
+        <AdminProtectedRoute path="/admin" component={AdminDashboard} />
         <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />

@@ -4,20 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
 import type { ExchangeInfo } from "@shared/schema";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
-
-  // Redirect non-admin users
-  if (user && !user.isAdmin) {
-    setLocation("/dashboard");
-    return null;
-  }
-
   const { data: exchangeRegistrations, isLoading } = useQuery<ExchangeInfo[]>({
     queryKey: ["/api/admin/exchanges"],
   });
