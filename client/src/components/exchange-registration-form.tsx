@@ -75,17 +75,8 @@ export function ExchangeRegistrationForm() {
         userFundSegregation: false,
       },
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onTouched", // Only validate after field is touched
   });
-
-  // Watch form values for real-time validation
-  const formWatch = form.watch();
-  useEffect(() => {
-    const subscription = form.watch(() => {
-      form.trigger(); // Trigger validation on changes
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
 
   const onSubmit = async (data: InsertExchangeInfo) => {
     try {
@@ -101,6 +92,11 @@ export function ExchangeRegistrationForm() {
         variant: "destructive",
       });
     }
+  };
+
+  // Helper function to determine if a field should show error state
+  const shouldShowError = (fieldName: string) => {
+    return form.formState.touchedFields[fieldName] && form.formState.errors[fieldName];
   };
 
   return (
@@ -129,8 +125,7 @@ export function ExchangeRegistrationForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              className={form.formState.errors.exchangeName ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("exchangeName")}
+                              className={shouldShowError("exchangeName") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -147,8 +142,7 @@ export function ExchangeRegistrationForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              className={form.formState.errors.legalEntityName ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("legalEntityName")}
+                              className={shouldShowError("legalEntityName") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -165,8 +159,7 @@ export function ExchangeRegistrationForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              className={form.formState.errors.registrationNumber ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("registrationNumber")}
+                              className={shouldShowError("registrationNumber") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -184,8 +177,7 @@ export function ExchangeRegistrationForm() {
                             <Input
                               {...field}
                               placeholder="Country, City"
-                              className={form.formState.errors.headquartersLocation ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("headquartersLocation")}
+                              className={shouldShowError("headquartersLocation") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -204,12 +196,11 @@ export function ExchangeRegistrationForm() {
                               {...field}
                               type="url"
                               placeholder="https://"
-                              className={form.formState.errors.websiteUrl ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("websiteUrl")}
+                              className={shouldShowError("websiteUrl") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
-                          {!form.formState.errors.websiteUrl && field.value && (
+                          {field.value && !form.formState.errors.websiteUrl && (
                             <p className="text-sm text-green-600">Valid URL format</p>
                           )}
                         </FormItem>
@@ -226,8 +217,7 @@ export function ExchangeRegistrationForm() {
                             <Input
                               {...field}
                               placeholder="YYYY"
-                              className={form.formState.errors.yearEstablished ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("yearEstablished")}
+                              className={shouldShowError("yearEstablished") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -276,8 +266,7 @@ export function ExchangeRegistrationForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              className={form.formState.errors.complianceContactName ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("complianceContactName")}
+                              className={shouldShowError("complianceContactName") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -295,8 +284,7 @@ export function ExchangeRegistrationForm() {
                             <Input
                               {...field}
                               type="email"
-                              className={form.formState.errors.complianceContactEmail ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("complianceContactEmail")}
+                              className={shouldShowError("complianceContactEmail") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -314,8 +302,7 @@ export function ExchangeRegistrationForm() {
                             <Input
                               {...field}
                               type="tel"
-                              className={form.formState.errors.complianceContactPhone ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("complianceContactPhone")}
+                              className={shouldShowError("complianceContactPhone") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -384,8 +371,7 @@ export function ExchangeRegistrationForm() {
                               min="0"
                               max="100"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className={form.formState.errors["custodyArrangements.coldStoragePercentage"] ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("custodyArrangements.coldStoragePercentage")}
+                              className={shouldShowError("custodyArrangements.coldStoragePercentage") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -406,8 +392,7 @@ export function ExchangeRegistrationForm() {
                               min="0"
                               max="100"
                               onChange={(e) => field.onChange(Number(e.target.value))}
-                              className={form.formState.errors["custodyArrangements.hotWalletPercentage"] ? "border-red-500" : ""}
-                              onBlur={() => form.trigger("custodyArrangements.hotWalletPercentage")}
+                              className={shouldShowError("custodyArrangements.hotWalletPercentage") ? "border-red-500" : ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -496,11 +481,12 @@ export function ExchangeRegistrationForm() {
 
             <div className="space-y-4">
               <div className="text-sm text-muted-foreground">
-                {Object.keys(form.formState.errors).length > 0 && (
-                  <p className="text-red-500">
-                    Please fix the validation errors before submitting
-                  </p>
-                )}
+                {Object.keys(form.formState.touchedFields).length > 0 &&
+                  Object.keys(form.formState.errors).length > 0 && (
+                    <p className="text-red-500">
+                      Please fix the validation errors before submitting
+                    </p>
+                  )}
               </div>
               <Button
                 type="submit"
