@@ -1,4 +1,11 @@
-import { users, transactions, exchangeInfo, type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo } from "@shared/schema";
+import { 
+  users, transactions, exchangeInfo, stablecoinInfo, defiProtocolInfo, nftMarketplaceInfo, cryptoFundInfo,
+  type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
+  type StablecoinInfo, type InsertStablecoinInfo,
+  type DefiProtocolInfo, type InsertDefiProtocolInfo,
+  type NftMarketplaceInfo, type InsertNftMarketplaceInfo,
+  type CryptoFundInfo, type InsertCryptoFundInfo
+} from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -27,6 +34,22 @@ export interface IStorage {
 
   // Admin operations
   getAllExchangeInfo(): Promise<ExchangeInfo[]>;
+
+  // Stablecoin operations
+  createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<void>;
+  getStablecoinInfo(userId: number): Promise<StablecoinInfo | undefined>;
+
+  // DeFi Protocol operations
+  createDefiProtocolInfo(userId: number, info: InsertDefiProtocolInfo): Promise<void>;
+  getDefiProtocolInfo(userId: number): Promise<DefiProtocolInfo | undefined>;
+
+  // NFT Marketplace operations
+  createNftMarketplaceInfo(userId: number, info: InsertNftMarketplaceInfo): Promise<void>;
+  getNftMarketplaceInfo(userId: number): Promise<NftMarketplaceInfo | undefined>;
+
+  // Crypto Fund operations
+  createCryptoFundInfo(userId: number, info: InsertCryptoFundInfo): Promise<void>;
+  getCryptoFundInfo(userId: number): Promise<CryptoFundInfo | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -85,6 +108,42 @@ export class DatabaseStorage implements IStorage {
 
   async getAllExchangeInfo(): Promise<ExchangeInfo[]> {
     return await db.select().from(exchangeInfo);
+  }
+
+  async createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<void> {
+    await db.insert(stablecoinInfo).values({ ...info, userId });
+  }
+
+  async getStablecoinInfo(userId: number): Promise<StablecoinInfo | undefined> {
+    const [info] = await db.select().from(stablecoinInfo).where(eq(stablecoinInfo.userId, userId));
+    return info;
+  }
+
+  async createDefiProtocolInfo(userId: number, info: InsertDefiProtocolInfo): Promise<void> {
+    await db.insert(defiProtocolInfo).values({ ...info, userId });
+  }
+
+  async getDefiProtocolInfo(userId: number): Promise<DefiProtocolInfo | undefined> {
+    const [info] = await db.select().from(defiProtocolInfo).where(eq(defiProtocolInfo.userId, userId));
+    return info;
+  }
+
+  async createNftMarketplaceInfo(userId: number, info: InsertNftMarketplaceInfo): Promise<void> {
+    await db.insert(nftMarketplaceInfo).values({ ...info, userId });
+  }
+
+  async getNftMarketplaceInfo(userId: number): Promise<NftMarketplaceInfo | undefined> {
+    const [info] = await db.select().from(nftMarketplaceInfo).where(eq(nftMarketplaceInfo.userId, userId));
+    return info;
+  }
+
+  async createCryptoFundInfo(userId: number, info: InsertCryptoFundInfo): Promise<void> {
+    await db.insert(cryptoFundInfo).values({ ...info, userId });
+  }
+
+  async getCryptoFundInfo(userId: number): Promise<CryptoFundInfo | undefined> {
+    const [info] = await db.select().from(cryptoFundInfo).where(eq(cryptoFundInfo.userId, userId));
+    return info;
   }
 }
 

@@ -3,11 +3,97 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { z } from "zod";
-import { exchangeInfoSchema } from "@shared/schema";
+import { 
+  exchangeInfoSchema,
+  stablecoinInfoSchema,
+  defiProtocolInfoSchema,
+  nftMarketplaceInfoSchema,
+  cryptoFundInfoSchema
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+
+  // Stablecoin registration route
+  app.post("/api/stablecoin/register", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const data = stablecoinInfoSchema.parse(req.body);
+      await storage.createStablecoinInfo(req.user.id, data);
+      res.sendStatus(201);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid input data",
+          errors: error.errors 
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // DeFi Protocol registration route
+  app.post("/api/defi/register", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const data = defiProtocolInfoSchema.parse(req.body);
+      await storage.createDefiProtocolInfo(req.user.id, data);
+      res.sendStatus(201);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid input data",
+          errors: error.errors 
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // NFT Marketplace registration route
+  app.post("/api/nft/register", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const data = nftMarketplaceInfoSchema.parse(req.body);
+      await storage.createNftMarketplaceInfo(req.user.id, data);
+      res.sendStatus(201);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid input data",
+          errors: error.errors 
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // Crypto Fund registration route
+  app.post("/api/fund/register", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const data = cryptoFundInfoSchema.parse(req.body);
+      await storage.createCryptoFundInfo(req.user.id, data);
+      res.sendStatus(201);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid input data",
+          errors: error.errors 
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
 
   // Admin routes
   app.get("/api/admin/exchanges", async (req, res) => {
