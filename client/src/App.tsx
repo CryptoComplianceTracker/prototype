@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ExchangeRegistrationPage from "@/pages/exchange-registration";
+import CompliancePage from "@/pages/compliance";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
         <ProtectedRoute path="/dashboard" component={DashboardPage} />
         <AdminProtectedRoute path="/admin" component={AdminDashboard} />
         <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
+        <ProtectedRoute path="/compliance" component={CompliancePage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
