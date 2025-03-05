@@ -101,7 +101,6 @@ export function NavBar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/transactions">Transactions</Link>
               <Link href="/compliance">Compliance</Link>
             </>
           )}
