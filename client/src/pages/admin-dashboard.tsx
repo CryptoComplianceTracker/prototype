@@ -2,8 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp, CheckCircle, AlertCircle } from "lucide-react";
 import type { ExchangeInfo } from "@shared/schema";
 
 export default function AdminDashboard() {
@@ -30,67 +34,128 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="registrations">
-          <div className="grid gap-6">
+          <div className="space-y-4">
             {exchangeRegistrations?.map((registration) => (
-              <Card key={registration.id} className="bg-card">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-medium">
-                      {registration.exchangeName}
-                    </CardTitle>
-                    <Badge>{registration.exchangeType}</Badge>
+              <Collapsible
+                key={registration.id}
+                className="border rounded-lg bg-card transition-all duration-200 hover:shadow-md"
+              >
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-lg font-semibold">
+                        {registration.exchangeName}
+                      </h3>
+                      <Badge>{registration.exchangeType}</Badge>
+                    </div>
+                    <ChevronDown className="h-5 w-5 transition-transform ui-expanded:rotate-180" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[200px] rounded-md border p-4">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium mb-2">General Information</h3>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>Legal Entity: {registration.legalEntityName}</div>
-                          <div>Registration #: {registration.registrationNumber}</div>
-                          <div>Location: {registration.headquartersLocation}</div>
-                          <div>Website: {registration.websiteUrl}</div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="border-t p-4 space-y-6">
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">General Information</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-muted-foreground">Legal Entity:</span>
+                          <p>{registration.legalEntityName}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Registration #:</span>
+                          <p>{registration.registrationNumber}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Location:</span>
+                          <p>{registration.headquartersLocation}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Website:</span>
+                          <p className="truncate">
+                            <a href={registration.websiteUrl} target="_blank" rel="noopener noreferrer" 
+                               className="text-primary hover:underline">
+                              {registration.websiteUrl}
+                            </a>
+                          </p>
                         </div>
                       </div>
+                    </div>
 
-                      <div>
-                        <h3 className="font-medium mb-2">Compliance Contact</h3>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>Name: {registration.complianceContactName}</div>
-                          <div>Email: {registration.complianceContactEmail}</div>
-                          <div>Phone: {registration.complianceContactPhone}</div>
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">Compliance Contact</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-muted-foreground">Name:</span>
+                          <p>{registration.complianceContactName}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Email:</span>
+                          <p>{registration.complianceContactEmail}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Phone:</span>
+                          <p>{registration.complianceContactPhone}</p>
                         </div>
                       </div>
+                    </div>
 
-                      <div>
-                        <h3 className="font-medium mb-2">Risk Management</h3>
-                        <div className="flex gap-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">Security & Risk Management</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
                           {registration.washTradingDetection?.automatedBotDetection ? (
                             <div className="flex items-center text-green-500">
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Bot Detection
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Bot Detection Active
                             </div>
                           ) : (
                             <div className="flex items-center text-red-500">
-                              <AlertCircle className="w-4 h-4 mr-1" />
+                              <AlertCircle className="w-4 h-4 mr-2" />
                               No Bot Detection
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      <div>
-                        <h3 className="font-medium mb-2">Custody Information</h3>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>Cold Storage: {registration.custodyArrangements?.coldStoragePercentage}%</div>
-                          <div>Hot Wallet: {registration.custodyArrangements?.hotWalletPercentage}%</div>
+                        <div>
+                          {registration.washTradingDetection?.spoofingDetection ? (
+                            <div className="flex items-center text-green-500">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Spoofing Detection Active
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-red-500">
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                              No Spoofing Detection
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">Custody Information</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-muted-foreground">Cold Storage:</span>
+                          <p>{registration.custodyArrangements?.coldStoragePercentage}%</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Hot Wallet:</span>
+                          <p>{registration.custodyArrangements?.hotWalletPercentage}%</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Fund Segregation:</span>
+                          <p>
+                            {registration.custodyArrangements?.userFundSegregation ? (
+                              <span className="text-green-500">Enabled</span>
+                            ) : (
+                              <span className="text-red-500">Disabled</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
         </TabsContent>
