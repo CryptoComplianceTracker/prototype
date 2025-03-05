@@ -23,9 +23,9 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  const [hashedStored, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashedStored, "hex");
+  const suppliedBuf = await scryptAsync(supplied, salt, 64) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
@@ -50,11 +50,18 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
+        if (!user) {
+          return done(null, false, { message: "Incorrect username" });
         }
+
+        const isValid = await comparePasswords(password, user.password);
+        if (!isValid) {
+          return done(null, false, { message: "Incorrect password" });
+        }
+
         return done(null, user);
       } catch (error) {
+        console.error("Auth error:", error);
         return done(error);
       }
     }),
@@ -88,9 +95,9 @@ export function setupAuth(app: Express) {
       });
     } catch (error) {
       if (error instanceof ZodError) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Invalid input data",
-          errors: error.errors 
+          errors: error.errors,
         });
       }
       next(error);
@@ -113,3 +120,5 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 }
+
+export { hashPassword };
