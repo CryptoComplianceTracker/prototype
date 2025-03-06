@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 export interface NewsArticle {
   title: string;
@@ -8,8 +9,52 @@ export interface NewsArticle {
   source: string;
 }
 
-// This is a mock service for demo purposes
-// In production, this would call a real news API
+// NewsAPI response interface
+interface NewsAPIResponse {
+  articles: Array<{
+    title: string;
+    description: string;
+    url: string;
+    publishedAt: string;
+    source: {
+      name: string;
+    };
+  }>;
+}
+
+const NEWS_API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+const NEWS_API_ENDPOINT = "https://newsapi.org/v2/everything";
+
+const fetchCryptoComplianceNews = async (): Promise<NewsArticle[]> => {
+  try {
+    const response = await axios.get<NewsAPIResponse>(NEWS_API_ENDPOINT, {
+      params: {
+        q: "(crypto OR cryptocurrency OR blockchain) AND (compliance OR regulation OR regulatory)",
+        language: "en",
+        sortBy: "publishedAt",
+        pageSize: 10,
+        apiKey: NEWS_API_KEY,
+      },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data.articles.map(article => ({
+      title: article.title,
+      description: article.description,
+      url: article.url,
+      publishedAt: article.publishedAt,
+      source: article.source.name,
+    }));
+  } catch (error) {
+    console.error("Error fetching news:", error);
+    // Return mock data as fallback if API fails
+    return mockNewsArticles;
+  }
+};
+
+// Keep mock data as fallback
 const mockNewsArticles: NewsArticle[] = [
   {
     title: "SEC Announces New Crypto Exchange Registration Requirements",
@@ -37,10 +82,8 @@ const mockNewsArticles: NewsArticle[] = [
 export function useComplianceNews() {
   return useQuery({
     queryKey: ["/api/compliance/news"],
-    queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return mockNewsArticles;
-    },
+    queryFn: fetchCryptoComplianceNews,
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    staleTime: 4 * 60 * 1000, // Consider data stale after 4 minutes
   });
 }
