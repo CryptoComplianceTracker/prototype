@@ -36,12 +36,13 @@ const fetchCryptoComplianceNews = async (): Promise<NewsArticle[]> => {
         apiKey: NEWS_API_KEY,
       },
       headers: {
+        "X-Api-Key": NEWS_API_KEY,
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
       },
     });
 
+    console.log("News API Response:", response.data);
     return response.data.articles.map(article => ({
       title: article.title,
       description: article.description,
@@ -51,6 +52,13 @@ const fetchCryptoComplianceNews = async (): Promise<NewsArticle[]> => {
     }));
   } catch (error) {
     console.error("Error fetching news:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("API Error Details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+    }
     return mockNewsArticles;
   }
 };
