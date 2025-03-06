@@ -37,6 +37,8 @@ const fetchCryptoComplianceNews = async (): Promise<NewsArticle[]> => {
       },
       headers: {
         "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json",
       },
     });
 
