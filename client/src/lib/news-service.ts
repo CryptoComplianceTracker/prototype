@@ -86,10 +86,6 @@ export function useComplianceNews() {
     queryFn: fetchCryptoComplianceNews,
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     staleTime: 4 * 60 * 1000, // Consider data stale after 4 minutes
-    retry: 2,
-    onError: (error) => {
-      console.error("Failed to fetch news, falling back to mock data:", error);
-      return mockNewsArticles;
-    },
+    placeholderData: mockNewsArticles // Use mock data as placeholder while loading
   });
 }
