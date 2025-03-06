@@ -51,8 +51,7 @@ const fetchCryptoComplianceNews = async (): Promise<NewsArticle[]> => {
     }));
   } catch (error) {
     console.error("Error fetching news:", error);
-    // Return mock data as fallback if API fails
-    return mockNewsArticles;
+    throw new Error("Failed to fetch news data");
   }
 };
 
@@ -87,5 +86,10 @@ export function useComplianceNews() {
     queryFn: fetchCryptoComplianceNews,
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     staleTime: 4 * 60 * 1000, // Consider data stale after 4 minutes
+    retry: 2,
+    onError: (error) => {
+      console.error("Failed to fetch news, falling back to mock data:", error);
+      return mockNewsArticles;
+    },
   });
 }
