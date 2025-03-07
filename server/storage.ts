@@ -111,7 +111,7 @@ export class DatabaseStorage implements IStorage {
       const exchanges = await db.select().from(exchangeInfo);
       console.log("Raw exchanges from database:", exchanges);
 
-      // Transform and validate exchange data with proper null checks
+      // Transform and validate exchange data
       return exchanges.map(exchange => ({
         ...exchange,
         exchangeType: this.validateExchangeType(exchange.exchangeType),

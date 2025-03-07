@@ -58,9 +58,6 @@ export const exchangeInfo = pgTable("exchange_info", {
   blockchainAnalytics: jsonb("blockchain_analytics"), // Analytics tools used
 
   createdAt: timestamp("created_at").defaultNow(),
-  riskAssessments: jsonb("risk_assessments").array(),
-  currentRiskScore: integer("current_risk_score"),
-  lastRiskAssessment: timestamp("last_risk_assessment"),
 });
 
 export const transactions = pgTable("transactions", {
