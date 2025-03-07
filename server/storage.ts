@@ -23,7 +23,7 @@ export interface IStorage {
 
   // Exchange operations
   createExchangeInfo(userId: number, info: InsertExchangeInfo): Promise<void>;
-  getExchangeInfo(userId: number): Promise<InsertExchangeInfo | undefined>;
+  getExchangeInfo(userId: number): Promise<ExchangeInfo | undefined>;
 
   // Transaction operations
   getTransactionsByUserId(userId: number): Promise<Transaction[]>;
@@ -87,7 +87,7 @@ export class DatabaseStorage implements IStorage {
     await db.insert(exchangeInfo).values({ ...info, userId });
   }
 
-  async getExchangeInfo(userId: number): Promise<InsertExchangeInfo | undefined> {
+  async getExchangeInfo(userId: number): Promise<ExchangeInfo | undefined> {
     const [info] = await db.select().from(exchangeInfo).where(eq(exchangeInfo.userId, userId));
     return info;
   }
@@ -111,7 +111,7 @@ export class DatabaseStorage implements IStorage {
       const exchanges = await db.select().from(exchangeInfo);
       console.log("Raw exchanges from database:", exchanges);
 
-      // Ensure type safety for exchangeType
+      // Transform and validate exchange data
       return exchanges.map(exchange => ({
         ...exchange,
         exchangeType: this.validateExchangeType(exchange.exchangeType),
@@ -128,12 +128,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Helper function to validate exchange type
-  validateExchangeType(type: string): "DEX" | "CEX" {
+  private validateExchangeType(type: string): "DEX" | "CEX" {
     if (type !== "DEX" && type !== "CEX") {
       console.warn(`Invalid exchange type "${type}" found, defaulting to "CEX"`);
       return "CEX";
     }
-    return type as "DEX" | "CEX";
+    return type;
   }
 
   async createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<void> {
