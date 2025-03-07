@@ -35,8 +35,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useEffect } from "react";
+import { calculateRiskScore } from "@/lib/risk-analysis";
+import type { RiskAssessment } from "@shared/schema";
 
-export function ExchangeRegistrationForm() {
+interface ExchangeRegistrationFormProps {
+  onRiskAssessment?: (assessment: RiskAssessment) => void;
+}
+
+export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrationFormProps) {
   const { toast } = useToast();
 
   const form = useForm<InsertExchangeInfo>({
@@ -81,9 +87,13 @@ export function ExchangeRegistrationForm() {
   const onSubmit = async (data: InsertExchangeInfo) => {
     try {
       await apiRequest("POST", "/api/exchange/register", data);
+
+      const riskAssessment = calculateRiskScore(data);
+      onRiskAssessment?.(riskAssessment);
+
       toast({
         title: "Registration successful",
-        description: "Your exchange information has been submitted.",
+        description: "Your exchange information has been submitted and risk assessment completed.",
       });
     } catch (error) {
       toast({
@@ -94,7 +104,6 @@ export function ExchangeRegistrationForm() {
     }
   };
 
-  // Helper function to determine if a field should show error state
   const shouldShowError = (fieldName: string) => {
     return form.formState.touchedFields[fieldName] && form.formState.errors[fieldName];
   };

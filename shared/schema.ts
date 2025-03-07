@@ -58,6 +58,9 @@ export const exchangeInfo = pgTable("exchange_info", {
   blockchainAnalytics: jsonb("blockchain_analytics"), // Analytics tools used
 
   createdAt: timestamp("created_at").defaultNow(),
+  riskAssessments: jsonb("risk_assessments").array(),
+  currentRiskScore: integer("current_risk_score"),
+  lastRiskAssessment: timestamp("last_risk_assessment"),
 });
 
 export const transactions = pgTable("transactions", {
@@ -335,3 +338,25 @@ export type InsertStablecoinInfo = z.infer<typeof stablecoinInfoSchema>;
 export type InsertDefiProtocolInfo = z.infer<typeof defiProtocolInfoSchema>;
 export type InsertNftMarketplaceInfo = z.infer<typeof nftMarketplaceInfoSchema>;
 export type InsertCryptoFundInfo = z.infer<typeof cryptoFundInfoSchema>;
+
+export interface RiskScore {
+  category: string;
+  score: number;
+  maxScore: number;
+  factors: RiskFactor[];
+}
+
+export interface RiskFactor {
+  name: string;
+  score: number;
+  maxScore: number;
+  description: string;
+  recommendation?: string;
+}
+
+export interface RiskAssessment {
+  overallScore: number;
+  riskLevel: "Low" | "Medium" | "High" | "Critical";
+  categories: RiskScore[];
+  timestamp: string;
+}
