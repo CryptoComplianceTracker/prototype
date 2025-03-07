@@ -111,15 +111,19 @@ export class DatabaseStorage implements IStorage {
       const exchanges = await db.select().from(exchangeInfo);
       console.log("Raw exchanges from database:", exchanges);
 
-      // Transform and validate exchange data
+      // Transform and validate exchange data with proper null checks
       return exchanges.map(exchange => ({
         ...exchange,
         exchangeType: this.validateExchangeType(exchange.exchangeType),
-        washTradingDetection: exchange.washTradingDetection || {},
-        custodyArrangements: exchange.custodyArrangements || {},
-        kycAmlControls: exchange.kycAmlControls || {},
-        tradingPolicies: exchange.tradingPolicies || {},
-        blockchainAnalytics: exchange.blockchainAnalytics || {}
+        washTradingDetection: this.parseJsonField(exchange.washTradingDetection),
+        custodyArrangements: this.parseJsonField(exchange.custodyArrangements),
+        securityMeasures: this.parseJsonField(exchange.securityMeasures),
+        riskManagement: this.parseJsonField(exchange.riskManagement),
+        kycVerificationMetrics: this.parseJsonField(exchange.kycVerificationMetrics),
+        sanctionsCompliance: this.parseJsonField(exchange.sanctionsCompliance),
+        insuranceCoverage: this.parseJsonField(exchange.insuranceCoverage),
+        supportedBlockchains: this.parseJsonField(exchange.supportedBlockchains),
+        blockchainAnalytics: this.parseJsonField(exchange.blockchainAnalytics)
       }));
     } catch (error) {
       console.error("Error in getAllExchangeInfo:", error);
@@ -134,6 +138,21 @@ export class DatabaseStorage implements IStorage {
       return "CEX";
     }
     return type;
+  }
+
+  private parseJsonField(field: unknown): Record<string, unknown> {
+    if (!field) return {};
+    if (typeof field === 'string') {
+      try {
+        return JSON.parse(field);
+      } catch {
+        return {};
+      }
+    }
+    if (typeof field === 'object') {
+      return field as Record<string, unknown>;
+    }
+    return {};
   }
 
   async createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<void> {
