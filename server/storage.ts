@@ -107,7 +107,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllExchangeInfo(): Promise<ExchangeInfo[]> {
-    return await db.select().from(exchangeInfo);
+    try {
+      const exchanges = await db.select().from(exchangeInfo);
+      console.log("Raw exchanges from database:", exchanges);
+
+      // Ensure type safety for exchangeType
+      return exchanges.map(exchange => ({
+        ...exchange,
+        exchangeType: this.validateExchangeType(exchange.exchangeType),
+        washTradingDetection: exchange.washTradingDetection || {},
+        custodyArrangements: exchange.custodyArrangements || {},
+        kycAmlControls: exchange.kycAmlControls || {},
+        tradingPolicies: exchange.tradingPolicies || {},
+        blockchainAnalytics: exchange.blockchainAnalytics || {}
+      }));
+    } catch (error) {
+      console.error("Error in getAllExchangeInfo:", error);
+      throw new Error(`Failed to fetch exchange info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Helper function to validate exchange type
+  validateExchangeType(type: string): "DEX" | "CEX" {
+    if (type !== "DEX" && type !== "CEX") {
+      console.warn(`Invalid exchange type "${type}" found, defaulting to "CEX"`);
+      return "CEX";
+    }
+    return type as "DEX" | "CEX";
   }
 
   async createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<void> {

@@ -7,24 +7,57 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, AlertCircle, CheckCircle } from "lucide-react";
+import { ChevronDown, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import type { ExchangeInfo } from "@shared/schema";
 import { useComplianceNews } from "@/lib/news-service";
 import { ComplianceNewsFeed } from "@/components/compliance-news-feed";
 import { RiskAnalysisDisplay } from "@/components/risk-analysis-display";
 import { calculateRiskScore } from "@/lib/risk-analysis";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function AdminDashboard() {
-  const { data: exchangeRegistrations, isLoading } = useQuery<ExchangeInfo[]>({
+  const { data: exchangeRegistrations, isLoading, error } = useQuery<ExchangeInfo[]>({
     queryKey: ["/api/admin/exchanges"],
+    retry: 2,
   });
 
   const { data: newsArticles, isLoading: isLoadingNews } = useComplianceNews();
 
   if (isLoading) {
     return (
+      <div className="container py-8 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading exchange data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
       <div className="container py-8">
-        <div>Loading...</div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load exchange registrations. Please try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!exchangeRegistrations?.length) {
+    return (
+      <div className="container py-8">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>No Registrations</AlertTitle>
+          <AlertDescription>
+            No exchange registrations found. New registrations will appear here.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -41,7 +74,7 @@ export default function AdminDashboard() {
 
         <TabsContent value="registrations">
           <div className="space-y-4">
-            {exchangeRegistrations?.map((registration) => {
+            {exchangeRegistrations.map((registration) => {
               const riskAssessment = calculateRiskScore(registration);
               return (
                 <Collapsible
@@ -57,8 +90,8 @@ export default function AdminDashboard() {
                         <Badge>{registration.exchangeType}</Badge>
                         <Badge 
                           variant={
-                            riskAssessment.riskLevel === "Low" ? "success" :
-                            riskAssessment.riskLevel === "Medium" ? "warning" :
+                            riskAssessment.riskLevel === "Low" ? "default" :
+                            riskAssessment.riskLevel === "Medium" ? "secondary" :
                             "destructive"
                           }
                         >

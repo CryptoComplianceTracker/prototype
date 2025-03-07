@@ -104,7 +104,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const exchanges = await storage.getAllExchangeInfo();
       res.json(exchanges);
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      console.error("Error fetching exchanges:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch exchanges",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
