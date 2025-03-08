@@ -1,92 +1,69 @@
 import { memo } from "react";
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  Marker
-} from "react-simple-maps";
 import { Link } from "wouter";
 import { jurisdictions } from "@/lib/jurisdiction-data";
 import { InfoTooltip } from "@/components/ui/tooltip-with-info";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import worldMapData from "../lib/world-map-data.json";
-
-interface GeoFeature {
-  rsmKey: string;
-  geometry: any;
-  properties: {
-    name: string;
-    [key: string]: any;
-  };
-}
 
 const RegulatoryMap = () => {
+  // Simple viewBox for world map proportions
   return (
-    <div className="w-full h-[600px] relative">
-      <ComposableMap 
-        projection="geoMercator"
-        projectionConfig={{
-          scale: 150,
-          center: [0, 30]
-        }}
+    <div className="w-full h-[600px] relative bg-card rounded-lg">
+      <svg 
+        viewBox="0 0 1000 500" 
+        className="w-full h-full"
+        style={{ background: '#2C3440' }}
       >
-        <Geographies geography={worldMapData}>
-          {({ geographies }: { geographies: GeoFeature[] }) =>
-            geographies.map((geo) => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                fill="#2C3440"
-                stroke="#FFFFFF"
-                strokeWidth={0.5}
-                style={{
-                  default: {
-                    outline: "none",
-                  },
-                  hover: {
-                    fill: "#374151",
-                    outline: "none",
-                  },
-                  pressed: {
-                    outline: "none",
-                  },
-                }}
-              />
-            ))
-          }
-        </Geographies>
+        {/* Simple world map outline */}
+        <path
+          d="M0,250 h1000 M500,0 v500"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="0.5"
+          fill="none"
+        />
 
-        {jurisdictions.map(({ name, coordinates, description, id }) => (
-          <Marker key={name} coordinates={[coordinates[1], coordinates[0]]}>
-            <InfoTooltip
-              term={name}
-              explanation={description}
-            >
-              <Link href={`/jurisdiction/${id}`}>
-                <g
-                  transform="translate(-12, -24)"
-                  style={{ cursor: "pointer" }}
-                >
-                  <circle
-                    r="8"
-                    fill="#60A5FA"
-                    stroke="#FFFFFF"
-                    strokeWidth="2"
-                    className="animate-pulse"
-                  />
-                  <circle
-                    r="4"
-                    fill="#2563EB"
-                    stroke="#FFFFFF"
-                    strokeWidth="1"
-                  />
-                </g>
-              </Link>
-            </InfoTooltip>
-          </Marker>
+        {/* Grid lines for reference */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <path
+            key={`grid-${i}`}
+            d={`M${i * 100},0 v500 M0,${i * 50} h1000`}
+            stroke="rgba(255,255,255,0.05)"
+            strokeWidth="0.5"
+            fill="none"
+          />
         ))}
-      </ComposableMap>
+
+        {/* Jurisdiction markers */}
+        {jurisdictions.map(({ name, description, id }) => {
+          // Convert lat/long to SVG coordinates
+          const x = ((180 + jurisdictions[0].coordinates[1]) / 360) * 1000;
+          const y = ((90 - jurisdictions[0].coordinates[0]) / 180) * 500;
+
+          return (
+            <Link key={id} href={`/jurisdiction/${id}`}>
+              <g transform={`translate(${x}, ${y})`}>
+                <circle
+                  r="8"
+                  fill="#60A5FA"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  className="animate-pulse cursor-pointer"
+                />
+                <circle
+                  r="4"
+                  fill="#2563EB"
+                  stroke="#FFFFFF"
+                  strokeWidth="1"
+                  className="cursor-pointer"
+                />
+                <InfoTooltip term={name} explanation={description}>
+                  <foreignObject x="-50" y="-40" width="100" height="20">
+                    <div className="text-center text-sm text-white">{name}</div>
+                  </foreignObject>
+                </InfoTooltip>
+              </g>
+            </Link>
+          );
+        })}
+      </svg>
     </div>
   );
 };
