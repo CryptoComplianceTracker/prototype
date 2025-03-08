@@ -36,8 +36,6 @@ const RegulatoryMap = () => {
           geography={geoUrl}
           onGeographyPathError={(err) => {
             console.error("Geography Path Error:", err);
-            //The following lines were removed because the error handling is done differently now.
-            // setError("Failed to load map data");
           }}
         >
           {({ geographies }: { geographies: GeoFeature[] }) =>
