@@ -7,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { ChevronDown, AlertCircle, CheckCircle, Loader2, Download } from "lucide-react";
 import type { ExchangeInfo } from "@shared/schema";
 import { useComplianceNews } from "@/lib/news-service";
 import { ComplianceNewsFeed } from "@/components/compliance-news-feed";
@@ -16,6 +16,8 @@ import { calculateRiskScore } from "@/lib/risk-analysis";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { InfoTooltip } from "@/components/ui/tooltip-with-info";
 import { complianceTerms } from "@/lib/compliance-terms";
+import { Button } from "@/components/ui/button";
+import { exportToCSV } from "@/lib/export-utils";
 
 export default function AdminDashboard() {
   const { data: exchangeRegistrations, isLoading, error } = useQuery<ExchangeInfo[]>({
@@ -24,6 +26,12 @@ export default function AdminDashboard() {
   });
 
   const { data: newsArticles, isLoading: isLoadingNews } = useComplianceNews();
+
+  const handleExport = () => {
+    if (exchangeRegistrations) {
+      exportToCSV(exchangeRegistrations);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -66,7 +74,17 @@ export default function AdminDashboard() {
 
   return (
     <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <Button 
+          onClick={handleExport}
+          disabled={!exchangeRegistrations?.length}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Export Data
+        </Button>
+      </div>
 
       <Tabs defaultValue="registrations">
         <TabsList>
