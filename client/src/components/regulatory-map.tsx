@@ -10,13 +10,11 @@ import { jurisdictions } from "@/lib/jurisdiction-data";
 import { InfoTooltip } from "@/components/ui/tooltip-with-info";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-
-// Use a CORS-friendly endpoint
-const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+import worldMapData from "../lib/world-map-data.json";
 
 interface GeoFeature {
   rsmKey: string;
-  geometry: any; // TopoJSON geometry type
+  geometry: any;
   properties: {
     name: string;
     [key: string]: any;
@@ -29,15 +27,11 @@ const RegulatoryMap = () => {
       <ComposableMap 
         projection="geoMercator"
         projectionConfig={{
-          scale: 150
+          scale: 150,
+          center: [0, 30]
         }}
       >
-        <Geographies 
-          geography={geoUrl}
-          onGeographyPathError={(err) => {
-            console.error("Geography Path Error:", err);
-          }}
-        >
+        <Geographies geography={worldMapData}>
           {({ geographies }: { geographies: GeoFeature[] }) =>
             geographies.map((geo) => (
               <Geography
