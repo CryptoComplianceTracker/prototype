@@ -39,4 +39,8 @@ export const complianceTerms = {
     term: "Jurisdictional Risk",
     explanation: "The legal and regulatory risks associated with operating in different geographical locations and regulatory frameworks.",
   },
+  spoofing: {
+    term: "Spoofing",
+    explanation: "A form of market manipulation where traders place orders they don't intend to execute, creating false impressions of market activity.",
+  }
 };
