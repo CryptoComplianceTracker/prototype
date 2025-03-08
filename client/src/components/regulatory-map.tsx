@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -9,7 +9,7 @@ import { Link } from "wouter";
 import { jurisdictions } from "@/lib/jurisdiction-data";
 import { InfoTooltip } from "@/components/ui/tooltip-with-info";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 // Use a CORS-friendly endpoint
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
@@ -24,27 +24,6 @@ interface GeoFeature {
 }
 
 const RegulatoryMap = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error Loading Map</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="w-full h-[600px] relative">
       <ComposableMap 
@@ -57,9 +36,9 @@ const RegulatoryMap = () => {
           geography={geoUrl}
           onGeographyPathError={(err) => {
             console.error("Geography Path Error:", err);
-            setError("Failed to load map data");
+            //The following lines were removed because the error handling is done differently now.
+            // setError("Failed to load map data");
           }}
-          onGeographiesLoaded={() => setIsLoading(false)}
         >
           {({ geographies }: { geographies: GeoFeature[] }) =>
             geographies.map((geo) => (
