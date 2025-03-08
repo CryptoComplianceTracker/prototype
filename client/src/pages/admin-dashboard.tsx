@@ -14,6 +14,8 @@ import { ComplianceNewsFeed } from "@/components/compliance-news-feed";
 import { RiskAnalysisDisplay } from "@/components/risk-analysis-display";
 import { calculateRiskScore } from "@/lib/risk-analysis";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { InfoTooltip } from "@/components/ui/tooltip-with-info";
+import { complianceTerms } from "@/lib/compliance-terms";
 
 export default function AdminDashboard() {
   const { data: exchangeRegistrations, isLoading, error } = useQuery<ExchangeInfo[]>({
@@ -95,7 +97,12 @@ export default function AdminDashboard() {
                             "destructive"
                           }
                         >
-                          {riskAssessment.riskLevel} Risk
+                          <InfoTooltip 
+                            term={complianceTerms.riskAssessment.term}
+                            explanation={complianceTerms.riskAssessment.explanation}
+                          >
+                            {riskAssessment.riskLevel} Risk
+                          </InfoTooltip>
                         </Badge>
                       </div>
                       <ChevronDown className="h-5 w-5 transition-transform ui-expanded:rotate-180" />
@@ -104,7 +111,14 @@ export default function AdminDashboard() {
                   <CollapsibleContent>
                     <div className="border-t p-4 space-y-6">
                       <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">General Information</h4>
+                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                          <InfoTooltip 
+                            term={complianceTerms.regulatoryCompliance.term}
+                            explanation={complianceTerms.regulatoryCompliance.explanation}
+                          >
+                            Regulatory Information
+                          </InfoTooltip>
+                        </h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <span className="text-sm text-muted-foreground">Legal Entity:</span>
@@ -115,7 +129,14 @@ export default function AdminDashboard() {
                             <p>{registration.registrationNumber}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Location:</span>
+                            <span className="text-sm text-muted-foreground">
+                              <InfoTooltip 
+                                term={complianceTerms.jurisdictionalRisk.term}
+                                explanation={complianceTerms.jurisdictionalRisk.explanation}
+                              >
+                                Location
+                              </InfoTooltip>
+                            </span>
                             <p>{registration.headquartersLocation}</p>
                           </div>
                           <div>
@@ -131,36 +152,28 @@ export default function AdminDashboard() {
                       </div>
 
                       <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">Compliance Contact</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-sm text-muted-foreground">Name:</span>
-                            <p>{registration.complianceContactName}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">Email:</span>
-                            <p>{registration.complianceContactEmail}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">Phone:</span>
-                            <p>{registration.complianceContactPhone}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
                         <h4 className="font-medium text-sm text-muted-foreground mb-2">Security & Risk Management</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             {registration.washTradingDetection?.automatedBotDetection ? (
                               <div className="flex items-center text-green-500">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Bot Detection Active
+                                <InfoTooltip 
+                                  term={complianceTerms.washTrading.term}
+                                  explanation={complianceTerms.washTrading.explanation}
+                                >
+                                  Bot Detection Active
+                                </InfoTooltip>
                               </div>
                             ) : (
                               <div className="flex items-center text-red-500">
                                 <AlertCircle className="w-4 h-4 mr-2" />
-                                No Bot Detection
+                                <InfoTooltip 
+                                  term={complianceTerms.washTrading.term}
+                                  explanation={complianceTerms.washTrading.explanation}
+                                >
+                                  No Bot Detection
+                                </InfoTooltip>
                               </div>
                             )}
                           </div>
@@ -168,12 +181,22 @@ export default function AdminDashboard() {
                             {registration.washTradingDetection?.spoofingDetection ? (
                               <div className="flex items-center text-green-500">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Spoofing Detection Active
+                                <InfoTooltip 
+                                  term={complianceTerms.spoofing.term}
+                                  explanation={complianceTerms.spoofing.explanation}
+                                >
+                                  Spoofing Detection Active
+                                </InfoTooltip>
                               </div>
                             ) : (
                               <div className="flex items-center text-red-500">
                                 <AlertCircle className="w-4 h-4 mr-2" />
-                                No Spoofing Detection
+                                <InfoTooltip 
+                                  term={complianceTerms.spoofing.term}
+                                  explanation={complianceTerms.spoofing.explanation}
+                                >
+                                  No Spoofing Detection
+                                </InfoTooltip>
                               </div>
                             )}
                           </div>
@@ -181,7 +204,14 @@ export default function AdminDashboard() {
                       </div>
 
                       <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">Custody Information</h4>
+                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                          <InfoTooltip 
+                            term={complianceTerms.coldStorage.term}
+                            explanation={complianceTerms.coldStorage.explanation}
+                          >
+                            Custody Information
+                          </InfoTooltip>
+                        </h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <span className="text-sm text-muted-foreground">Cold Storage:</span>
@@ -192,7 +222,14 @@ export default function AdminDashboard() {
                             <p>{registration.custodyArrangements?.hotWalletPercentage}%</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Fund Segregation:</span>
+                            <span className="text-sm text-muted-foreground">
+                              <InfoTooltip 
+                                term={complianceTerms.fundSegregation.term}
+                                explanation={complianceTerms.fundSegregation.explanation}
+                              >
+                                Fund Segregation
+                              </InfoTooltip>
+                            </span>
                             <p>
                               {registration.custodyArrangements?.userFundSegregation ? (
                                 <span className="text-green-500">Enabled</span>
