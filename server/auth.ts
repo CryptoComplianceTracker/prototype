@@ -61,10 +61,14 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
+      httpOnly: true, // Prevents client-side access to the cookie
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'strict' // Protects against CSRF
     },
+    name: 'sessionId', // Change session cookie name from default 'connect.sid'
   };
 
+  // Configure secure session handling
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
