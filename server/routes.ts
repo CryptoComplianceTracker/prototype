@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import { createRegistrationAttestation } from "@/lib/attestation-service";
 
 // Rate limiter configuration
 const apiLimiter = rateLimit({
@@ -62,7 +63,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const data = stablecoinInfoSchema.parse(req.body);
-      await storage.createStablecoinInfo(req.user.id, data);
+      const registration = await storage.createStablecoinInfo(req.user.id, data);
+      if (req.user.walletAddress) {
+        const attestation = await createRegistrationAttestation(
+          'stablecoin',
+          registration.id.toString(),
+          req.user.walletAddress
+        );
+        if (!attestation.success) {
+          console.warn('Attestation creation failed:', attestation.error);
+        }
+      }
       console.log('Stablecoin registration successful');
       res.sendStatus(201);
     } catch (error) {
@@ -86,7 +97,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const data = defiProtocolInfoSchema.parse(req.body);
-      await storage.createDefiProtocolInfo(req.user.id, data);
+      const registration = await storage.createDefiProtocolInfo(req.user.id, data);
+      if (req.user.walletAddress) {
+        const attestation = await createRegistrationAttestation(
+          'defi',
+          registration.id.toString(),
+          req.user.walletAddress
+        );
+        if (!attestation.success) {
+          console.warn('Attestation creation failed:', attestation.error);
+        }
+      }
       console.log('DeFi protocol registration successful');
       res.sendStatus(201);
     } catch (error) {
@@ -110,7 +131,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const data = nftMarketplaceInfoSchema.parse(req.body);
-      await storage.createNftMarketplaceInfo(req.user.id, data);
+      const registration = await storage.createNftMarketplaceInfo(req.user.id, data);
+      if (req.user.walletAddress) {
+        const attestation = await createRegistrationAttestation(
+          'nft',
+          registration.id.toString(),
+          req.user.walletAddress
+        );
+        if (!attestation.success) {
+          console.warn('Attestation creation failed:', attestation.error);
+        }
+      }
       console.log('NFT marketplace registration successful');
       res.sendStatus(201);
     } catch (error) {
@@ -134,7 +165,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const data = cryptoFundInfoSchema.parse(req.body);
-      await storage.createCryptoFundInfo(req.user.id, data);
+      const registration = await storage.createCryptoFundInfo(req.user.id, data);
+      if (req.user.walletAddress) {
+        const attestation = await createRegistrationAttestation(
+          'fund',
+          registration.id.toString(),
+          req.user.walletAddress
+        );
+        if (!attestation.success) {
+          console.warn('Attestation creation failed:', attestation.error);
+        }
+      }
       console.log('Crypto fund registration successful');
       res.sendStatus(201);
     } catch (error) {
@@ -191,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Exchange registration route
+  // Exchange registration route (updated)
   app.post("/api/exchange/register", async (req, res) => {
     if (!req.isAuthenticated()) {
       console.log('Unauthorized access attempt to /api/exchange/register');
@@ -199,7 +240,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const data = exchangeInfoSchema.parse(req.body);
-      await storage.createExchangeInfo(req.user.id, data);
+      const registration = await storage.createExchangeInfo(req.user.id, data);
+
+      // Create attestation if wallet address is provided
+      if (req.user.walletAddress) {
+        const attestation = await createRegistrationAttestation(
+          'exchange',
+          registration.id.toString(),
+          req.user.walletAddress
+        );
+
+        if (!attestation.success) {
+          console.warn('Attestation creation failed:', attestation.error);
+        }
+      }
+
       console.log('Exchange registration successful');
       res.sendStatus(201);
     } catch (error) {
