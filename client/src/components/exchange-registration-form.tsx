@@ -18,6 +18,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useWeb3Wallet } from "@/hooks/use-web3-wallet";
@@ -591,6 +605,6 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
   );
 }
 
-const shouldShowError = (fieldName: string) => {
-  return form.formState.touchedFields[fieldName] && form.formState.errors[fieldName];
-};
+function shouldShowError(fieldName: string) {
+  return form?.formState.touchedFields[fieldName] && form?.formState.errors[fieldName];
+}
