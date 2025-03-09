@@ -1,5 +1,5 @@
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
-import { ethers } from "ethers";
+import { BrowserProvider, JsonRpcSigner } from "ethers";
 
 // EAS Contract Address on Sepolia
 const EAS_CONTRACT_ADDRESS = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e";
@@ -14,9 +14,9 @@ export async function createRegistrationAttestation(
 ) {
   try {
     // Connect to provider (assuming user has MetaMask or similar wallet)
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    
+    const provider = new BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
     // Initialize EAS
     const eas = new EAS(EAS_CONTRACT_ADDRESS);
     eas.connect(signer);
@@ -27,7 +27,7 @@ export async function createRegistrationAttestation(
       { name: "userAddress", value: userAddress, type: "address" },
       { name: "entityType", value: registrationType, type: "string" },
       { name: "registrationId", value: registrationId, type: "string" },
-      { name: "timestamp", value: Math.floor(Date.now() / 1000), type: "uint256" },
+      { name: "timestamp", value: BigInt(Math.floor(Date.now() / 1000)), type: "uint256" },
     ]);
 
     // Make the attestation
@@ -35,7 +35,7 @@ export async function createRegistrationAttestation(
       schema: REGISTRATION_SCHEMA,
       data: {
         recipient: userAddress,
-        expirationTime: 0, // No expiration
+        expirationTime: BigInt(0), // No expiration
         revocable: true,
         data: encodedData,
       },
@@ -60,12 +60,12 @@ export async function createRegistrationAttestation(
 
 export async function verifyAttestation(attestationUID: string) {
   try {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const provider = new BrowserProvider(window.ethereum);
     const eas = new EAS(EAS_CONTRACT_ADDRESS);
     eas.connect(provider);
 
     const attestation = await eas.getAttestation(attestationUID);
-    
+
     return {
       success: true,
       attestation,

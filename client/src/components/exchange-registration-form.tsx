@@ -18,23 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useEffect } from "react";
+import { useWeb3Wallet } from "@/hooks/use-web3-wallet";
+import { Web3WalletConnector } from "@/components/web3-wallet-connector";
 import { calculateRiskScore } from "@/lib/risk-analysis";
 import type { RiskAssessment } from "@shared/schema";
 
@@ -44,6 +31,7 @@ interface ExchangeRegistrationFormProps {
 
 export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrationFormProps) {
   const { toast } = useToast();
+  const { address: walletAddress, connect } = useWeb3Wallet();
 
   const form = useForm<InsertExchangeInfo>({
     resolver: zodResolver(exchangeInfoSchema),
@@ -81,19 +69,36 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
         userFundSegregation: false,
       },
     },
-    mode: "onTouched", // Only validate after field is touched
+    mode: "onTouched",
   });
 
   const onSubmit = async (data: InsertExchangeInfo) => {
     try {
-      await apiRequest("POST", "/api/exchange/register", data);
+      if (!walletAddress) {
+        const address = await connect();
+        if (!address) {
+          toast({
+            title: "Wallet Required",
+            description: "Please connect your wallet to create an attestation for your registration.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
 
+      // Submit registration data
+      const response = await apiRequest("POST", "/api/exchange/register", {
+        ...data,
+        walletAddress,
+      });
+
+      // Calculate and report risk assessment
       const riskAssessment = calculateRiskScore(data);
       onRiskAssessment?.(riskAssessment);
 
       toast({
         title: "Registration successful",
-        description: "Your exchange information has been submitted and risk assessment completed.",
+        description: "Your exchange information has been submitted and attestation created.",
       });
     } catch (error) {
       toast({
@@ -102,10 +107,6 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
         variant: "destructive",
       });
     }
-  };
-
-  const shouldShowError = (fieldName: string) => {
-    return form.formState.touchedFields[fieldName] && form.formState.errors[fieldName];
   };
 
   return (
@@ -118,6 +119,14 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
           Please provide detailed information about your cryptocurrency exchange.
           Fields will be validated as you type.
         </CardDescription>
+        <div className="pt-4">
+          <Web3WalletConnector onConnect={connect} />
+          {!walletAddress && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Connect your wallet to create an on-chain attestation of your registration
+            </p>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <Form {...form}>
@@ -565,10 +574,15 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
               <Button
                 type="submit"
                 className="w-full transition-all duration-200 shadow-lg hover:shadow-primary/20"
-                disabled={!form.formState.isValid || form.formState.isSubmitting}
+                disabled={!walletAddress || !form.formState.isValid || form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting ? "Submitting..." : "Submit Registration"}
               </Button>
+              {!walletAddress && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Connect your wallet to submit registration
+                </p>
+              )}
             </div>
           </form>
         </Form>
@@ -576,3 +590,7 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
     </Card>
   );
 }
+
+const shouldShowError = (fieldName: string) => {
+  return form.formState.touchedFields[fieldName] && form.formState.errors[fieldName];
+};
