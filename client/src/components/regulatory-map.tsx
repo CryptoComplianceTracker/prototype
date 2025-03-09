@@ -36,6 +36,27 @@ const RegulatoryMap = () => {
           />
         ))}
 
+        {/* Simplified continent outlines */}
+        <g fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" strokeWidth="1">
+          {/* North America */}
+          <path d="M200,100 l100,-30 l100,20 l50,50 l-50,80 l-150,30 l-50,-100 z" />
+
+          {/* South America */}
+          <path d="M300,300 l50,-30 l30,80 l-30,50 l-50,20 l-30,-70 z" />
+
+          {/* Europe */}
+          <path d="M500,100 l80,-20 l40,40 l-20,60 l-60,20 l-40,-40 z" />
+
+          {/* Africa */}
+          <path d="M500,200 l100,20 l20,100 l-60,80 l-80,-20 l-30,-130 z" />
+
+          {/* Asia */}
+          <path d="M600,100 l150,-30 l50,80 l-30,100 l-100,50 l-120,-80 l-20,-70 z" />
+
+          {/* Australia */}
+          <path d="M800,300 l60,20 l20,40 l-40,30 l-60,-10 l-20,-50 z" />
+        </g>
+
         {/* Jurisdiction markers */}
         {jurisdictions.map(({ name, description, id, coordinates }) => {
           // Convert lat/long to SVG coordinates
