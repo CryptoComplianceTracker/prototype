@@ -303,6 +303,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add the new endpoint after the existing /api/user/kyc endpoint
+  app.get("/api/user/registrations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/user/registrations');
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Fetch all types of registrations for the user
+      const [exchanges, stablecoins, defiProtocols, nftMarketplaces, cryptoFunds] = await Promise.all([
+        storage.getExchangeInfoByUserId(req.user.id),
+        storage.getStablecoinInfoByUserId(req.user.id),
+        storage.getDefiProtocolInfoByUserId(req.user.id),
+        storage.getNftMarketplaceInfoByUserId(req.user.id),
+        storage.getCryptoFundInfoByUserId(req.user.id)
+      ]);
+
+      // Transform into a unified format
+      const registrations = [
+        ...exchanges.map(reg => ({ ...reg, type: 'exchange' })),
+        ...stablecoins.map(reg => ({ ...reg, type: 'stablecoin' })),
+        ...defiProtocols.map(reg => ({ ...reg, type: 'defi' })),
+        ...nftMarketplaces.map(reg => ({ ...reg, type: 'nft' })),
+        ...cryptoFunds.map(reg => ({ ...reg, type: 'fund' }))
+      ];
+
+      console.log(`Retrieved ${registrations.length} registrations for user ${req.user.id}`);
+      res.json(registrations);
+    } catch (error) {
+      console.error('Error fetching user registrations:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Risk assessment route
   app.get("/api/risk-assessment/:walletAddress", async (req, res) => {
     if (!req.isAuthenticated()) {
