@@ -123,6 +123,11 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
     }
   };
 
+  // Move shouldShowError inside the component to access form
+  const shouldShowError = (fieldName: string) => {
+    return form.formState.touchedFields[fieldName] && form.formState.errors[fieldName];
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto bg-gradient-to-b from-background to-muted/20 shadow-xl">
       <CardHeader className="space-y-2 pb-8 border-b">
@@ -603,8 +608,4 @@ export function ExchangeRegistrationForm({ onRiskAssessment }: ExchangeRegistrat
       </CardContent>
     </Card>
   );
-}
-
-function shouldShowError(fieldName: string) {
-  return form?.formState.touchedFields[fieldName] && form?.formState.errors[fieldName];
 }
