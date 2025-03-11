@@ -5,6 +5,7 @@ import { connectWallet } from "@/lib/web3";
 import { Wallet, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { registrationTypes } from "@/lib/registration-types";
+import { useWeb3Wallet } from "@/hooks/use-web3-wallet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +16,11 @@ import {
 export function NavBar() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const { address, connect, disconnect } = useWeb3Wallet();
 
-  const handleConnectWallet = async () => {
+  const handleConnect = async () => {
     try {
-      const address = await connectWallet();
+      const address = await connect();
       toast({
         title: "Wallet Connected",
         description: `Connected to ${address.slice(0, 6)}...${address.slice(-4)}`,
@@ -27,6 +29,21 @@ export function NavBar() {
       toast({
         title: "Connection Failed",
         description: error instanceof Error ? error.message : "Failed to connect wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (address) {
+        await disconnect();
+      }
+      logoutMutation.mutate();
+    } catch (error) {
+      toast({
+        title: "Logout Failed",
+        description: error instanceof Error ? error.message : "Failed to logout",
         variant: "destructive",
       });
     }
@@ -74,15 +91,15 @@ export function NavBar() {
             <>
               <Button
                 variant="outline"
-                onClick={handleConnectWallet}
+                onClick={address ? undefined : handleConnect}
                 className="hidden sm:inline-flex"
               >
                 <Wallet className="mr-2 h-4 w-4" />
-                Connect Wallet
+                {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect Wallet'}
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => logoutMutation.mutate()}
+                onClick={handleLogout}
                 disabled={logoutMutation.isPending}
               >
                 Logout
