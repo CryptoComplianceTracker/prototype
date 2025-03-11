@@ -9,14 +9,7 @@ import { verifyAttestation } from "@/lib/attestation-service";
 import { useWeb3Wallet } from "@/hooks/use-web3-wallet";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-
-const registrationTypes = [
-  { id: 'exchange', name: 'Exchange Registration', route: '/exchange-registration' },
-  { id: 'stablecoin', name: 'Stablecoin Registration', route: '/stablecoin-registration' },
-  { id: 'defi', name: 'DeFi Protocol Registration', route: '/defi-registration' },
-  { id: 'nft', name: 'NFT Marketplace Registration', route: '/nft-registration' },
-  { id: 'fund', name: 'Crypto Fund Registration', route: '/fund-registration' }
-];
+import { registrationTypes, getViewRoute } from "@/lib/registration-types";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -32,9 +25,6 @@ export default function DashboardPage() {
   const completedRegistrations = registrations.length;
   const totalRegistrations = registrationTypes.length;
   const completionPercentage = (completedRegistrations / totalRegistrations) * 100;
-
-  // Helper function to get view route for completed registrations
-  const getViewRoute = (type: string, id: number) => `/${type}-view/${id}`;
 
   return (
     <div className="container py-8">
@@ -109,7 +99,7 @@ export default function DashboardPage() {
                       )}
                       <span>{type.name}</span>
                     </div>
-                    <Link href={isComplete ? getViewRoute(type.id, registration.id) : type.route}>
+                    <Link href={isComplete ? getViewRoute(type.id, registration.id) : type.formRoute}>
                       <Button variant={isComplete ? "outline" : "default"} size="sm">
                         {isComplete ? 'View Details' : 'Start Registration'}
                       </Button>

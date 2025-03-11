@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { connectWallet } from "@/lib/web3";
 import { Wallet, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { registrationTypes } from "@/lib/registration-types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,54 +52,16 @@ export function NavBar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[300px]">
-                  <DropdownMenuItem asChild>
-                    <Link href="/exchange/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Crypto Exchange Registration</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">CEX & DEX platforms</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/stablecoin/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Stablecoin Issuer Disclosure</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">For stablecoin providers</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/defi/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">DeFi Protocol Registration</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Decentralized finance protocols</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/nft/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">NFT Marketplace Registration</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Digital collectibles platforms</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/fund/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Crypto Fund Registration</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Institutional investors & funds</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/kyc/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">AML/KYC Reporting</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance reporting forms</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
+                  {registrationTypes.map(type => (
+                    <DropdownMenuItem key={type.id} asChild>
+                      <Link href={type.formRoute}>
+                        <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                          <div className="font-medium group-hover:text-primary">{type.name}</div>
+                          <span className="text-sm text-muted-foreground group-hover:text-primary/70">{type.description}</span>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/compliance" className="hover:text-primary transition-colors">Compliance</Link>
