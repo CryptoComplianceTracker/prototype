@@ -15,6 +15,7 @@ import DefiRegistrationPage from "@/pages/defi-registration";
 import NftRegistrationPage from "@/pages/nft-registration";
 import CompliancePage from "@/pages/compliance";
 import FundRegistrationPage from "@/pages/fund-registration";
+import { RegistrationView } from "@/components/registration-view";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,12 +27,18 @@ function Router() {
           <ProtectedRoute path="/" component={DashboardPage} />
           <ProtectedRoute path="/dashboard" component={DashboardPage} />
           <AdminProtectedRoute path="/admin" component={AdminDashboard} />
-          <ProtectedRoute path="/exchange/register" component={ExchangeRegistrationPage} />
-          <ProtectedRoute path="/stablecoin/register" component={StablecoinRegistrationPage} />
-          <ProtectedRoute path="/defi/register" component={DefiRegistrationPage} />
-          <ProtectedRoute path="/nft/register" component={NftRegistrationPage} />
-          <ProtectedRoute path="/fund/register" component={FundRegistrationPage} />
+
+          {/* Registration Form Routes */}
+          <ProtectedRoute path="/exchange-registration" component={ExchangeRegistrationPage} />
+          <ProtectedRoute path="/stablecoin-registration" component={StablecoinRegistrationPage} />
+          <ProtectedRoute path="/defi-registration" component={DefiRegistrationPage} />
+          <ProtectedRoute path="/nft-registration" component={NftRegistrationPage} />
+          <ProtectedRoute path="/fund-registration" component={FundRegistrationPage} />
           <ProtectedRoute path="/compliance" component={CompliancePage} />
+
+          {/* Registration View Routes */}
+          <ProtectedRoute path="/:type-view/:id" component={RegistrationView} />
+
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>

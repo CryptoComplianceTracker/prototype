@@ -7,13 +7,15 @@ import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { verifyAttestation } from "@/lib/attestation-service";
 import { useWeb3Wallet } from "@/hooks/use-web3-wallet";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 const registrationTypes = [
-  { id: 'exchange', name: 'Exchange Registration' },
-  { id: 'stablecoin', name: 'Stablecoin Registration' },
-  { id: 'defi', name: 'DeFi Protocol Registration' },
-  { id: 'nft', name: 'NFT Marketplace Registration' },
-  { id: 'fund', name: 'Crypto Fund Registration' }
+  { id: 'exchange', name: 'Exchange Registration', route: '/exchange-registration' },
+  { id: 'stablecoin', name: 'Stablecoin Registration', route: '/stablecoin-registration' },
+  { id: 'defi', name: 'DeFi Protocol Registration', route: '/defi-registration' },
+  { id: 'nft', name: 'NFT Marketplace Registration', route: '/nft-registration' },
+  { id: 'fund', name: 'Crypto Fund Registration', route: '/fund-registration' }
 ];
 
 export default function DashboardPage() {
@@ -30,6 +32,9 @@ export default function DashboardPage() {
   const completedRegistrations = registrations.length;
   const totalRegistrations = registrationTypes.length;
   const completionPercentage = (completedRegistrations / totalRegistrations) * 100;
+
+  // Helper function to get view route for completed registrations
+  const getViewRoute = (type: string, id: number) => `/${type}-view/${id}`;
 
   return (
     <div className="container py-8">
@@ -91,9 +96,11 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {registrationTypes.map((type) => {
-                const isComplete = registrations.some(r => r.type === type.id);
+                const registration = registrations.find(r => r.type === type.id);
+                const isComplete = !!registration;
+
                 return (
-                  <div key={type.id} className="flex items-center justify-between">
+                  <div key={type.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-2">
                       {isComplete ? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
@@ -102,9 +109,11 @@ export default function DashboardPage() {
                       )}
                       <span>{type.name}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {isComplete ? 'Completed' : 'Pending'}
-                    </div>
+                    <Link href={isComplete ? getViewRoute(type.id, registration.id) : type.route}>
+                      <Button variant={isComplete ? "outline" : "default"} size="sm">
+                        {isComplete ? 'View Details' : 'Start Registration'}
+                      </Button>
+                    </Link>
                   </div>
                 );
               })}
