@@ -52,5 +52,26 @@ export function useWeb3Wallet() {
     }
   }, [toast]);
 
-  return { address, connecting, connect };
+  const disconnect = useCallback(async () => {
+    try {
+      // Clear the stored address
+      setAddress(null);
+
+      // Some wallets (like MetaMask) don't have a native disconnect method
+      // We just clear our local state
+      toast({
+        title: "Wallet Disconnected",
+        description: "Your wallet has been disconnected.",
+      });
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+      toast({
+        title: "Disconnection Failed",
+        description: "Failed to disconnect wallet. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
+
+  return { address, connecting, connect, disconnect };
 }
