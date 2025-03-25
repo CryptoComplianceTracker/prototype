@@ -177,6 +177,49 @@ export const cryptoFundInfo = pgTable("crypto_fund_info", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Unified registration table
+export const registrations = pgTable("registrations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  registrationType: text("registration_type").notNull(),
+  status: text("status").notNull().default('draft'),
+  version: integer("version").notNull().default(1),
+  name: text("name").notNull(),
+  registrationNumber: text("registration_number"),
+  jurisdiction: text("jurisdiction"),
+  websiteUrl: text("website_url"),
+  entityDetails: jsonb("entity_details").notNull(),
+  complianceData: jsonb("compliance_data"),
+  riskScore: integer("risk_score"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
+// Registration versions table
+export const registrationVersions = pgTable("registration_versions", {
+  id: serial("id").primaryKey(),
+  registrationId: integer("registration_id").notNull().references(() => registrations.id),
+  version: integer("version").notNull(),
+  entityDetails: jsonb("entity_details").notNull(),
+  complianceData: jsonb("compliance_data"),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+// Audit logs table
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  tableName: text("table_name").notNull(),
+  recordId: integer("record_id").notNull(),
+  action: text("action").notNull(),
+  oldData: jsonb("old_data"),
+  newData: jsonb("new_data"),
+  userId: integer("user_id").references(() => users.id),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const exchangeInfoSchema = createInsertSchema(exchangeInfo)
   .omit({ id: true, userId: true, createdAt: true })
   .extend({
@@ -326,6 +369,29 @@ export const cryptoFundInfoSchema = createInsertSchema(cryptoFundInfo)
     }),
   });
 
+export const registrationSchema = createInsertSchema(registrations)
+  .omit({ 
+    id: true, 
+    userId: true, 
+    version: true, 
+    createdAt: true, 
+    updatedAt: true, 
+    deletedAt: true 
+  })
+  .extend({
+    registrationType: z.enum(['exchange', 'stablecoin', 'defi', 'nft', 'fund'], {
+      required_error: "Registration type is required",
+    }),
+    status: z.enum(['draft', 'pending', 'approved', 'rejected', 'suspended'], {
+      required_error: "Status is required",
+    }),
+    websiteUrl: z.string().url({
+      message: "Please enter a valid website URL",
+    }).optional(),
+    entityDetails: z.record(z.unknown()),
+    complianceData: z.record(z.unknown()).optional(),
+  });
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
@@ -340,6 +406,10 @@ export type InsertStablecoinInfo = z.infer<typeof stablecoinInfoSchema>;
 export type InsertDefiProtocolInfo = z.infer<typeof defiProtocolInfoSchema>;
 export type InsertNftMarketplaceInfo = z.infer<typeof nftMarketplaceInfoSchema>;
 export type InsertCryptoFundInfo = z.infer<typeof cryptoFundInfoSchema>;
+export type Registration = typeof registrations.$inferSelect;
+export type InsertRegistration = z.infer<typeof registrationSchema>;
+export type RegistrationVersion = typeof registrationVersions.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
 
 export interface RiskScore {
   category: string;

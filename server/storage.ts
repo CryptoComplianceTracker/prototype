@@ -1,13 +1,15 @@
 import { 
   users, transactions, exchangeInfo, stablecoinInfo, defiProtocolInfo, nftMarketplaceInfo, cryptoFundInfo,
+  registrations, registrationVersions, auditLogs,
   type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
   type StablecoinInfo, type InsertStablecoinInfo,
   type DefiProtocolInfo, type InsertDefiProtocolInfo,
   type NftMarketplaceInfo, type InsertNftMarketplaceInfo,
-  type CryptoFundInfo, type InsertCryptoFundInfo
+  type CryptoFundInfo, type InsertCryptoFundInfo,
+  type Registration, type InsertRegistration, type RegistrationVersion, type AuditLog
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -55,6 +57,21 @@ export interface IStorage {
   createCryptoFundInfo(userId: number, info: InsertCryptoFundInfo): Promise<CryptoFundInfo>;
   getCryptoFundInfo(userId: number): Promise<CryptoFundInfo | undefined>;
   getCryptoFundInfoByUserId(userId: number): Promise<CryptoFundInfo[]>;
+
+  // New unified registration methods
+  createRegistration(userId: number, registration: InsertRegistration): Promise<Registration>;
+  getRegistration(id: number): Promise<Registration | undefined>;
+  getRegistrationsByUserId(userId: number): Promise<Registration[]>;
+  getRegistrationsByType(type: string): Promise<Registration[]>;
+  updateRegistration(id: number, data: Partial<Registration>): Promise<Registration>;
+
+  // Version tracking
+  createRegistrationVersion(registrationId: number, version: Partial<RegistrationVersion>): Promise<RegistrationVersion>;
+  getRegistrationVersions(registrationId: number): Promise<RegistrationVersion[]>;
+
+  // Audit logging
+  createAuditLog(log: Omit<AuditLog, "id" | "createdAt">): Promise<AuditLog>;
+  getAuditLogs(tableName: string, recordId: number): Promise<AuditLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -219,6 +236,75 @@ export class DatabaseStorage implements IStorage {
 
   async getCryptoFundInfoByUserId(userId: number): Promise<CryptoFundInfo[]> {
     return await db.select().from(cryptoFundInfo).where(eq(cryptoFundInfo.userId, userId));
+  }
+
+  async createRegistration(userId: number, registration: InsertRegistration): Promise<Registration> {
+    const [created] = await db.insert(registrations)
+      .values({ ...registration, userId })
+      .returning();
+    return created;
+  }
+
+  async getRegistration(id: number): Promise<Registration | undefined> {
+    const [registration] = await db.select()
+      .from(registrations)
+      .where(eq(registrations.id, id))
+      .where(sql`deleted_at IS NULL`);
+    return registration;
+  }
+
+  async getRegistrationsByUserId(userId: number): Promise<Registration[]> {
+    return await db.select()
+      .from(registrations)
+      .where(eq(registrations.userId, userId))
+      .where(sql`deleted_at IS NULL`);
+  }
+
+  async getRegistrationsByType(type: string): Promise<Registration[]> {
+    return await db.select()
+      .from(registrations)
+      .where(eq(registrations.registrationType, type))
+      .where(sql`deleted_at IS NULL`);
+  }
+
+  async updateRegistration(id: number, data: Partial<Registration>): Promise<Registration> {
+    const [updated] = await db.update(registrations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(registrations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createRegistrationVersion(
+    registrationId: number, 
+    version: Partial<RegistrationVersion>
+  ): Promise<RegistrationVersion> {
+    const [created] = await db.insert(registrationVersions)
+      .values({ ...version, registrationId })
+      .returning();
+    return created;
+  }
+
+  async getRegistrationVersions(registrationId: number): Promise<RegistrationVersion[]> {
+    return await db.select()
+      .from(registrationVersions)
+      .where(eq(registrationVersions.registrationId, registrationId))
+      .orderBy(desc(registrationVersions.version));
+  }
+
+  async createAuditLog(log: Omit<AuditLog, "id" | "createdAt">): Promise<AuditLog> {
+    const [created] = await db.insert(auditLogs)
+      .values(log)
+      .returning();
+    return created;
+  }
+
+  async getAuditLogs(tableName: string, recordId: number): Promise<AuditLog[]> {
+    return await db.select()
+      .from(auditLogs)
+      .where(eq(auditLogs.tableName, tableName))
+      .where(eq(auditLogs.recordId, recordId))
+      .orderBy(desc(auditLogs.createdAt));
   }
 }
 
