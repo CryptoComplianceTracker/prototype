@@ -8,7 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, AlertCircle, CheckCircle, Loader2, Download } from "lucide-react";
-import type { ExchangeInfo } from "@shared/schema";
+import type { Registration } from "@shared/schema";
 import { useComplianceNews } from "@/lib/news-service";
 import { ComplianceNewsFeed } from "@/components/compliance-news-feed";
 import { RiskAnalysisDisplay } from "@/components/risk-analysis-display";
@@ -20,16 +20,16 @@ import { Button } from "@/components/ui/button";
 import { exportToCSV } from "@/lib/export-utils";
 
 export default function AdminDashboard() {
-  const { data: exchangeRegistrations, isLoading, error } = useQuery<ExchangeInfo[]>({
-    queryKey: ["/api/admin/exchanges"],
+  const { data: registrations, isLoading, error } = useQuery<Registration[]>({
+    queryKey: ["/api/admin/registrations"],
     retry: 2,
   });
 
   const { data: newsArticles, isLoading: isLoadingNews } = useComplianceNews();
 
   const handleExport = () => {
-    if (exchangeRegistrations) {
-      exportToCSV(exchangeRegistrations);
+    if (registrations) {
+      exportToCSV(registrations);
     }
   };
 
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
       <div className="container py-8 flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading exchange data...</span>
+          <span>Loading registration data...</span>
         </div>
       </div>
     );
@@ -51,26 +51,35 @@ export default function AdminDashboard() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            Failed to load exchange registrations. Please try again later.
+            Failed to load registrations. Please try again later.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  if (!exchangeRegistrations?.length) {
+  if (!registrations?.length) {
     return (
       <div className="container py-8">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>No Registrations</AlertTitle>
           <AlertDescription>
-            No exchange registrations found. New registrations will appear here.
+            No registrations found. New registrations will appear here.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
+
+  // Group registrations by type
+  const registrationsByType = registrations.reduce((acc, reg) => {
+    if (!acc[reg.registrationType]) {
+      acc[reg.registrationType] = [];
+    }
+    acc[reg.registrationType].push(reg);
+    return acc;
+  }, {} as Record<string, Registration[]>);
 
   return (
     <div className="container py-8">
@@ -78,7 +87,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <Button 
           onClick={handleExport}
-          disabled={!exchangeRegistrations?.length}
+          disabled={!registrations?.length}
           className="flex items-center gap-2"
         >
           <Download className="h-4 w-4" />
@@ -86,207 +95,142 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="registrations">
+      <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="registrations">Exchange Registrations</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance Overview</TabsTrigger>
+          <TabsTrigger value="all">All Registrations</TabsTrigger>
+          <TabsTrigger value="exchange">Exchanges</TabsTrigger>
+          <TabsTrigger value="stablecoin">Stablecoins</TabsTrigger>
+          <TabsTrigger value="defi">DeFi Protocols</TabsTrigger>
+          <TabsTrigger value="nft">NFT Marketplaces</TabsTrigger>
+          <TabsTrigger value="fund">Crypto Funds</TabsTrigger>
+          <TabsTrigger value="news">Compliance News</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="registrations">
+        {/* All Registrations Tab */}
+        <TabsContent value="all">
           <div className="space-y-4">
-            {exchangeRegistrations.map((registration) => {
-              const riskAssessment = calculateRiskScore(registration);
-              return (
-                <Collapsible
-                  key={registration.id}
-                  className="border rounded-lg bg-card transition-all duration-200 hover:shadow-md"
-                >
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-4">
-                        <h3 className="text-lg font-semibold">
-                          {registration.exchangeName}
-                        </h3>
-                        <Badge>{registration.exchangeType}</Badge>
-                        <Badge 
-                          variant={
-                            riskAssessment.riskLevel === "Low" ? "default" :
-                            riskAssessment.riskLevel === "Medium" ? "secondary" :
-                            "destructive"
-                          }
-                        >
-                          <InfoTooltip 
-                            term={complianceTerms.riskAssessment.term}
-                            explanation={complianceTerms.riskAssessment.explanation}
-                          >
-                            {riskAssessment.riskLevel} Risk
-                          </InfoTooltip>
-                        </Badge>
-                      </div>
-                      <ChevronDown className="h-5 w-5 transition-transform ui-expanded:rotate-180" />
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="border-t p-4 space-y-6">
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                          <InfoTooltip 
-                            term={complianceTerms.regulatoryCompliance.term}
-                            explanation={complianceTerms.regulatoryCompliance.explanation}
-                          >
-                            Regulatory Information
-                          </InfoTooltip>
-                        </h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-sm text-muted-foreground">Legal Entity:</span>
-                            <p>{registration.legalEntityName}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">Registration #:</span>
-                            <p>{registration.registrationNumber}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">
-                              <InfoTooltip 
-                                term={complianceTerms.jurisdictionalRisk.term}
-                                explanation={complianceTerms.jurisdictionalRisk.explanation}
-                              >
-                                Location
-                              </InfoTooltip>
-                            </span>
-                            <p>{registration.headquartersLocation}</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">Website:</span>
-                            <p className="truncate">
-                              <a href={registration.websiteUrl} target="_blank" rel="noopener noreferrer"
-                                 className="text-primary hover:underline">
-                                {registration.websiteUrl}
-                              </a>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">Security & Risk Management</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            {registration.washTradingDetection?.automatedBotDetection ? (
-                              <div className="flex items-center text-green-500">
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                <InfoTooltip 
-                                  term={complianceTerms.washTrading.term}
-                                  explanation={complianceTerms.washTrading.explanation}
-                                >
-                                  Bot Detection Active
-                                </InfoTooltip>
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-red-500">
-                                <AlertCircle className="w-4 h-4 mr-2" />
-                                <InfoTooltip 
-                                  term={complianceTerms.washTrading.term}
-                                  explanation={complianceTerms.washTrading.explanation}
-                                >
-                                  No Bot Detection
-                                </InfoTooltip>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            {registration.washTradingDetection?.spoofingDetection ? (
-                              <div className="flex items-center text-green-500">
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                <InfoTooltip 
-                                  term={complianceTerms.spoofing.term}
-                                  explanation={complianceTerms.spoofing.explanation}
-                                >
-                                  Spoofing Detection Active
-                                </InfoTooltip>
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-red-500">
-                                <AlertCircle className="w-4 h-4 mr-2" />
-                                <InfoTooltip 
-                                  term={complianceTerms.spoofing.term}
-                                  explanation={complianceTerms.spoofing.explanation}
-                                >
-                                  No Spoofing Detection
-                                </InfoTooltip>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                          <InfoTooltip 
-                            term={complianceTerms.coldStorage.term}
-                            explanation={complianceTerms.coldStorage.explanation}
-                          >
-                            Custody Information
-                          </InfoTooltip>
-                        </h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-sm text-muted-foreground">Cold Storage:</span>
-                            <p>{registration.custodyArrangements?.coldStoragePercentage}%</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">Hot Wallet:</span>
-                            <p>{registration.custodyArrangements?.hotWalletPercentage}%</p>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">
-                              <InfoTooltip 
-                                term={complianceTerms.fundSegregation.term}
-                                explanation={complianceTerms.fundSegregation.explanation}
-                              >
-                                Fund Segregation
-                              </InfoTooltip>
-                            </span>
-                            <p>
-                              {registration.custodyArrangements?.userFundSegregation ? (
-                                <span className="text-green-500">Enabled</span>
-                              ) : (
-                                <span className="text-red-500">Disabled</span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 border-t pt-6">
-                        <h4 className="text-lg font-semibold mb-4">Risk Assessment</h4>
-                        <RiskAnalysisDisplay assessment={riskAssessment} />
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
+            {registrations.map((registration) => (
+              <RegistrationCard key={registration.id} registration={registration} />
+            ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="compliance">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Latest Compliance News & Regulations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ComplianceNewsFeed 
-                  articles={newsArticles || []}
-                  isLoading={isLoadingNews}
-                />
-              </CardContent>
-            </Card>
-          </div>
+        {/* Type-specific Tabs */}
+        {Object.entries(registrationsByType).map(([type, regs]) => (
+          <TabsContent key={type} value={type}>
+            <div className="space-y-4">
+              {regs.map((registration) => (
+                <RegistrationCard key={registration.id} registration={registration} />
+              ))}
+            </div>
+          </TabsContent>
+        ))}
+
+        {/* News Tab */}
+        <TabsContent value="news">
+          <Card>
+            <CardHeader>
+              <CardTitle>Latest Compliance News & Regulations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ComplianceNewsFeed 
+                articles={newsArticles || []}
+                isLoading={isLoadingNews}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function RegistrationCard({ registration }: { registration: Registration }) {
+  const riskAssessment = calculateRiskScore(registration.entityDetails);
+
+  return (
+    <Collapsible
+      key={registration.id}
+      className="border rounded-lg bg-card transition-all duration-200 hover:shadow-md"
+    >
+      <CollapsibleTrigger className="w-full">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            <h3 className="text-lg font-semibold">
+              {registration.name}
+            </h3>
+            <Badge>{registration.registrationType}</Badge>
+            <Badge variant={registration.status === 'approved' ? 'default' : 'secondary'}>
+              {registration.status}
+            </Badge>
+            <Badge 
+              variant={
+                riskAssessment.riskLevel === "Low" ? "default" :
+                riskAssessment.riskLevel === "Medium" ? "secondary" :
+                "destructive"
+              }
+            >
+              <InfoTooltip 
+                term={complianceTerms.riskAssessment.term}
+                explanation={complianceTerms.riskAssessment.explanation}
+              >
+                {riskAssessment.riskLevel} Risk
+              </InfoTooltip>
+            </Badge>
+          </div>
+          <ChevronDown className="h-5 w-5 transition-transform ui-expanded:rotate-180" />
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="border-t p-4 space-y-6">
+          <div>
+            <h4 className="font-medium text-sm text-muted-foreground mb-2">Registration Details</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-sm text-muted-foreground">Registration Number:</span>
+                <p>{registration.registrationNumber || 'Not Assigned'}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Jurisdiction:</span>
+                <p>{registration.jurisdiction || 'Not Specified'}</p>
+              </div>
+              {registration.websiteUrl && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Website:</span>
+                  <p className="truncate">
+                    <a href={registration.websiteUrl} target="_blank" rel="noopener noreferrer"
+                       className="text-primary hover:underline">
+                      {registration.websiteUrl}
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-sm text-muted-foreground mb-2">Risk Assessment</h4>
+            <RiskAnalysisDisplay assessment={riskAssessment} />
+          </div>
+
+          {/* Entity-specific details based on registration type */}
+          <div>
+            <h4 className="font-medium text-sm text-muted-foreground mb-2">Entity Details</h4>
+            <pre className="bg-muted p-4 rounded-md overflow-auto">
+              {JSON.stringify(registration.entityDetails, null, 2)}
+            </pre>
+          </div>
+
+          {registration.complianceData && (
+            <div>
+              <h4 className="font-medium text-sm text-muted-foreground mb-2">Compliance Data</h4>
+              <pre className="bg-muted p-4 rounded-md overflow-auto">
+                {JSON.stringify(registration.complianceData, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
