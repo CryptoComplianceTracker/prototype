@@ -22,9 +22,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export function StablecoinRegistrationForm() {
   const { toast } = useToast();
+  const { user } = useAuth();
+
   const form = useForm<InsertStablecoinInfo>({
     resolver: zodResolver(stablecoinInfoSchema),
     defaultValues: {
@@ -42,6 +45,10 @@ export function StablecoinRegistrationForm() {
   const mutation = useMutation({
     mutationFn: async (data: InsertStablecoinInfo) => {
       console.log("Submitting stablecoin registration:", data);
+      if (!user) {
+        throw new Error("You must be logged in to register a stablecoin");
+      }
+
       const response = await apiRequest("POST", "/api/stablecoin/register", data);
       console.log("API Response status:", response.status);
 
@@ -75,7 +82,7 @@ export function StablecoinRegistrationForm() {
   const onSubmit = async (data: InsertStablecoinInfo) => {
     console.log("Form submitted with data:", data);
     try {
-      await mutation.mutate(data);
+      await mutation.mutateAsync(data);
     } catch (error) {
       console.error("Form submission error:", error);
     }
@@ -83,7 +90,10 @@ export function StablecoinRegistrationForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form 
+        onSubmit={form.handleSubmit(onSubmit)} 
+        className="space-y-8"
+      >
         <div className="grid gap-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormField
@@ -213,7 +223,6 @@ export function StablecoinRegistrationForm() {
         <Button 
           type="submit" 
           disabled={mutation.isPending}
-          onClick={() => console.log("Register button clicked")}
         >
           {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Register Stablecoin
