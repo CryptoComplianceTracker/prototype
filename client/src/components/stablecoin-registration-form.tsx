@@ -41,11 +41,19 @@ export function StablecoinRegistrationForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertStablecoinInfo) => {
+      console.log("Submitting stablecoin registration:", data);
       const response = await apiRequest("POST", "/api/stablecoin/register", data);
+      console.log("API Response status:", response.status);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error("Registration failed:", error);
         throw new Error(error.message || "Failed to register stablecoin");
       }
+
+      const result = await response.json();
+      console.log("Registration successful:", result);
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -55,6 +63,7 @@ export function StablecoinRegistrationForm() {
       form.reset();
     },
     onError: (error: Error) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Registration Failed",
         description: error.message,
@@ -63,9 +72,18 @@ export function StablecoinRegistrationForm() {
     },
   });
 
+  const onSubmit = async (data: InsertStablecoinInfo) => {
+    console.log("Form submitted with data:", data);
+    try {
+      await mutation.mutate(data);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid gap-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FormField
@@ -192,7 +210,11 @@ export function StablecoinRegistrationForm() {
           </div>
         </div>
 
-        <Button type="submit" disabled={mutation.isPending}>
+        <Button 
+          type="submit" 
+          disabled={mutation.isPending}
+          onClick={() => console.log("Register button clicked")}
+        >
           {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Register Stablecoin
         </Button>
