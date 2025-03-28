@@ -160,6 +160,7 @@ export const cryptoFundInfo = pgTable("crypto_fund_info", {
   fundType: text("fund_type").notNull(),
   registrationNumber: text("registration_number").notNull(),
   jurisdiction: text("jurisdiction").notNull(),
+  websiteUrl: text("website_url").notNull(),
 
   // Investment Strategy
   investmentStrategy: jsonb("investment_strategy"),
@@ -366,6 +367,9 @@ export const cryptoFundInfoSchema = createInsertSchema(cryptoFundInfo)
   .extend({
     fundType: z.enum(["Hedge Fund", "Venture Capital", "Private Equity", "ETF", "Other"], {
       required_error: "Please select a fund type",
+    }),
+    websiteUrl: z.string().url({
+      message: "Please enter a valid website URL",
     }),
   });
 

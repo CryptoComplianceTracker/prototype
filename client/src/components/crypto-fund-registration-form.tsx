@@ -33,6 +33,7 @@ export function CryptoFundRegistrationForm() {
       fundType: "Hedge Fund",
       registrationNumber: "",
       jurisdiction: "",
+      websiteUrl: "",
       investmentStrategy: {},
       assetAllocation: {},
       riskProfile: {},
@@ -133,6 +134,20 @@ export function CryptoFundRegistrationForm() {
                   <FormLabel>Jurisdiction</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., United States, Cayman Islands" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="websiteUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Website URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://www.example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

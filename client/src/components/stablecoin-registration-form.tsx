@@ -39,6 +39,7 @@ export function StablecoinRegistrationForm() {
       backingAssetType: "Fiat",
       peggedTo: "USD",
       totalSupply: "",
+      websiteUrl: "",
     },
   });
 
@@ -212,6 +213,20 @@ export function StablecoinRegistrationForm() {
                   <FormLabel>Total Supply</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter total supply" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="websiteUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Website URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://www.example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
