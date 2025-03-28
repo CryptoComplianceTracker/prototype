@@ -82,6 +82,7 @@ export function NavBar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/compliance" className="hover:text-primary transition-colors">Compliance</Link>
+              <Link href="/compliance-news" className="hover:text-primary transition-colors">Crypto News</Link>
             </>
           )}
         </div>

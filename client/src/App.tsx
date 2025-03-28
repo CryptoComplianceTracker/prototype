@@ -14,6 +14,7 @@ import StablecoinRegistrationPage from "@/pages/stablecoin-registration";
 import DefiRegistrationPage from "@/pages/defi-registration";
 import NftRegistrationPage from "@/pages/nft-registration";
 import CompliancePage from "@/pages/compliance";
+import ComplianceNewsPage from "@/pages/compliance-news";
 import FundRegistrationPage from "@/pages/fund-registration";
 import { RegistrationView } from "@/components/registration-view";
 import NotFound from "@/pages/not-found";
@@ -35,6 +36,7 @@ function Router() {
           <ProtectedRoute path="/nft-registration" component={NftRegistrationPage} />
           <ProtectedRoute path="/fund-registration" component={FundRegistrationPage} />
           <ProtectedRoute path="/compliance" component={CompliancePage} />
+          <ProtectedRoute path="/compliance-news" component={ComplianceNewsPage} />
 
           {/* Registration View Routes */}
           <ProtectedRoute path="/:type-view/:id" component={RegistrationView} />
