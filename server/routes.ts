@@ -192,16 +192,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes with enhanced logging
-  app.get("/api/admin/exchanges", async (req, res) => {
+  const checkAdminAuth = (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
-      console.log('Unauthorized access attempt to /api/admin/exchanges');
+      console.log('Unauthorized access attempt to admin endpoint');
       return res.sendStatus(401);
     }
     if (!req.user.isAdmin) {
       console.log(`Non-admin user ${req.user.id} attempted to access admin endpoint`);
       return res.sendStatus(403);
     }
+    next();
+  };
 
+  // Admin exchange registrations
+  app.get("/api/admin/exchanges", checkAdminAuth, async (req, res) => {
     try {
       console.log('Fetching all exchange info from database...');
       const exchanges = await storage.getAllExchangeInfo();
@@ -211,6 +215,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching exchanges:", error);
       res.status(500).json({
         message: "Failed to fetch exchanges",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin stablecoin registrations
+  app.get("/api/admin/stablecoins", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Fetching all stablecoin info from database...');
+      const stablecoins = await storage.getAllStablecoinInfo();
+      console.log(`Successfully retrieved ${stablecoins.length} stablecoins`);
+      res.json(stablecoins);
+    } catch (error) {
+      console.error("Error fetching stablecoins:", error);
+      res.status(500).json({
+        message: "Failed to fetch stablecoins",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin DeFi protocol registrations
+  app.get("/api/admin/defi", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Fetching all DeFi protocol info from database...');
+      const defiProtocols = await storage.getAllDefiProtocolInfo();
+      console.log(`Successfully retrieved ${defiProtocols.length} DeFi protocols`);
+      res.json(defiProtocols);
+    } catch (error) {
+      console.error("Error fetching DeFi protocols:", error);
+      res.status(500).json({
+        message: "Failed to fetch DeFi protocols",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin NFT marketplace registrations
+  app.get("/api/admin/nft", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Fetching all NFT marketplace info from database...');
+      const nftMarketplaces = await storage.getAllNftMarketplaceInfo();
+      console.log(`Successfully retrieved ${nftMarketplaces.length} NFT marketplaces`);
+      res.json(nftMarketplaces);
+    } catch (error) {
+      console.error("Error fetching NFT marketplaces:", error);
+      res.status(500).json({
+        message: "Failed to fetch NFT marketplaces",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin crypto fund registrations
+  app.get("/api/admin/funds", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Fetching all crypto fund info from database...');
+      const cryptoFunds = await storage.getAllCryptoFundInfo();
+      console.log(`Successfully retrieved ${cryptoFunds.length} crypto funds`);
+      res.json(cryptoFunds);
+    } catch (error) {
+      console.error("Error fetching crypto funds:", error);
+      res.status(500).json({
+        message: "Failed to fetch crypto funds",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

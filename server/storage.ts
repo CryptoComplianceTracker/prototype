@@ -37,6 +37,10 @@ export interface IStorage {
 
   // Admin operations
   getAllExchangeInfo(): Promise<ExchangeInfo[]>;
+  getAllStablecoinInfo(): Promise<StablecoinInfo[]>;
+  getAllDefiProtocolInfo(): Promise<DefiProtocolInfo[]>;
+  getAllNftMarketplaceInfo(): Promise<NftMarketplaceInfo[]>;
+  getAllCryptoFundInfo(): Promise<CryptoFundInfo[]>;
 
   // Stablecoin operations
   createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<StablecoinInfo>;
@@ -151,6 +155,50 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error in getAllExchangeInfo:", error);
       throw new Error(`Failed to fetch exchange info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  async getAllStablecoinInfo(): Promise<StablecoinInfo[]> {
+    try {
+      const stablecoins = await db.select().from(stablecoinInfo);
+      console.log(`Retrieved ${stablecoins.length} stablecoin registrations`);
+      return stablecoins;
+    } catch (error) {
+      console.error("Error in getAllStablecoinInfo:", error);
+      throw new Error(`Failed to fetch stablecoin info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAllDefiProtocolInfo(): Promise<DefiProtocolInfo[]> {
+    try {
+      const defiProtocols = await db.select().from(defiProtocolInfo);
+      console.log(`Retrieved ${defiProtocols.length} DeFi protocol registrations`);
+      return defiProtocols;
+    } catch (error) {
+      console.error("Error in getAllDefiProtocolInfo:", error);
+      throw new Error(`Failed to fetch DeFi protocol info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAllNftMarketplaceInfo(): Promise<NftMarketplaceInfo[]> {
+    try {
+      const nftMarketplaces = await db.select().from(nftMarketplaceInfo);
+      console.log(`Retrieved ${nftMarketplaces.length} NFT marketplace registrations`);
+      return nftMarketplaces;
+    } catch (error) {
+      console.error("Error in getAllNftMarketplaceInfo:", error);
+      throw new Error(`Failed to fetch NFT marketplace info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAllCryptoFundInfo(): Promise<CryptoFundInfo[]> {
+    try {
+      const cryptoFunds = await db.select().from(cryptoFundInfo);
+      console.log(`Retrieved ${cryptoFunds.length} crypto fund registrations`);
+      return cryptoFunds;
+    } catch (error) {
+      console.error("Error in getAllCryptoFundInfo:", error);
+      throw new Error(`Failed to fetch crypto fund info: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
