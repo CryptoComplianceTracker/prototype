@@ -16,7 +16,6 @@ export interface NewsArticle {
 export function useComplianceNews() {
   return useQuery<NewsArticle[]>({
     queryKey: ["/api/compliance/news"],
-    queryFn: getQueryFn({ on401: "returnUndefined" }),
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     staleTime: 4 * 60 * 1000, // Consider data stale after 4 minutes
   });
