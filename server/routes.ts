@@ -287,58 +287,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Compliance News API route
   app.get("/api/compliance/news", async (_req, res) => {
     try {
-      // Since News API has limitations on the developer plan (particularly for localhost/development),
-      // we'll create some realistic sample data for development purposes
-      // This would be replaced with a real API call in production
-      const articles = [
-        {
-          title: "SEC Issues New Guidelines for Crypto Exchanges",
-          description: "The Securities and Exchange Commission has released updated compliance requirements that all cryptocurrency exchanges operating in the US must adhere to.",
-          url: "https://www.sec.gov/news/press-release/2025-45",
-          publishedAt: new Date().toISOString(),
-          source: "SEC Press Release"
-        },
-        {
-          title: "EU Parliament Approves Comprehensive Crypto Regulation Framework",
-          description: "The European Parliament has voted to approve a new framework for regulating cryptocurrency assets and services across the European Union.",
-          url: "https://ec.europa.eu/commission/presscorner/detail/en/ip_25_1234",
-          publishedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          source: "European Commission"
-        },
-        {
-          title: "Financial Action Task Force Updates Crypto Travel Rule Requirements",
-          description: "The FATF has updated its recommendations on the implementation of the travel rule for virtual asset service providers.",
-          url: "https://www.fatf-gafi.org/publications/fatfrecommendations/documents/travel-rule-guidelines-2025.html",
-          publishedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          source: "FATF Guidelines"
-        },
-        {
-          title: "Singapore MAS Strengthens Crypto Licensing Requirements",
-          description: "The Monetary Authority of Singapore has announced stricter requirements for cryptocurrency firms seeking to operate in the country.",
-          url: "https://www.mas.gov.sg/news/media-releases/2025/mas-strengthens-digital-payment-token-service-regulations",
-          publishedAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-          source: "MAS Media Releases"
-        },
-        {
-          title: "Japan FSA Unveils New Stablecoin Regulations",
-          description: "Japan's Financial Services Agency has released a new regulatory framework specifically targeting stablecoin issuers and service providers.",
-          url: "https://www.fsa.go.jp/en/news/2025/20250328.html",
-          publishedAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
-          source: "FSA Japan"
-        }
-      ];
+      const NEWS_API_KEY = process.env.VITE_NEWS_API_KEY;
+      const NEWS_API_ENDPOINT = "https://newsapi.org/v2/everything";
       
-      console.log('Serving compliance news data');
+      // Make a server-side request to the News API
+      const axios = require('axios');
+      
+      interface NewsSource {
+        name: string;
+      }
+      
+      interface NewsArticle {
+        title: string;
+        description: string;
+        url: string;
+        publishedAt: string;
+        source: NewsSource;
+      }
+      
+      interface NewsAPIResponse {
+        articles: NewsArticle[];
+      }
+      
+      console.log('Fetching news with API key:', NEWS_API_KEY ? 'Key provided' : 'No key');
+      
+      const response = await axios.get<NewsAPIResponse>(NEWS_API_ENDPOINT, {
+        params: {
+          q: "(crypto OR cryptocurrency OR blockchain) AND (compliance OR regulation OR regulatory)",
+          language: "en",
+          sortBy: "publishedAt",
+          pageSize: 15,
+          apiKey: NEWS_API_KEY,
+        },
+        headers: {
+          "X-Api-Key": NEWS_API_KEY,
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+      });
+      
+      console.log('Successfully fetched compliance news from API');
+      
+      // Transform the response data
+      const articles = response.data.articles.map((article: NewsArticle) => ({
+        title: article.title || 'No title available',
+        description: article.description || 'No description available',
+        url: article.url,
+        publishedAt: article.publishedAt,
+        source: article.source.name,
+      }));
+      
       res.json(articles);
-      
-      // Note: In production, this would be an actual API call
-      // const NEWS_API_KEY = process.env.VITE_NEWS_API_KEY;
-      // const NEWS_API_ENDPOINT = "https://newsapi.org/v2/everything";
-      // const axios = require('axios');
-      // const response = await axios.get(NEWS_API_ENDPOINT, ...);
-      
     } catch (error: unknown) {
-      console.error('Error processing compliance news:', error);
+      console.error('Error fetching compliance news:', error);
+      
+      // Type guard for axios errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status: number, data: any } };
+        console.error('News API error details:', {
+          status: axiosError.response?.status,
+          data: axiosError.response?.data
+        });
+      }
+      
       res.status(500).json({ 
         message: 'Failed to fetch compliance news',
         error: error instanceof Error ? error.message : 'Unknown error'
