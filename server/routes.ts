@@ -284,6 +284,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Compliance News API route
+  app.get("/api/compliance/news", async (_req, res) => {
+    try {
+      const NEWS_API_KEY = process.env.VITE_NEWS_API_KEY;
+      const NEWS_API_ENDPOINT = "https://newsapi.org/v2/everything";
+      
+      // Make a server-side request to the News API
+      const axios = require('axios');
+      
+      interface NewsSource {
+        name: string;
+      }
+      
+      interface NewsArticle {
+        title: string;
+        description: string;
+        url: string;
+        publishedAt: string;
+        source: NewsSource;
+      }
+      
+      interface NewsAPIResponse {
+        articles: NewsArticle[];
+      }
+      
+      const response = await axios.get<NewsAPIResponse>(NEWS_API_ENDPOINT, {
+        params: {
+          q: "(crypto OR cryptocurrency OR blockchain) AND (compliance OR regulation OR regulatory)",
+          language: "en",
+          sortBy: "publishedAt",
+          pageSize: 10,
+          apiKey: NEWS_API_KEY,
+        },
+        headers: {
+          "X-Api-Key": NEWS_API_KEY,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      console.log('Successfully fetched compliance news');
+      
+      // Transform the response data
+      const articles = response.data.articles.map((article: NewsArticle) => ({
+        title: article.title,
+        description: article.description,
+        url: article.url,
+        publishedAt: article.publishedAt,
+        source: article.source.name,
+      }));
+      
+      res.json(articles);
+    } catch (error: unknown) {
+      console.error('Error fetching compliance news:', error);
+      
+      // Type guard for axios errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status: number, data: any } };
+        console.error('News API error details:', {
+          status: axiosError.response?.status,
+          data: axiosError.response?.data
+        });
+      }
+      
+      res.status(500).json({ 
+        message: 'Failed to fetch compliance news',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Transaction routes
   app.get("/api/transactions", async (req, res) => {
     if (!req.isAuthenticated()) {
