@@ -1,8 +1,9 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { z } from "zod";
+import axios from "axios";
 import {
   exchangeInfoSchema,
   stablecoinInfoSchema,
@@ -291,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const NEWS_API_ENDPOINT = "https://newsapi.org/v2/everything";
       
       // Make a server-side request to the News API
-      const axios = require('axios');
+      // Using axios imported at the top of the file
       
       interface NewsSource {
         name: string;
