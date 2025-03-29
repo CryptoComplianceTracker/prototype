@@ -123,6 +123,14 @@ export function NavBar() {
                       </div>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/compliance-reporting">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Reporting</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance report management</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/jurisdiction-page" className="hover:text-primary transition-colors">Jurisdictions</Link>

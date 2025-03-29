@@ -16,6 +16,7 @@ import NftRegistrationPage from "@/pages/nft-registration";
 import CompliancePage from "@/pages/compliance";
 import ComplianceNewsPage from "@/pages/compliance-news";
 import ComplianceDashboardPage from "@/pages/compliance-dashboard";
+import ComplianceReportingPage from "@/pages/compliance-reporting";
 import FundRegistrationPage from "@/pages/fund-registration";
 import JurisdictionPage from "@/pages/jurisdiction-page";
 import TemplateStudioPage from "@/pages/template-studio";
@@ -41,6 +42,7 @@ function Router() {
           <ProtectedRoute path="/compliance" component={CompliancePage} />
           <ProtectedRoute path="/compliance-news" component={ComplianceNewsPage} />
           <ProtectedRoute path="/compliance-dashboard" component={ComplianceDashboardPage} />
+          <ProtectedRoute path="/compliance-reporting" component={ComplianceReportingPage} />
           <ProtectedRoute path="/template-studio" component={TemplateStudioPage} />
           <ProtectedRoute path="/jurisdiction-page" component={JurisdictionPage} />
           <ProtectedRoute path="/jurisdiction/:id" component={JurisdictionPage} />
