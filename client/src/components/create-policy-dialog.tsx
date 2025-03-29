@@ -49,9 +49,11 @@ const policyFormSchema = z.object({
   jurisdiction_id: z.coerce.number().optional(),
   status: z.string().default("draft"),
   version: z.string().default("1.0"),
-  content: z.string().min(20, {
-    message: "Policy content must be at least 20 characters.",
-  }),
+  content: z.object({
+    text: z.string().min(20, {
+      message: "Policy content must be at least 20 characters.",
+    }),
+  }).or(z.string().min(20).transform(text => ({ text }))),
 });
 
 type PolicyFormValues = z.infer<typeof policyFormSchema>;
@@ -198,22 +200,31 @@ export function CreatePolicyDialog({
             <FormField
               control={form.control}
               name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Policy Content</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Enter the policy content here. You can describe procedures, requirements, and guidelines." 
-                      className="min-h-[200px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    This content will be versioned. You can update it later.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // Handle the object vs string case
+                // Convert possibly complex value to simple string for textarea
+                const value = typeof field.value === 'object' && field.value?.text ? 
+                  field.value.text : 
+                  field.value || '';
+                
+                return (
+                  <FormItem>
+                    <FormLabel>Policy Content</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter the policy content here. You can describe procedures, requirements, and guidelines." 
+                        className="min-h-[200px]"
+                        value={value as string}
+                        onChange={(e) => field.onChange({ text: e.target.value })}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      This content will be versioned. You can update it later.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             
             <DialogFooter>

@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { db } from "./db";
 import { z } from "zod";
 import axios from "axios";
 import {
@@ -585,7 +586,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
     try {
-      const data = policySchema.parse(req.body);
+      // Create the policy tables if they don't exist yet
+      try {
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS "policies" (
+            "id" SERIAL PRIMARY KEY,
+            "name" VARCHAR(255) NOT NULL,
+            "description" TEXT,
+            "type" VARCHAR(100) NOT NULL,
+            "jurisdiction_id" INTEGER,
+            "status" VARCHAR(50) NOT NULL DEFAULT 'draft',
+            "content" JSONB NOT NULL,
+            "metadata" JSONB,
+            "created_by" INTEGER NOT NULL,
+            "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            "updated_at" TIMESTAMP WITH TIME ZONE
+          )
+        `);
+        
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS "policy_versions" (
+            "id" SERIAL PRIMARY KEY,
+            "policy_id" INTEGER NOT NULL,
+            "version" VARCHAR(50) NOT NULL,
+            "content" JSONB NOT NULL,
+            "change_notes" TEXT,
+            "created_by" INTEGER NOT NULL,
+            "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()
+          )
+        `);
+        
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS "policy_templates" (
+            "id" SERIAL PRIMARY KEY,
+            "name" VARCHAR(255) NOT NULL,
+            "description" TEXT,
+            "category" VARCHAR(100) NOT NULL,
+            "content" JSONB NOT NULL,
+            "metadata" JSONB,
+            "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            "updated_at" TIMESTAMP WITH TIME ZONE
+          )
+        `);
+        
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS "policy_tags" (
+            "id" SERIAL PRIMARY KEY,
+            "policy_id" INTEGER NOT NULL,
+            "tag" VARCHAR(100) NOT NULL,
+            "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()
+          )
+        `);
+        
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS "policy_approvals" (
+            "id" SERIAL PRIMARY KEY,
+            "policy_id" INTEGER NOT NULL,
+            "approver_id" INTEGER NOT NULL,
+            "status" VARCHAR(50) NOT NULL,
+            "comments" TEXT,
+            "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()
+          )
+        `);
+        
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS "policy_obligation_mappings" (
+            "id" SERIAL PRIMARY KEY,
+            "policy_id" INTEGER NOT NULL,
+            "obligation_id" INTEGER NOT NULL,
+            "coverage_level" INTEGER NOT NULL,
+            "notes" TEXT,
+            "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            "updated_at" TIMESTAMP WITH TIME ZONE
+          )
+        `);
+        
+        console.log('Created policy-related tables');
+      } catch (dbError) {
+        console.error('Error creating policy tables:', dbError);
+      }
+      
+      // Handle string content vs object content
+      let parsedData;
+      if (typeof req.body.content === 'string') {
+        // If content is a string, create the expected object structure
+        parsedData = {
+          ...req.body,
+          content: { text: req.body.content }
+        };
+      } else if (typeof req.body.content === 'object' && req.body.content.text) {
+        // If content is already the correct object structure, use it as is
+        parsedData = req.body;
+      } else {
+        throw new Error('Invalid content format');
+      }
+      
+      // Parse the data
+      const data = policySchema.parse(parsedData);
+      
+      if (!req.user) {
+        throw new Error('User not authenticated');
+      }
+      
       const policy = await storage.createPolicy(req.user.id, data);
       console.log(`Created new policy: ${policy.name}`);
       res.status(201).json(policy);
@@ -597,7 +699,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: error.errors
         });
       } else {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ 
+          message: "Internal server error",
+          details: error instanceof Error ? error.message : "Unknown error" 
+        });
       }
     }
   });
