@@ -44,7 +44,7 @@ function Router() {
           <ProtectedRoute path="/compliance-dashboard" component={ComplianceDashboardPage} />
           <ProtectedRoute path="/compliance-reporting" component={ComplianceReportingPage} />
           <ProtectedRoute path="/template-studio" component={TemplateStudioPage} />
-          <ProtectedRoute path="/jurisdiction-page" component={JurisdictionPage} />
+          <ProtectedRoute path="/jurisdictions" component={JurisdictionPage} />
           <ProtectedRoute path="/jurisdiction/:id" component={JurisdictionPage} />
 
           {/* Registration View Routes */}

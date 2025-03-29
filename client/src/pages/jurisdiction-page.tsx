@@ -153,7 +153,7 @@ export default function JurisdictionPage() {
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold">Jurisdiction not found</h1>
         <p>The requested jurisdiction could not be found.</p>
-        <Link href="/jurisdiction-page">
+        <Link href="/jurisdictions">
           <Button variant="outline" className="mt-4">
             Back to Jurisdictions
           </Button>
@@ -213,7 +213,7 @@ export default function JurisdictionPage() {
       
       <div className="flex justify-between items-center">
         <div></div>
-        <Link href="/jurisdiction-page">
+        <Link href="/jurisdictions">
           <Button variant="outline" size="sm" className="flex items-center gap-1">
             <Globe className="h-4 w-4" />
             All Jurisdictions

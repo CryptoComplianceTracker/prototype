@@ -133,7 +133,7 @@ export function NavBar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/jurisdiction-page" className="hover:text-primary transition-colors">Jurisdictions</Link>
+              <Link href="/jurisdictions" className="hover:text-primary transition-colors">Jurisdictions</Link>
             </>
           )}
         </div>
