@@ -1,0 +1,57 @@
+🇸🇬 Singapore — Jurisdiction Entry
+1. jurisdictions
+Field	Value
+name	Singapore
+region	Asia-Pacific
+iso_code	SG
+risk_level	Low
+favorability_score	90
+notes	Singapore balances innovation and regulation, offering clear licensing pathways under the Payment Services Act (PSA). It is a regional hub for digital asset companies.
+2. regulatory_bodies
+Name	Website
+Monetary Authority of Singapore (MAS)	https://www.mas.gov.sg
+Description: MAS is the single financial regulator, issuing licenses under PSA, managing anti-money laundering (AML) rules, and providing regulatory sandboxes for FinTech.
+
+3. laws
+✅ Payment Services Act (PSA)
+type: Licensing, AML
+
+effective_date: 2020-01-28
+
+source: MAS PSA Overview
+
+description: Regulates cryptocurrency exchanges and wallet providers as Digital Payment Token (DPT) service providers. Requires licensing and AML/CFT compliance.
+
+✅ Financial Advisers Act
+Regulates firms offering investment advice regarding digital assets.
+
+✅ AML/CFT Notices 626 & 824
+Applied to DPT providers under MAS oversight.
+
+4. compliance_requirements
+Type	Description
+DPT Licensing	Required under PSA for exchanges, custodians, wallet providers.
+AML/KYC	Mandatory for all licensed entities. Includes CDD and ongoing transaction monitoring.
+Travel Rule	Enforced in accordance with FATF guidance; MAS expects originator/beneficiary data.
+Risk-Based Assessment	Required before launch of any DPT product or service.
+Marketing Restrictions	Public marketing of unlicensed crypto services is prohibited.
+5. taxation_rules
+Field	Value
+income_tax_applicable	Yes (if crypto is used for business or paid as salary)
+capital_gains_tax	No (Singapore does not have capital gains tax)
+vat_applicable	No GST on DPTs since 2020
+description	Crypto held for personal investment is tax-free. Corporate income tax applies if DPTs are used in business operations.
+tax_authority_url	IRAS Crypto Guide
+6. reporting_obligations
+Type	Description
+AML Reports	Suspicious Transaction Reports (STRs) must be filed with the STRO (Suspicious Transaction Reporting Office).
+Periodic Submissions	Regulatory returns to MAS for DPT metrics, complaints, client risk levels.
+Travel Rule Data	Information on originator and beneficiary for transfers ≥ S$1,500.
+Penalties	Fines up to S$1 million + revocation of license for serious breaches.
+7. regulatory_updates
+Title	Date	Summary
+Revised Travel Rule Implementation	Q3 2024	MAS announced a requirement for DPT providers to implement full Travel Rule data sharing between licensed entities.
+DPT Advertising Ban	Q1 2022	MAS banned advertising crypto services in public places or via mass media unless fully licensed.
+8. tags
+#AML, #DPT, #MAS, #Licensing, #NoCapitalGains, #TravelRule, #APAC
+
