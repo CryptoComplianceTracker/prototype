@@ -45,7 +45,18 @@ export function RegistrationView() {
       description: "The requested registration details could not be found.",
       variant: "destructive",
     });
-    return null;
+    return (
+      <div className="container mx-auto py-8">
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle>Registration Not Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>The requested registration could not be found.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

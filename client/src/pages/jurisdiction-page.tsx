@@ -133,7 +133,9 @@ export default function JurisdictionPage() {
                 <Button 
                   variant="default" 
                   className="w-full flex items-center justify-center gap-2"
-                  onClick={() => setLocation(`/jurisdiction/${jurisdiction.id}`)}
+                  onClick={() => {
+                    window.location.href = `/jurisdiction/${jurisdiction.id}`;
+                  }}
                 >
                   View Details
                   <ArrowRight className="h-4 w-4" />
@@ -155,7 +157,9 @@ export default function JurisdictionPage() {
         <Button 
           variant="outline" 
           className="mt-4"
-          onClick={() => setLocation("/jurisdiction-page")}
+          onClick={() => {
+            window.location.href = "/jurisdiction-page";
+          }}
         >
           Back to Jurisdictions
         </Button>
@@ -218,7 +222,9 @@ export default function JurisdictionPage() {
           variant="outline" 
           size="sm" 
           className="flex items-center gap-1"
-          onClick={() => setLocation("/jurisdiction-page")}
+          onClick={() => {
+            window.location.href = "/jurisdiction-page";
+          }}
         >
           <Globe className="h-4 w-4" />
           All Jurisdictions

@@ -38,11 +38,11 @@ function Router() {
           <ProtectedRoute path="/fund-registration" component={FundRegistrationPage} />
           <ProtectedRoute path="/compliance" component={CompliancePage} />
           <ProtectedRoute path="/compliance-news" component={ComplianceNewsPage} />
-          <ProtectedRoute path="/jurisdiction-page" component={JurisdictionPage} />
-          <ProtectedRoute path="/jurisdiction/:id" component={JurisdictionPage} />
+          <Route path="/jurisdiction-page" component={JurisdictionPage} />
+          <Route path="/jurisdiction/:id" component={JurisdictionPage} />
 
           {/* Registration View Routes */}
-          <ProtectedRoute path="/:type-view/:id" component={RegistrationView} />
+          <Route path="/:type-view/:id" component={RegistrationView} />
 
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
