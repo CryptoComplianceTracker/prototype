@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Loader2, AlertCircle, Info, Book, Coins, FileText, 
@@ -19,6 +19,7 @@ import {
 
 export default function JurisdictionPage() {
   const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   // If no ID is provided, we're on the list view page
@@ -132,7 +133,7 @@ export default function JurisdictionPage() {
                 <Button 
                   variant="default" 
                   className="w-full flex items-center justify-center gap-2"
-                  onClick={() => window.location.href = `/jurisdiction/${jurisdiction.id}`}
+                  onClick={() => setLocation(`/jurisdiction/${jurisdiction.id}`)}
                 >
                   View Details
                   <ArrowRight className="h-4 w-4" />
@@ -154,7 +155,7 @@ export default function JurisdictionPage() {
         <Button 
           variant="outline" 
           className="mt-4"
-          onClick={() => window.location.href = "/jurisdiction-page"}
+          onClick={() => setLocation("/jurisdiction-page")}
         >
           Back to Jurisdictions
         </Button>
@@ -217,7 +218,7 @@ export default function JurisdictionPage() {
           variant="outline" 
           size="sm" 
           className="flex items-center gap-1"
-          onClick={() => window.location.href = "/jurisdiction-page"}
+          onClick={() => setLocation("/jurisdiction-page")}
         >
           <Globe className="h-4 w-4" />
           All Jurisdictions
