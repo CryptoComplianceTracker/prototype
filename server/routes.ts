@@ -1787,6 +1787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      console.log('API request for jurisdiction with ID:', req.params.id);
       const id = parseInt(req.params.id);
       const jurisdiction = await storage.getJurisdiction(id);
       

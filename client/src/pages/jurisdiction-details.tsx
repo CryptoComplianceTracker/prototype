@@ -24,7 +24,8 @@ export default function JurisdictionDetails() {
   
   const { data, isLoading, error } = useQuery<any>({
     queryKey: [`/api/jurisdictions/${id}`],
-    enabled: !!id
+    enabled: !!id,
+    retry: 1
   });
   
   const formatDate = (dateString: string) => {
