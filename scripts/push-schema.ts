@@ -3,9 +3,11 @@ import {
   users, transactions, exchangeInfo, stablecoinInfo, defiProtocolInfo, nftMarketplaceInfo, 
   cryptoFundInfo, registrations, registrationVersions, auditLogs,
   jurisdictions, regulatory_bodies, regulations, compliance_requirements, taxation_rules,
-  reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords
+  reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords,
+  laws, obligations, organizations, reports, obligation_assignments, regulatory_keywords_index
 } from "../shared/schema";
 import { sql } from "drizzle-orm";
+import { migrateJurisdictionsSchema } from "./migrate-jurisdiction-schema";
 
 async function main() {
   console.log("Creating database schema...");
@@ -172,8 +174,19 @@ async function main() {
   };
 
   await createSchema();
-  console.log("Schema push completed");
-  process.exit(0);
+  console.log("Base schema push completed");
+  
+  // Run migration for the enhanced jurisdiction schema
+  console.log("Running jurisdiction schema migration...");
+  const migrationResult = await migrateJurisdictionsSchema();
+  
+  if (migrationResult.success) {
+    console.log("Schema push and migration completed successfully");
+  } else {
+    console.error("Migration failed:", migrationResult.message);
+  }
+  
+  process.exit(migrationResult.success ? 0 : 1);
 }
 
 main().catch((err) => {

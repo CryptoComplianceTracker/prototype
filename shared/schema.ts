@@ -443,11 +443,20 @@ export const jurisdictions = pgTable("jurisdictions", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   region: text("region").notNull(),
+  iso_code: text("iso_code"),
+  currency_code: text("currency_code"),
+  is_fatf_member: boolean("is_fatf_member").default(false),
   risk_level: text("risk_level").notNull(),
   favorability_score: integer("favorability_score"),
+  legal_system_type: text("legal_system_type"),
+  national_language: text("national_language"),
+  central_bank_url: text("central_bank_url"),
+  financial_licensing_portal: text("financial_licensing_portal"),
+  contact_email: text("contact_email"),
   notes: text("notes"),
   created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow()
+  updated_at: timestamp("updated_at").defaultNow(),
+  last_updated: timestamp("last_updated").defaultNow()
 });
 
 export const regulatory_bodies = pgTable("regulatory_bodies", {
@@ -456,6 +465,11 @@ export const regulatory_bodies = pgTable("regulatory_bodies", {
   jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
   website_url: text("website_url"),
   description: text("description"),
+  contact_email: text("contact_email"),
+  phone_number: text("phone_number"),
+  crypto_scope: text("crypto_scope"),
+  authority_level: text("authority_level"),
+  reporting_api_available: boolean("reporting_api_available").default(false),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow()
 });
@@ -533,6 +547,103 @@ export const jurisdiction_query_keywords = pgTable("jurisdiction_query_keywords"
   created_at: timestamp("created_at").defaultNow()
 });
 
+// New tables for enhanced jurisdictional schema
+export const laws = pgTable("laws", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  abbreviation: text("abbreviation"),
+  law_type: text("law_type"),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  regulatory_body_id: integer("regulatory_body_id").references(() => regulatory_bodies.id),
+  effective_date: timestamp("effective_date"),
+  last_updated: timestamp("last_updated"),
+  legal_category: text("legal_category"),
+  description: text("description"),
+  applicability: text("applicability"),
+  full_text_link: text("full_text_link"),
+  source_url: text("source_url"),
+  source_language: text("source_language"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  incorporation_country: text("incorporation_country"),
+  main_exchange_token: text("main_exchange_token"),
+  regulatory_classification: text("regulatory_classification"),
+  onboarding_date: timestamp("onboarding_date"),
+  website_url: text("website_url"),
+  contact_email: text("contact_email"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const obligations = pgTable("obligations", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  law_id: integer("law_id").references(() => laws.id),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  obligation_type: text("obligation_type"),
+  frequency: text("frequency"),
+  due_by_day: integer("due_by_day"),
+  due_months: text("due_months"),
+  format: text("format"),
+  delivery_method: text("delivery_method"),
+  submission_url: text("submission_url"),
+  escalation_policy: text("escalation_policy"),
+  penalty_type: text("penalty_type"),
+  penalty_amount: text("penalty_amount"),
+  threshold_condition: text("threshold_condition"),
+  dependent_on: integer("dependent_on").references((): any => obligations.id),
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  obligation_id: integer("obligation_id").references(() => obligations.id),
+  organization_id: integer("organization_id").references(() => organizations.id),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id),
+  submitted_by: integer("submitted_by").references(() => users.id),
+  status: text("status"),
+  file_link: text("file_link"),
+  submission_hash: text("submission_hash"),
+  submission_signature: text("submission_signature"),
+  blockchain_anchor_tx: text("blockchain_anchor_tx"),
+  submitted_to: text("submitted_to"),
+  submission_date: timestamp("submission_date"),
+  verified_by: integer("verified_by").references(() => users.id),
+  verification_notes: text("verification_notes"),
+  response_code: text("response_code"),
+  response_message: text("response_message"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const obligation_assignments = pgTable("obligation_assignments", {
+  id: serial("id").primaryKey(),
+  obligation_id: integer("obligation_id").references(() => obligations.id),
+  user_id: integer("user_id").references(() => users.id),
+  team_role: text("team_role"),
+  status: text("status"),
+  due_date: timestamp("due_date"),
+  actual_completion_date: timestamp("actual_completion_date"),
+  is_blocking: boolean("is_blocking").default(false),
+  sla_hours: integer("sla_hours"),
+  priority_level: text("priority_level"),
+  completion_notes: text("completion_notes"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const regulatory_keywords_index = pgTable("regulatory_keywords_index", {
+  id: serial("id").primaryKey(),
+  keyword: text("keyword").notNull(),
+  law_id: integer("law_id").references(() => laws.id),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id),
+  match_score: text("match_score"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
 // Schemas for data insertion
 export const jurisdictionSchema = createInsertSchema(jurisdictions);
 export const regulatoryBodySchema = createInsertSchema(regulatory_bodies);
@@ -544,7 +655,15 @@ export const regulatoryUpdateSchema = createInsertSchema(regulatory_updates);
 export const jurisdictionTagSchema = createInsertSchema(jurisdiction_tags);
 export const jurisdictionQueryKeywordSchema = createInsertSchema(jurisdiction_query_keywords);
 
-// Types for the new tables
+// Schemas for new tables
+export const lawSchema = createInsertSchema(laws);
+export const organizationSchema = createInsertSchema(organizations);
+export const obligationSchema = createInsertSchema(obligations);
+export const reportSchema = createInsertSchema(reports);
+export const obligationAssignmentSchema = createInsertSchema(obligation_assignments);
+export const regulatoryKeywordIndexSchema = createInsertSchema(regulatory_keywords_index);
+
+// Types for the tables
 export type Jurisdiction = typeof jurisdictions.$inferSelect;
 export type RegulatoryBody = typeof regulatory_bodies.$inferSelect;
 export type Regulation = typeof regulations.$inferSelect;
@@ -554,6 +673,12 @@ export type ReportingObligation = typeof reporting_obligations.$inferSelect;
 export type RegulatoryUpdate = typeof regulatory_updates.$inferSelect;
 export type JurisdictionTag = typeof jurisdiction_tags.$inferSelect;
 export type JurisdictionQueryKeyword = typeof jurisdiction_query_keywords.$inferSelect;
+export type Law = typeof laws.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Obligation = typeof obligations.$inferSelect;
+export type Report = typeof reports.$inferSelect;
+export type ObligationAssignment = typeof obligation_assignments.$inferSelect;
+export type RegulatoryKeywordIndex = typeof regulatory_keywords_index.$inferSelect;
 
 // Insert types
 export type InsertJurisdiction = z.infer<typeof jurisdictionSchema>;
@@ -565,3 +690,9 @@ export type InsertReportingObligation = z.infer<typeof reportingObligationSchema
 export type InsertRegulatoryUpdate = z.infer<typeof regulatoryUpdateSchema>;
 export type InsertJurisdictionTag = z.infer<typeof jurisdictionTagSchema>;
 export type InsertJurisdictionQueryKeyword = z.infer<typeof jurisdictionQueryKeywordSchema>;
+export type InsertLaw = z.infer<typeof lawSchema>;
+export type InsertOrganization = z.infer<typeof organizationSchema>;
+export type InsertObligation = z.infer<typeof obligationSchema>;
+export type InsertReport = z.infer<typeof reportSchema>;
+export type InsertObligationAssignment = z.infer<typeof obligationAssignmentSchema>;
+export type InsertRegulatoryKeywordIndex = z.infer<typeof regulatoryKeywordIndexSchema>;
