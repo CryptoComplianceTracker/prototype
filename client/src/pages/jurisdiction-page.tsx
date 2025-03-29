@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Loader2, AlertCircle, Info, Book, Coins, FileText, 
@@ -53,7 +53,7 @@ export default function JurisdictionPage() {
   // Query for a specific jurisdiction's details
   const { data: jurisdictionData, isLoading: isLoadingDetail, error: detailError } = useQuery<any>({
     queryKey: [`/api/jurisdictions/${id}`],
-    enabled: !!id,
+    enabled: !!id
   });
   
   const isLoading = isListView ? isLoadingList : isLoadingDetail;
@@ -130,16 +130,15 @@ export default function JurisdictionPage() {
                 )}
               </CardContent>
               <CardFooter className="pt-2">
-                <Button 
-                  variant="default" 
-                  className="w-full flex items-center justify-center gap-2"
-                  onClick={() => {
-                    setLocation(`/jurisdiction/${jurisdiction.id}`);
-                  }}
-                >
-                  View Details
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                <Link href={`/jurisdiction/${jurisdiction.id}`}>
+                  <Button 
+                    variant="default" 
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    View Details
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
@@ -154,15 +153,11 @@ export default function JurisdictionPage() {
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold">Jurisdiction not found</h1>
         <p>The requested jurisdiction could not be found.</p>
-        <Button 
-          variant="outline" 
-          className="mt-4"
-          onClick={() => {
-            setLocation("/jurisdiction-page");
-          }}
-        >
-          Back to Jurisdictions
-        </Button>
+        <Link href="/jurisdiction-page">
+          <Button variant="outline" className="mt-4">
+            Back to Jurisdictions
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -218,17 +213,12 @@ export default function JurisdictionPage() {
       
       <div className="flex justify-between items-center">
         <div></div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-          onClick={() => {
-            setLocation("/jurisdiction-page");
-          }}
-        >
-          <Globe className="h-4 w-4" />
-          All Jurisdictions
-        </Button>
+        <Link href="/jurisdiction-page">
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <Globe className="h-4 w-4" />
+            All Jurisdictions
+          </Button>
+        </Link>
       </div>
 
       <Tabs defaultValue="regulatory_bodies">
