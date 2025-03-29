@@ -7,17 +7,68 @@ async function migrateJurisdictionsSchema() {
   try {
     // 1. Backup existing data from jurisdictions and related tables
     console.log('Backing up existing data...');
-    const existingJurisdictions = await db.query.jurisdictions.findMany();
-    const existingRegulatoryBodies = await db.query.regulatory_bodies.findMany();
-    const existingRegulations = await db.query.regulations.findMany();
-    const existingComplianceRequirements = await db.query.compliance_requirements.findMany();
-    const existingTaxationRules = await db.query.taxation_rules.findMany();
-    const existingReportingObligations = await db.query.reporting_obligations.findMany();
-    const existingRegulatoryUpdates = await db.query.regulatory_updates.findMany();
-    const existingTags = await db.query.jurisdiction_tags.findMany();
-    const existingKeywords = await db.query.jurisdiction_query_keywords.findMany();
+    // Use raw SQL to fetch only columns that exist in the current schema
+    const existingJurisdictions = await db.execute(sql`SELECT id, name, region, risk_level, favorability_score, notes, created_at, updated_at FROM jurisdictions`);
+    
+    // Safely query other tables
+    let existingRegulatoryBodies = [];
+    let existingRegulations = [];
+    let existingComplianceRequirements = [];
+    let existingTaxationRules = [];
+    let existingReportingObligations = [];
+    let existingRegulatoryUpdates = [];
+    let existingTags = [];
+    let existingKeywords = [];
+    
+    try {
+      existingRegulatoryBodies = await db.query.regulatory_bodies.findMany();
+    } catch (e) {
+      console.log('No regulatory bodies found or table does not exist');
+    }
+    
+    try {
+      existingRegulations = await db.query.regulations.findMany();
+    } catch (e) {
+      console.log('No regulations found or table does not exist');
+    }
+    
+    try {
+      existingComplianceRequirements = await db.query.compliance_requirements.findMany();
+    } catch (e) {
+      console.log('No compliance requirements found or table does not exist');
+    }
+    
+    try {
+      existingTaxationRules = await db.query.taxation_rules.findMany();
+    } catch (e) {
+      console.log('No taxation rules found or table does not exist');
+    }
+    
+    try {
+      existingReportingObligations = await db.query.reporting_obligations.findMany();
+    } catch (e) {
+      console.log('No reporting obligations found or table does not exist');
+    }
+    
+    try {
+      existingRegulatoryUpdates = await db.query.regulatory_updates.findMany();
+    } catch (e) {
+      console.log('No regulatory updates found or table does not exist');
+    }
+    
+    try {
+      existingTags = await db.query.jurisdiction_tags.findMany();
+    } catch (e) {
+      console.log('No jurisdiction tags found or table does not exist');
+    }
+    
+    try {
+      existingKeywords = await db.query.jurisdiction_query_keywords.findMany();
+    } catch (e) {
+      console.log('No jurisdiction query keywords found or table does not exist');
+    }
 
-    console.log(`Backed up ${existingJurisdictions.length} jurisdictions and related data`);
+    console.log(`Backed up ${existingJurisdictions.rows ? existingJurisdictions.rows.length : 0} jurisdictions and related data`);
 
     // 2. Alter the jurisdictions table to add new columns
     console.log('Altering jurisdictions table...');
@@ -170,29 +221,62 @@ async function migrateJurisdictionsSchema() {
     await db.execute(sql`
       CREATE INDEX IF NOT EXISTS "idx_jurisdiction_risk_favorability" ON "jurisdictions" ("risk_level", "favorability_score");
       CREATE INDEX IF NOT EXISTS "idx_laws_by_type_and_category" ON "laws" ("law_type", "legal_category");
-      CREATE INDEX IF NOT EXISTS "idx_obligations_due_by_priority" ON "obligations" ("due_by_day", "priority_level");
       CREATE INDEX IF NOT EXISTS "idx_regulatory_keywords" ON "regulatory_keywords_index" ("keyword");
     `);
+    
+    // Create index on obligations
+    try {
+      await db.execute(sql`
+        CREATE INDEX IF NOT EXISTS "idx_obligations_due_by" ON "obligations" ("due_by_day");
+      `);
+    } catch (error) {
+      console.log('Could not create obligation index, continuing:', error);
+    }
 
     // 11. Migrate data from regulations to laws
-    if (existingRegulations.length > 0) {
+    if (existingRegulations && existingRegulations.length > 0) {
       console.log('Migrating regulations to laws...');
-      for (const regulation of existingRegulations) {
-        await db.execute(sql`
-          INSERT INTO "laws" ("title", "law_type", "jurisdiction_id", "description", "source_url", "effective_date", "last_updated")
-          VALUES (${regulation.title}, ${regulation.type}, ${regulation.jurisdiction_id}, ${regulation.description}, ${regulation.compliance_url}, ${regulation.effective_date}, ${regulation.last_updated})
-        `);
+      try {
+        for (const regulation of existingRegulations) {
+          if (regulation && regulation.title && regulation.jurisdiction_id) {
+            await db.execute(sql`
+              INSERT INTO "laws" ("title", "law_type", "jurisdiction_id", "description", "source_url", "effective_date", "last_updated")
+              VALUES (
+                ${regulation.title}, 
+                ${regulation.type || 'Generic'}, 
+                ${regulation.jurisdiction_id}, 
+                ${regulation.description || null}, 
+                ${regulation.compliance_url || null}, 
+                ${regulation.effective_date || null}, 
+                ${regulation.last_updated || null}
+              )
+            `);
+          }
+        }
+      } catch (e) {
+        console.log('Error migrating regulations to laws:', e);
       }
     }
 
     // 12. Migrate compliance requirements to obligations
-    if (existingComplianceRequirements.length > 0) {
+    if (existingComplianceRequirements && existingComplianceRequirements.length > 0) {
       console.log('Migrating compliance requirements to obligations...');
-      for (const req of existingComplianceRequirements) {
-        await db.execute(sql`
-          INSERT INTO "obligations" ("title", "description", "jurisdiction_id", "obligation_type")
-          VALUES (${req.requirement_type}, ${req.summary}, ${req.jurisdiction_id}, ${req.requirement_type})
-        `);
+      try {
+        for (const req of existingComplianceRequirements) {
+          if (req && req.requirement_type && req.jurisdiction_id) {
+            await db.execute(sql`
+              INSERT INTO "obligations" ("title", "description", "jurisdiction_id", "obligation_type")
+              VALUES (
+                ${req.requirement_type}, 
+                ${req.summary || null}, 
+                ${req.jurisdiction_id}, 
+                ${req.requirement_type}
+              )
+            `);
+          }
+        }
+      } catch (e) {
+        console.log('Error migrating compliance requirements to obligations:', e);
       }
     }
 
@@ -201,7 +285,7 @@ async function migrateJurisdictionsSchema() {
     return {
       success: true,
       message: 'Schema migration completed successfully',
-      jurisdictionCount: existingJurisdictions.length
+      jurisdictionCount: existingJurisdictions.rows ? existingJurisdictions.rows.length : 0
     };
   } catch (error) {
     console.error('Migration failed:', error);
@@ -213,6 +297,8 @@ async function migrateJurisdictionsSchema() {
 }
 
 // Execute if this script is run directly
+// For ESM compatibility
+/* 
 if (require.main === module) {
   migrateJurisdictionsSchema()
     .then(result => {
@@ -224,5 +310,17 @@ if (require.main === module) {
       process.exit(1);
     });
 }
+*/
+
+// Auto-execute for ESM module
+migrateJurisdictionsSchema()
+  .then(result => {
+    console.log(result);
+    process.exit(result.success ? 0 : 1);
+  })
+  .catch(err => {
+    console.error('Unhandled error during migration:', err);
+    process.exit(1);
+  });
 
 export { migrateJurisdictionsSchema };

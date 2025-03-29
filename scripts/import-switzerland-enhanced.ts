@@ -24,7 +24,10 @@ async function importEnhancedSwitzerlandData() {
         central_bank_url: 'https://www.snb.ch/',
         financial_licensing_portal: 'https://www.finma.ch/en/authorisation/',
         contact_email: 'info@finma.ch',
-        notes: 'Switzerland is home to "Crypto Valley" (Zug), and offers a clear regulatory framework for blockchain innovation. It supports tokenized assets, DAOs, and stablecoins.'
+        notes: 'Switzerland is home to "Crypto Valley" (Zug), and offers a clear regulatory framework for blockchain innovation. It supports tokenized assets, DAOs, and stablecoins.',
+        created_at: new Date(),
+        updated_at: new Date(),
+        last_updated: new Date()
       })
       .returning();
 
@@ -41,7 +44,9 @@ async function importEnhancedSwitzerlandData() {
         phone_number: '+41 31 327 91 00',
         crypto_scope: 'ICOs, exchanges, custody, stablecoins, securities tokens',
         authority_level: 'National',
-        reporting_api_available: true
+        reporting_api_available: true,
+        created_at: new Date(),
+        updated_at: new Date()
       })
       .returning();
 
@@ -357,16 +362,15 @@ async function importEnhancedSwitzerlandData() {
 }
 
 // Execute if this script is run directly
-if (require.main === module) {
-  importEnhancedSwitzerlandData()
-    .then(result => {
-      console.log(result);
-      process.exit(result.success ? 0 : 1);
-    })
-    .catch(err => {
-      console.error('Unhandled error during import:', err);
-      process.exit(1);
-    });
-}
+// For ESM compatibility
+importEnhancedSwitzerlandData()
+  .then(result => {
+    console.log(result);
+    process.exit(result.success ? 0 : 1);
+  })
+  .catch(err => {
+    console.error('Unhandled error during import:', err);
+    process.exit(1);
+  });
 
 export { importEnhancedSwitzerlandData };
