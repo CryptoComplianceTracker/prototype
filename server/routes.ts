@@ -495,6 +495,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Compliance Dashboard API endpoints
+  app.get("/api/user/compliance", (req, res) => {
+    // This endpoint would normally fetch actual compliance data from the database
+    // For now, we'll return mock data for the UI development
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    res.json({
+      policies: { totalCount: 12, completedCount: 8 },
+      kyc: { totalCount: 28, completedCount: 22 },
+      transactions: { totalCount: 45, completedCount: 39 },
+      sars: { totalCount: 6, completedCount: 4 },
+      obligations: { totalCount: 18, completedCount: 15 },
+      reviews: { totalCount: 9, completedCount: 7 },
+      intelligence: { totalCount: 14, completedCount: 10 },
+      reporting: { totalCount: 5, completedCount: 3 }
+    });
+  });
+
+  // Policy Framework API endpoints
+  app.get("/api/policy-templates", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // In a production environment, these would be fetched from the database
+    res.json([
+      {
+        id: "pt-1",
+        name: "FATF Travel Rule Implementation",
+        description: "Policy template for implementing the FATF Travel Rule for VASPs",
+        category: "AML",
+        jurisdiction: "Global",
+        lastUpdated: "2025-01-15"
+      },
+      {
+        id: "pt-2",
+        name: "KYC Onboarding Procedure",
+        description: "Standardized customer onboarding process aligned with global best practices",
+        category: "KYC",
+        jurisdiction: "Global",
+        lastUpdated: "2025-02-20"
+      },
+      {
+        id: "pt-3",
+        name: "EU 6th AML Directive Compliance",
+        description: "Comprehensive policy template for EU 6AMLD compliance",
+        category: "AML",
+        jurisdiction: "European Union",
+        lastUpdated: "2025-03-10"
+      }
+    ]);
+  });
+
+  app.get("/api/user/:userId/policies", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // In a production environment, we would filter policies by user ID
+    // For now, we'll return example policies
+    res.json([
+      {
+        id: "pol-1",
+        name: "KYC Onboarding Policy",
+        type: "Customer Due Diligence",
+        jurisdiction: "Switzerland",
+        lastUpdated: "2025-03-15",
+        status: "active",
+        version: "1.2"
+      },
+      {
+        id: "pol-2",
+        name: "Transaction Monitoring Procedure",
+        type: "AML",
+        jurisdiction: "Global",
+        lastUpdated: "2025-02-28",
+        status: "review_needed",
+        version: "2.0"
+      },
+      {
+        id: "pol-3",
+        name: "Travel Rule Implementation",
+        type: "FATF Compliance",
+        jurisdiction: "Global",
+        lastUpdated: "2025-01-10",
+        status: "draft",
+        version: "0.8"
+      }
+    ]);
+  });
+
+  app.get("/api/jurisdictions/obligations", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    res.json([
+      {
+        id: "obl-1",
+        title: "Customer Identification Program",
+        description: "Requires verification of the identity of individuals and entities before establishing business relationships",
+        category: "KYC",
+        source: "FINMA AML Ordinance Art. 3-5",
+        jurisdiction: "Switzerland",
+        coverage: 100
+      },
+      {
+        id: "obl-2",
+        title: "Transaction Monitoring",
+        description: "Systems and controls to monitor customer transactions and identify suspicious activities",
+        category: "AML",
+        source: "AMLA Art. 6(1)",
+        jurisdiction: "Switzerland",
+        coverage: 75
+      },
+      {
+        id: "obl-3",
+        title: "Suspicious Activity Reporting",
+        description: "Report suspicious transactions to the Money Laundering Reporting Office Switzerland (MROS)",
+        category: "Reporting",
+        source: "AMLA Art. 9",
+        jurisdiction: "Switzerland",
+        coverage: 50
+      }
+    ]);
+  });
+
+  // KYC Engine API endpoints
+  app.get("/api/kyc/verifications", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    res.json([
+      {
+        id: "VRF-001289",
+        customerName: "John Smith",
+        type: "Individual",
+        dateSubmitted: "2025-03-28",
+        status: "pending",
+        riskLevel: "low",
+        country: "United Kingdom"
+      },
+      {
+        id: "VRF-001288",
+        customerName: "Acme Corporation",
+        type: "Corporate",
+        dateSubmitted: "2025-03-28",
+        status: "additional_info",
+        riskLevel: "medium",
+        country: "Singapore"
+      },
+      {
+        id: "VRF-001287",
+        customerName: "Elena Rodriguez",
+        type: "Individual",
+        dateSubmitted: "2025-03-27",
+        status: "approved",
+        riskLevel: "low",
+        country: "Spain"
+      },
+      {
+        id: "VRF-001286",
+        customerName: "Blockchain Ventures Ltd",
+        type: "Corporate",
+        dateSubmitted: "2025-03-27",
+        status: "pending",
+        riskLevel: "high",
+        country: "Cayman Islands"
+      },
+      {
+        id: "VRF-001285",
+        customerName: "Wei Zhang",
+        type: "Individual",
+        dateSubmitted: "2025-03-26",
+        status: "rejected",
+        riskLevel: "high",
+        country: "China"
+      }
+    ]);
+  });
+
+  app.get("/api/kyc/providers", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    res.json([
+      { id: "jumio", name: "Jumio", status: "active", docTypes: 12, countries: 195 },
+      { id: "sumsub", name: "SumSub", status: "active", docTypes: 10, countries: 220 },
+      { id: "veriff", name: "Veriff", status: "inactive", docTypes: 8, countries: 190 },
+      { id: "worldcheck", name: "World-Check", status: "active", docTypes: 6, countries: 210 }
+    ]);
+  });
+
   // Jurisdictions API endpoints
   app.get("/api/jurisdictions", async (_req, res) => {
     try {

@@ -20,11 +20,13 @@ export function NavBar() {
 
   const handleConnect = async () => {
     try {
-      const address = await connect();
-      toast({
-        title: "Wallet Connected",
-        description: `Connected to ${address.slice(0, 6)}...${address.slice(-4)}`,
-      });
+      const walletAddress = await connect();
+      if (walletAddress) {
+        toast({
+          title: "Wallet Connected",
+          description: `Connected to ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Connection Failed",
@@ -81,9 +83,41 @@ export function NavBar() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/compliance" className="hover:text-primary transition-colors">Compliance</Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="px-3 flex items-center gap-1">
+                    Compliance
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[250px]">
+                  <DropdownMenuItem asChild>
+                    <Link href="/compliance-dashboard">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Compliance Dashboard</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Manage all compliance activities</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/compliance">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Compliance Portal</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Access compliance resources</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/compliance-news">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Crypto News</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Regulatory news updates</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link href="/jurisdiction-page" className="hover:text-primary transition-colors">Jurisdictions</Link>
-              <Link href="/compliance-news" className="hover:text-primary transition-colors">Crypto News</Link>
             </>
           )}
         </div>
@@ -97,7 +131,7 @@ export function NavBar() {
                 className="hidden sm:inline-flex"
               >
                 <Wallet className="mr-2 h-4 w-4" />
-                {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect Wallet'}
+                {address && address.length > 8 ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect Wallet'}
               </Button>
               <Button
                 variant="ghost"
