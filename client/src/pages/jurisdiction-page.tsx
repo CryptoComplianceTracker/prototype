@@ -129,12 +129,14 @@ export default function JurisdictionPage() {
                 )}
               </CardContent>
               <CardFooter className="pt-2">
-                <Link href={`/jurisdiction/${jurisdiction.id}`}>
-                  <Button variant="default" className="w-full flex items-center justify-center gap-2">
-                    View Details
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                <Button 
+                  variant="default" 
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => window.location.href = `/jurisdiction/${jurisdiction.id}`}
+                >
+                  View Details
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </CardFooter>
             </Card>
           ))}
@@ -149,11 +151,13 @@ export default function JurisdictionPage() {
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold">Jurisdiction not found</h1>
         <p>The requested jurisdiction could not be found.</p>
-        <Link href="/jurisdiction-page">
-          <Button variant="outline" className="mt-4">
-            Back to Jurisdictions
-          </Button>
-        </Link>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => window.location.href = "/jurisdiction-page"}
+        >
+          Back to Jurisdictions
+        </Button>
       </div>
     );
   }
@@ -209,12 +213,15 @@ export default function JurisdictionPage() {
       
       <div className="flex justify-between items-center">
         <div></div>
-        <Link href="/jurisdiction-page">
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <Globe className="h-4 w-4" />
-            All Jurisdictions
-          </Button>
-        </Link>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={() => window.location.href = "/jurisdiction-page"}
+        >
+          <Globe className="h-4 w-4" />
+          All Jurisdictions
+        </Button>
       </div>
 
       <Tabs defaultValue="regulatory_bodies">
