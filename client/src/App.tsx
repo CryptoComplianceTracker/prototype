@@ -18,6 +18,7 @@ import ComplianceNewsPage from "@/pages/compliance-news";
 import ComplianceDashboardPage from "@/pages/compliance-dashboard";
 import FundRegistrationPage from "@/pages/fund-registration";
 import JurisdictionPage from "@/pages/jurisdiction-page";
+import TemplateStudioPage from "@/pages/template-studio";
 import { RegistrationView } from "@/components/registration-view";
 import NotFound from "@/pages/not-found";
 
@@ -40,6 +41,7 @@ function Router() {
           <ProtectedRoute path="/compliance" component={CompliancePage} />
           <ProtectedRoute path="/compliance-news" component={ComplianceNewsPage} />
           <ProtectedRoute path="/compliance-dashboard" component={ComplianceDashboardPage} />
+          <ProtectedRoute path="/template-studio" component={TemplateStudioPage} />
           <Route path="/jurisdiction-page" component={JurisdictionPage} />
           <Route path="/jurisdiction/:id" component={JurisdictionPage} />
 
