@@ -596,6 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "type" VARCHAR(100) NOT NULL,
             "jurisdiction_id" INTEGER,
             "status" VARCHAR(50) NOT NULL DEFAULT 'draft',
+            "version" VARCHAR(50) NOT NULL DEFAULT '1.0',
             "content" JSONB NOT NULL,
             "metadata" JSONB,
             "created_by" INTEGER NOT NULL,
