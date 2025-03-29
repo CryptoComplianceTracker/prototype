@@ -1,0 +1,59 @@
+United States — Jurisdiction Entry
+1. jurisdictions
+Field	Value
+name	United States
+region	North America
+iso_code	US
+risk_level	Medium
+favorability_score	65
+notes	The U.S. is a patchwork of federal and state laws. Crypto companies must navigate overlapping jurisdictions from the SEC, CFTC, FinCEN, IRS, and state financial regulators.
+2. regulatory_bodies
+Name	Website
+FinCEN (AML oversight)	https://www.fincen.gov
+SEC (Securities)	https://www.sec.gov
+CFTC (Derivatives/Commodities)	https://www.cftc.gov
+IRS (Taxation)	https://www.irs.gov
+State regulators	(e.g., NYDFS in New York)
+3. laws
+✅ Bank Secrecy Act (BSA) — via FinCEN
+Applies to exchanges and custodians as MSBs (Money Services Businesses)
+
+SAR filing, KYC, recordkeeping required
+
+✅ Securities Act 1933 / Howey Test
+Determines whether tokens are securities
+
+Token sales may require SEC registration or exemption
+
+✅ Commodity Exchange Act
+CFTC oversees derivatives/futures contracts based on crypto assets
+
+✅ State-specific laws (NY BitLicense, CA DFPI regulations)
+4. compliance_requirements
+Type	Description
+MSB Registration	Mandatory with FinCEN for most exchanges and crypto ATMs
+SAR Filings	Suspicious Activity Reports for AML compliance
+Securities Registration/Exemption	Depending on the token's structure and use case
+KYC Requirements	Varies slightly by state but generally required for MSBs
+Sanctions Screening	Required for OFAC-listed addresses/entities
+5. taxation_rules
+Field	Value
+income_tax_applicable	Yes (ordinary income for mined/staked assets)
+capital_gains_tax	Yes (short/long term based on holding duration)
+vat_applicable	No VAT/GST equivalent
+description	Crypto is treated as property. Every disposal (sale, trade, use) is a taxable event.
+tax_authority_url	IRS Virtual Currency Tax Center
+6. reporting_obligations
+Type	Description
+SARs	Submitted to FinCEN for suspicious activity
+Form 1099	Issued by exchanges to users and IRS for income tracking
+Form 8949 / Schedule D	Required for capital gains/losses
+Travel Rule Compliance	Expected, pending FinCEN rulemaking
+State Reports	Varies by state, some require quarterly transaction summaries
+7. regulatory_updates
+Title	Date	Summary
+SEC vs. Crypto Exchanges	2023-2025	Ongoing litigation determines whether tokens are securities
+FinCEN Proposed Rulemaking	Q1 2025	Tightening Travel Rule + beneficial ownership disclosure for crypto
+IRS 1099-DA Proposal	Q4 2024	Requires 1099 reporting for all crypto brokers, including DEXs
+8. tags
+#FinCEN, #SEC, #CFTC, #MSB, #TaxableEvent, #NYDFS, #1099-DA, #HoweyTest
