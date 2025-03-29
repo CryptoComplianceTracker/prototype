@@ -277,36 +277,9 @@ export function registerTemplateRoutes(app: Express) {
   });
   
   // Get a specific jurisdiction by ID
-  app.get("/api/jurisdictions/:id", async (req: Request, res: Response) => {
-    if (!req.isAuthenticated()) {
-      console.log('Unauthorized access attempt to /api/jurisdictions/:id');
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid jurisdiction ID" });
-      }
-      
-      console.log(`Fetching jurisdiction with ID: ${id}`);
-      const jurisdiction = await storage.getJurisdiction(id);
-      
-      if (!jurisdiction) {
-        return res.status(404).json({ message: "Jurisdiction not found" });
-      }
-      
-      console.log(`Successfully retrieved jurisdiction: ${jurisdiction.name}`);
-      res.json(jurisdiction);
-    } catch (error) {
-      console.error("Error fetching jurisdiction:", error);
-      res.status(500).json({
-        message: "Failed to fetch jurisdiction",
-        details: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+  // Endpoint for jurisdiction details moved to routes.ts to avoid duplication
+  // Original endpoint returned basic jurisdiction data
+  // The routes.ts version returns comprehensive data including related entities
   
   // Get regulatory bodies by jurisdiction ID
   app.get("/api/jurisdictions/:id/regulatory-bodies", async (req: Request, res: Response) => {

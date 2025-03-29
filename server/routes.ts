@@ -1512,6 +1512,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/jurisdictions/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/jurisdictions/:id');
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
     try {
       const id = parseInt(req.params.id);
       const jurisdiction = await storage.getJurisdiction(id);
