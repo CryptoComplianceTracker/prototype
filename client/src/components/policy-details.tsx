@@ -96,7 +96,7 @@ export function PolicyDetails({ policyId, open, onClose }: PolicyDetailsProps) {
   const updatePolicyMutation = useMutation({
     mutationFn: async (data: { content: string }) => {
       const response = await apiRequest("PUT", `/api/policies/${policyId}`, {
-        content: data.content,
+        content: { text: data.content },  // Use the expected object structure
       });
       return await response.json();
     },
@@ -123,7 +123,10 @@ export function PolicyDetails({ policyId, open, onClose }: PolicyDetailsProps) {
 
   const addVersionMutation = useMutation({
     mutationFn: async (data: { content: string; version: string; change_notes: string }) => {
-      const response = await apiRequest("POST", `/api/policies/${policyId}/versions`, data);
+      const response = await apiRequest("POST", `/api/policies/${policyId}/versions`, {
+        ...data,
+        content: { text: data.content }  // Use the expected object structure
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -173,7 +176,12 @@ export function PolicyDetails({ policyId, open, onClose }: PolicyDetailsProps) {
 
   const handleStartEdit = () => {
     if (policy) {
-      setEditedContent(policy.content || "");
+      // Handle content being an object with a text property or a string
+      const content = typeof policy.content === 'object' && policy.content !== null
+        ? policy.content.text || JSON.stringify(policy.content)
+        : policy.content || "";
+      
+      setEditedContent(content);
       setEditMode(true);
     }
   };
@@ -318,7 +326,9 @@ export function PolicyDetails({ policyId, open, onClose }: PolicyDetailsProps) {
               />
             ) : (
               <div className="border rounded-md p-4 min-h-[300px] whitespace-pre-wrap">
-                {policy.content}
+                {typeof policy.content === 'object' && policy.content !== null
+                  ? policy.content.text || JSON.stringify(policy.content, null, 2)
+                  : policy.content || ""}
               </div>
             )}
           </TabsContent>
