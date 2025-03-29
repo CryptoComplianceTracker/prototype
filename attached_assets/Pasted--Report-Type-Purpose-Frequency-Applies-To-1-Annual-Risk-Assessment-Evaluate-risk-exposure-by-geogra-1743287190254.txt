@@ -1,0 +1,42 @@
+#	Report Type	Purpose	Frequency	Applies To
+1	Annual Risk Assessment	Evaluate risk exposure by geography, products, users	Annual	All VASPs, exchanges, DAOs
+2	Licensing & Registration Status Report	Track country licenses, registration, expiration dates	Quarterly	Global firms
+3	Compliance Breach Disclosures	Self-report known compliance failures or missed obligations	As required	All
+📜 Token + Protocol Compliance Reports
+#	Report Type	Purpose	Frequency	Applies To
+4	Smart Contract Audit Report	Demonstrate audits and findings on deployed contracts	Per major update	Protocols, DeFi apps
+5	Token Distribution Concentration Report	Track centralization and whale holdings	Monthly	All token issuers
+6	Fork & Upgrade Disclosure Report	Communicate protocol updates and governance outcomes	Per fork/upgrade	Protocol maintainers
+7	Legal Opinion Register	Track jurisdiction-specific classification of tokens	Per issuance/update	All token projects
+8	Token Lifecycle Compliance Tracker	Monitor compliance across minting, listing, marketing, burning	Continuous	DAOs, issuers, launchpads
+🪙 Stablecoins & Custodial Assets
+#	Report Type	Purpose	Frequency	Applies To
+9	Proof of Reserves	Verify solvency using cryptographic proofs	Monthly/Real-time	Custodians, exchanges
+10	Stablecoin Backing Certification	Confirm fiat or collateral reserve ratios	Monthly/Quarterly	Stablecoin issuers
+11	Custodial Asset Segregation Report	Demonstrate separation of client vs company funds	Monthly	Custodians, CEXs
+12	Synthetic Asset Collateralization Report	Track collateral status of synthetics or mirrored tokens	Monthly	Synthetic asset issuers
+📊 Activity, Behavior & Monitoring Reports
+#	Report Type	Purpose	Frequency	Applies To
+13	Transaction Pattern Anomalies Report	Flag unusual behavior via AI/ML	Weekly	Trading desks, OTC, exchanges
+14	Sanctions Exposure Report	Track proximity or links to blacklisted wallets/entities	Real-time + Quarterly	All
+15	Insider Trading Monitoring Report	Detect suspicious internal activity or misuse of info	Weekly	Exchanges, DAOs
+16	Cross-Border Transfer Risk Report	Assess global remittance, IP origin, fiat bridges	Monthly	Stablecoin apps, exchanges
+17	Wash Trading Probability Report	Flag fake volume and trading loopback behavior	Monthly	NFT platforms, DEXs
+18	Volatility Risk Disclosure Report	Quantify risks for low-liquidity, high-volatility tokens	Weekly	Token issuers, traders
+19	Liquidity Stress Testing Report	Show resilience to large withdrawals or crashes	Quarterly	Custodians, DeFi lending pools
+20	Algorithmic Token Behavior Audit	Track autonomous token supply/minting triggers	Bi-monthly or per change	Algo-stablecoin protocols
+🧠 Governance + DAOs + Market Integrity
+#	Report Type	Purpose	Frequency	Applies To
+21	DAO Treasury Governance Report	Audit and disclose DAO votes, funds allocation	Quarterly	DAOs
+22	Delegated Governance Manipulation Report	Detect suspicious delegation and vote control shifts	Real-time/Monthly	DAOs
+23	Influencer Marketing Disclosure Report	Track crypto promo campaigns and wallet ties	Per campaign	Memecoins, NFT projects
+🌍 ESG, Transparency, & Controls
+#	Report Type	Purpose	Frequency	Applies To
+24	ESG + Sustainability Disclosure	Measure environmental and social impact	Quarterly/Annually	Miners, validators, issuers
+25	Off-Chain Operational Controls Review	Ensure traditional governance, HR, and access controls	Annually	CeFi orgs, centralized ops
+26	NFT Marketplace Transparency Report	Flag wash trading, manipulative behavior	Monthly	NFT platforms
+📈 Meta-Compliance & Regulator Interface Reports
+#	Report Type	Purpose	Frequency	Applies To
+27	Jurisdictional Risk Score Report	Quantify legal and operational risk by country	Monthly	SROs, exchanges
+28	Compliance SLA Breach Report	Report missed submissions, delayed tasks, escalations	Monthly or per incident	All members
+29	Regulatory Communication Log Report	Store and timestamp official interactions	Real-time	Compliance teams, regulators
