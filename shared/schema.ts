@@ -82,18 +82,35 @@ export const stablecoinInfo = pgTable("stablecoin_info", {
   issuerName: text("issuer_name").notNull(),
   registrationNumber: text("registration_number").notNull(),
   jurisdiction: text("jurisdiction").notNull(),
+  websiteUrl: text("website_url").notNull(),
+  complianceOfficerEmail: text("compliance_officer_email"),
 
   // Stablecoin Details
   backingAssetType: text("backing_asset_type").notNull(),
+  backingAssetDetails: text("backing_asset_details"),
   peggedTo: text("pegged_to").notNull(),
   totalSupply: text("total_supply").notNull(),
 
-  // Reserve Information
+  // Reserve & Compliance Information
+  reserveRatio: text("reserve_ratio"),
+  custodianName: text("custodian_name"),
+  auditProvider: text("audit_provider"),
+  attestationMethod: text("attestation_method"),
+  redemptionPolicy: text("redemption_policy"),
+  redemptionFrequency: text("redemption_frequency"),
+  centralBankPartnership: boolean("central_bank_partnership").default(false),
+  isRegulated: boolean("is_regulated").default(false),
+  hasMarketMakers: boolean("has_market_makers").default(false),
+  hasTravelRule: boolean("has_travel_rule").default(false),
+  amlPolicyUrl: text("aml_policy_url"),
+
+  // Reserve Information (JSON fields)
   reserveDetails: jsonb("reserve_details"),
   custodianDetails: jsonb("custodian_details"),
   auditInformation: jsonb("audit_information"),
 
   // Smart Contract Details
+  chainIds: text("chain_ids").array(),
   contractAddresses: jsonb("contract_addresses"),
   blockchainPlatforms: jsonb("blockchain_platforms"),
 
@@ -333,7 +350,7 @@ export const insertUserSchema = createInsertSchema(users)
 export const stablecoinInfoSchema = createInsertSchema(stablecoinInfo)
   .omit({ id: true, userId: true, createdAt: true })
   .extend({
-    backingAssetType: z.enum(["Fiat", "Crypto", "Commodity", "Mixed"], {
+    backingAssetType: z.enum(["Fiat", "Crypto", "Commodity", "Mixed", "Algorithmic", "Sovereign", "Commercial"], {
       required_error: "Please select a backing asset type",
     }),
     websiteUrl: z.string().url({
@@ -342,6 +359,26 @@ export const stablecoinInfoSchema = createInsertSchema(stablecoinInfo)
     totalSupply: z.string().min(1, {
       message: "Total supply is required",
     }),
+    // Validation for new fields
+    backingAssetDetails: z.string().optional(),
+    redemptionPolicy: z.string().optional(),
+    auditProvider: z.string().optional(),
+    centralBankPartnership: z.boolean().default(false),
+    isRegulated: z.boolean().default(false),
+    custodianName: z.string().optional(),
+    chainIds: z.array(z.string()).optional(),
+    complianceOfficerEmail: z.string().email({ message: "Please enter a valid email" }).optional(),
+    reserveRatio: z.string().regex(/^\d+$/, { message: "Reserve ratio must be a number" }).optional(),
+    hasMarketMakers: z.boolean().default(false),
+    amlPolicyUrl: z.string().url({ message: "Please enter a valid URL" }).optional(),
+    redemptionFrequency: z.enum([
+      "Real-time", "Daily", "Weekly", "Monthly", "Quarterly", "By Request", "None"
+    ]).optional(),
+    hasTravelRule: z.boolean().default(false),
+    attestationMethod: z.enum([
+      "Professional Audit", "Cryptographic Proof", "On-Chain Verification", 
+      "Self Reported", "Regulatory Oversight", "None"
+    ]).optional(),
   });
 
 export const defiProtocolInfoSchema = createInsertSchema(defiProtocolInfo)
