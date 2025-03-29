@@ -1,11 +1,15 @@
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, AlertCircle, Info, Book, Coins, FileText, Bell, RefreshCw, Tag } from "lucide-react";
+import { 
+  Loader2, AlertCircle, Info, Book, Coins, FileText, 
+  Bell, RefreshCw, Tag, MapPin, ArrowRight, Globe
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
@@ -17,10 +21,42 @@ export default function JurisdictionPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   
-  const { data: jurisdictionData, isLoading, error } = useQuery<any>({
+  // If no ID is provided, we're on the list view page
+  const isListView = !id;
+  
+  const getRiskLevelColor = (riskLevel: string) => {
+    switch (riskLevel.toLowerCase()) {
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Not specified';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+  
+  // Query for the list of all jurisdictions
+  const { data: jurisdictionsList, isLoading: isLoadingList, error: listError } = useQuery<any>({
+    queryKey: ['/api/jurisdictions'],
+    enabled: isListView,
+  });
+  
+  // Query for a specific jurisdiction's details
+  const { data: jurisdictionData, isLoading: isLoadingDetail, error: detailError } = useQuery<any>({
     queryKey: [`/api/jurisdictions/${id}`],
     enabled: !!id,
   });
+  
+  const isLoading = isListView ? isLoadingList : isLoadingDetail;
+  const error = isListView ? listError : detailError;
 
   if (isLoading) {
     return (
@@ -44,10 +80,80 @@ export default function JurisdictionPage() {
     );
   }
 
+  // Handle list view case
+  if (isListView) {
+    if (!jurisdictionsList) {
+      return (
+        <div className="container mx-auto p-8">
+          <h1 className="text-3xl font-bold">No jurisdictions found</h1>
+          <p>Please check back later for regulatory jurisdiction information.</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="container mx-auto p-4 md:p-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Regulatory Jurisdictions</h1>
+            <p className="text-muted-foreground">Browse regulatory information by jurisdiction</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {jurisdictionsList.map((jurisdiction: any) => (
+            <Card key={jurisdiction.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    {jurisdiction.name}
+                  </CardTitle>
+                  <Badge 
+                    className={getRiskLevelColor(jurisdiction.risk_level)}
+                  >
+                    {jurisdiction.risk_level}
+                  </Badge>
+                </div>
+                <CardDescription>{jurisdiction.region}</CardDescription>
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="flex justify-between mb-3">
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Favorability: {jurisdiction.favorability_score}/100
+                  </Badge>
+                </div>
+                {jurisdiction.notes && (
+                  <p className="text-sm line-clamp-3">{jurisdiction.notes}</p>
+                )}
+              </CardContent>
+              <CardFooter className="pt-2">
+                <Link href={`/jurisdiction/${jurisdiction.id}`}>
+                  <Button variant="default" className="w-full flex items-center justify-center gap-2">
+                    View Details
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle detail view case
   if (!jurisdictionData) {
     return (
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold">Jurisdiction not found</h1>
+        <p>The requested jurisdiction could not be found.</p>
+        <Link href="/jurisdiction-page">
+          <Button variant="outline" className="mt-4">
+            Back to Jurisdictions
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -63,25 +169,6 @@ export default function JurisdictionPage() {
     tags,
     keywords
   } = jurisdictionData;
-
-  const getRiskLevelColor = (riskLevel: string) => {
-    switch (riskLevel.toLowerCase()) {
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
-      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
-  
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Not specified';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
@@ -119,6 +206,16 @@ export default function JurisdictionPage() {
           </CardContent>
         </Card>
       )}
+      
+      <div className="flex justify-between items-center">
+        <div></div>
+        <Link href="/jurisdiction-page">
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            <Globe className="h-4 w-4" />
+            All Jurisdictions
+          </Button>
+        </Link>
+      </div>
 
       <Tabs defaultValue="regulatory_bodies">
         <TabsList className="grid grid-cols-2 md:grid-cols-7 mb-4">
@@ -395,8 +492,8 @@ export default function JurisdictionPage() {
                   {tags.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No tags specified</p>
                   ) : (
-                    tags.map((tag: string, index: number) => (
-                      <Badge key={index} variant="secondary">{tag}</Badge>
+                    tags.map((tag: any) => (
+                      <Badge key={tag.id} variant="secondary">{tag.tag}</Badge>
                     ))
                   )}
                 </div>
@@ -410,9 +507,9 @@ export default function JurisdictionPage() {
                   {keywords.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No keywords specified</p>
                   ) : (
-                    keywords.map((keyword: string, index: number) => (
-                      <div key={index} className="text-sm px-3 py-1 rounded-md bg-muted">
-                        {keyword}
+                    keywords.map((keyword: any) => (
+                      <div key={keyword.id} className="text-sm px-3 py-1 rounded-md bg-muted">
+                        {keyword.keyword}
                       </div>
                     ))
                   )}
