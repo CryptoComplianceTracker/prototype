@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { z } from "zod";
 import axios from "axios";
+import { registerTemplateRoutes } from "./templates";
 import {
   exchangeInfoSchema,
   stablecoinInfoSchema,
@@ -62,6 +63,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up authentication routes
   setupAuth(app);
+  
+  // Set up template routes
+  registerTemplateRoutes(app);
 
   // Stablecoin registration route
   app.post("/api/stablecoin/register", async (req, res) => {
