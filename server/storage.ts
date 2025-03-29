@@ -159,12 +159,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllJurisdictions(): Promise<Jurisdiction[]> {
-    return await db.select().from(jurisdictions);
+    const results = await db.select().from(jurisdictions);
+    
+    // Convert to the expected Jurisdiction type
+    return results.map(jurisdiction => ({
+      id: jurisdiction.id,
+      name: jurisdiction.name,
+      region: jurisdiction.region,
+      risk_level: jurisdiction.risk_level,
+      favorability_score: jurisdiction.favorability_score,
+      notes: jurisdiction.notes,
+      created_at: jurisdiction.created_at,
+      updated_at: jurisdiction.updated_at,
+      iso_code: jurisdiction.iso_code,
+      currency_code: jurisdiction.currency_code, 
+      is_fatf_member: jurisdiction.is_fatf_member,
+      legal_system_type: jurisdiction.legal_system_type,
+      national_language: jurisdiction.national_language,
+      central_bank_url: jurisdiction.central_bank_url,
+      financial_licensing_portal: jurisdiction.financial_licensing_portal,
+      contact_email: jurisdiction.contact_email,
+      last_updated: jurisdiction.last_updated
+    }));
   }
 
   async updateJurisdiction(id: number, data: Partial<Jurisdiction>): Promise<Jurisdiction> {
+    // Only set fields that existed in the original schema
+    const updateData: any = {
+      updated_at: new Date()
+    };
+    
+    if (data.name) updateData.name = data.name;
+    if (data.region) updateData.region = data.region;
+    if (data.risk_level) updateData.risk_level = data.risk_level;
+    if (data.favorability_score) updateData.favorability_score = data.favorability_score;
+    if (data.notes) updateData.notes = data.notes;
+    
     const [updated] = await db.update(jurisdictions)
-      .set({ ...data, updated_at: new Date() })
+      .set(updateData)
       .where(eq(jurisdictions.id, id))
       .returning();
     return updated;
@@ -520,25 +552,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRegistration(id: number): Promise<Registration | undefined> {
-    const [registration] = await db.select()
+    const results = await db.select()
       .from(registrations)
-      .where(eq(registrations.id, id))
-      .where(sql`deleted_at IS NULL`);
-    return registration;
+      .where(eq(registrations.id, id));
+      
+    if (results.length === 0) return undefined;
+    const registration = results[0];
+    
+    // Return only if not deleted
+    return registration.deletedAt === null ? registration : undefined;
   }
 
   async getRegistrationsByUserId(userId: number): Promise<Registration[]> {
-    return await db.select()
+    const results = await db.select()
       .from(registrations)
-      .where(eq(registrations.userId, userId))
-      .where(sql`deleted_at IS NULL`);
+      .where(eq(registrations.userId, userId));
+      
+    // Filter deleted records in memory
+    return results.filter(r => r.deletedAt === null);
   }
 
   async getRegistrationsByType(type: string): Promise<Registration[]> {
-    return await db.select()
+    const results = await db.select()
       .from(registrations)
-      .where(eq(registrations.registrationType, type))
-      .where(sql`deleted_at IS NULL`);
+      .where(eq(registrations.registrationType, type));
+      
+    // Filter deleted records in memory
+    return results.filter(r => r.deletedAt === null);
   }
 
   async updateRegistration(id: number, data: Partial<Registration>): Promise<Registration> {
@@ -551,19 +591,37 @@ export class DatabaseStorage implements IStorage {
 
   async createRegistrationVersion(
     registrationId: number, 
-    version: Partial<RegistrationVersion>
+    versionData: Partial<RegistrationVersion>
   ): Promise<RegistrationVersion> {
+    // Create a clean object with only valid fields
+    const data: any = {
+      registration_id: registrationId,
+      version: versionData.version,
+      entity_details: versionData.entityDetails,
+      created_by: versionData.createdBy
+    };
+    
+    // Add optional fields only if they exist
+    if (versionData.complianceData) {
+      data.compliance_data = versionData.complianceData;
+    }
+    
     const [created] = await db.insert(registrationVersions)
-      .values({ ...version, registrationId })
+      .values(data)
       .returning();
     return created;
   }
 
   async getRegistrationVersions(registrationId: number): Promise<RegistrationVersion[]> {
-    return await db.select()
-      .from(registrationVersions)
-      .where(eq(registrationVersions.registrationId, registrationId))
-      .orderBy(desc(registrationVersions.version));
+    const results = await db.select().from(registrationVersions);
+    
+    // Filter and sort in memory
+    return results
+      .filter(v => v.registrationId === registrationId)
+      .sort((a, b) => {
+        // Sort by version descending
+        return (b.version || 0) - (a.version || 0);
+      });
   }
 
   async createAuditLog(log: Omit<AuditLog, "id" | "createdAt">): Promise<AuditLog> {
@@ -574,11 +632,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAuditLogs(tableName: string, recordId: number): Promise<AuditLog[]> {
-    return await db.select()
-      .from(auditLogs)
-      .where(eq(auditLogs.tableName, tableName))
-      .where(eq(auditLogs.recordId, recordId))
-      .orderBy(desc(auditLogs.createdAt));
+    const results = await db.select().from(auditLogs);
+    
+    // Filter and sort in memory
+    return results
+      .filter(log => log.tableName === tableName && log.recordId === recordId)
+      .sort((a, b) => {
+        if (!a.createdAt) return 1;
+        if (!b.createdAt) return -1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
   }
 }
 

@@ -664,7 +664,26 @@ export const obligationAssignmentSchema = createInsertSchema(obligation_assignme
 export const regulatoryKeywordIndexSchema = createInsertSchema(regulatory_keywords_index);
 
 // Types for the tables
-export type Jurisdiction = typeof jurisdictions.$inferSelect;
+export type Jurisdiction = {
+  id: number;
+  name: string;
+  region: string;
+  risk_level: string;
+  favorability_score: number | null;
+  notes: string | null;
+  created_at: Date | null;
+  updated_at: Date | null;
+  iso_code?: string | null;
+  currency_code?: string | null;
+  is_fatf_member?: boolean | null;
+  legal_system_type?: string | null;
+  national_language?: string | null;
+  central_bank_url?: string | null;
+  financial_licensing_portal?: string | null;
+  contact_email?: string | null;
+  last_updated?: Date | null;
+};
+
 export type RegulatoryBody = typeof regulatory_bodies.$inferSelect;
 export type Regulation = typeof regulations.$inferSelect;
 export type ComplianceRequirement = typeof compliance_requirements.$inferSelect;
