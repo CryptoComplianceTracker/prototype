@@ -124,8 +124,10 @@ export function PolicyDetails({ policyId, open, onClose }: PolicyDetailsProps) {
   const addVersionMutation = useMutation({
     mutationFn: async (data: { content: string; version: string; change_notes: string }) => {
       const response = await apiRequest("POST", `/api/policies/${policyId}/versions`, {
-        ...data,
-        content: { text: data.content }  // Use the expected object structure
+        policy_id: policyId,
+        version: data.version,
+        content: { text: data.content },  // Use the expected object structure
+        change_summary: data.change_notes  // Map change_notes to change_summary
       });
       return await response.json();
     },
@@ -355,7 +357,7 @@ export function PolicyDetails({ policyId, open, onClose }: PolicyDetailsProps) {
                       <TableCell className="font-medium">{version.version}</TableCell>
                       <TableCell>{formatDate(version.created_at)}</TableCell>
                       <TableCell>User #{version.created_by}</TableCell>
-                      <TableCell>{version.change_notes}</TableCell>
+                      <TableCell>{version.change_summary}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm">View</Button>
                       </TableCell>

@@ -860,6 +860,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      // First check if we need to recreate the policy version tables
+      try {
+        // Check if change_summary column exists
+        const result = await db.execute(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'policy_versions' AND column_name = 'change_summary'
+        `);
+        
+        // If no change_summary column is found, recreate policy_versions table
+        if (result.rows.length === 0) {
+          console.log('change_summary column not found in policy_versions table, recreating table...');
+          
+          await db.execute(`DROP TABLE IF EXISTS "policy_versions" CASCADE`);
+          
+          await db.execute(`
+            CREATE TABLE IF NOT EXISTS "policy_versions" (
+              "id" SERIAL PRIMARY KEY,
+              "policy_id" INTEGER NOT NULL,
+              "version" VARCHAR(50) NOT NULL,
+              "content" JSONB NOT NULL,
+              "change_summary" TEXT NOT NULL,
+              "created_by" INTEGER NOT NULL,
+              "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()
+            )
+          `);
+          
+          console.log('policy_versions table recreated successfully');
+        }
+      } catch (dbError) {
+        console.error('Error checking/recreating policy_versions table:', dbError);
+      }
+      
       // Check if policy exists and user is authorized
       const policy = await storage.getPolicy(policyId);
       if (!policy) {
@@ -872,7 +905,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this policy" });
       }
       
-      const data = policyVersionSchema.parse(req.body);
+      // Ensure the request body includes the required fields
+      const formattedData = {
+        ...req.body,
+        policy_id: policyId
+      };
+      
+      const data = policyVersionSchema.parse(formattedData);
       const version = await storage.createPolicyVersion(policyId, req.user.id, data);
       
       console.log(`Created new version ${version.version} for policy: ${policy.name}`);
@@ -902,6 +941,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      // First check if we need to recreate the policy version tables
+      try {
+        // Check if change_summary column exists
+        const result = await db.execute(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'policy_versions' AND column_name = 'change_summary'
+        `);
+        
+        // If no change_summary column is found, recreate policy_versions table
+        if (result.rows.length === 0) {
+          console.log('change_summary column not found in policy_versions table, recreating table...');
+          
+          await db.execute(`DROP TABLE IF EXISTS "policy_versions" CASCADE`);
+          
+          await db.execute(`
+            CREATE TABLE IF NOT EXISTS "policy_versions" (
+              "id" SERIAL PRIMARY KEY,
+              "policy_id" INTEGER NOT NULL,
+              "version" VARCHAR(50) NOT NULL,
+              "content" JSONB NOT NULL,
+              "change_summary" TEXT NOT NULL,
+              "created_by" INTEGER NOT NULL,
+              "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()
+            )
+          `);
+          
+          console.log('policy_versions table recreated successfully');
+        }
+      } catch (dbError) {
+        console.error('Error checking/recreating policy_versions table:', dbError);
+      }
+      
       // Check if policy exists
       const policy = await storage.getPolicy(policyId);
       if (!policy) {
@@ -1056,6 +1128,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      // First check if we need to recreate the policy_obligation_mappings table
+      try {
+        // Check if coverage_level column exists
+        const result = await db.execute(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'policy_obligation_mappings' AND column_name = 'coverage_level'
+        `);
+        
+        // If no coverage_level column is found, recreate policy_obligation_mappings table
+        if (result.rows.length === 0) {
+          console.log('coverage_level column not found in policy_obligation_mappings table, recreating table...');
+          
+          await db.execute(`DROP TABLE IF EXISTS "policy_obligation_mappings" CASCADE`);
+          
+          await db.execute(`
+            CREATE TABLE IF NOT EXISTS "policy_obligation_mappings" (
+              "id" SERIAL PRIMARY KEY,
+              "policy_id" INTEGER NOT NULL,
+              "obligation_id" INTEGER NOT NULL,
+              "coverage_level" INTEGER NOT NULL,
+              "notes" TEXT,
+              "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now(),
+              "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT now()
+            )
+          `);
+          
+          console.log('policy_obligation_mappings table recreated successfully');
+        }
+      } catch (dbError) {
+        console.error('Error checking/recreating policy_obligation_mappings table:', dbError);
+      }
+      
       const mappings = await storage.getPolicyObligationMappingsByPolicyId(policyId);
       console.log(`Retrieved ${mappings.length} obligation mappings for policy ID: ${policyId}`);
       res.json(mappings);
