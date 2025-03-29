@@ -523,6 +523,59 @@ export const reporting_obligations = pgTable("reporting_obligations", {
   updated_at: timestamp("updated_at").defaultNow()
 });
 
+// New table for compliance report types
+export const compliance_report_types = pgTable("compliance_report_types", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(), // Category from master list (Risk & Licensing, Tokens & Protocols, etc.)
+  name: text("name").notNull(), // Report name (e.g., "Annual Risk Assessment")
+  description: text("description").notNull(),
+  frequency: text("frequency").notNull(), // Annual, Quarterly, Monthly, Weekly, Real-time, As required, etc.
+  applies_to: text("applies_to").notNull(), // What type of entities this applies to
+  template_available: boolean("template_available").default(false),
+  documentation_url: text("documentation_url"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// User-specific compliance reports
+export const compliance_reports = pgTable("compliance_reports", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  report_type_id: integer("report_type_id").references(() => compliance_report_types.id),
+  entity_id: integer("entity_id"), // Can reference various entity tables (exchanges, funds, etc.)
+  entity_type: text("entity_type").notNull(), // exchange, stablecoin, fund, etc.
+  status: text("status").notNull().default('draft'), // draft, in_progress, submitted, approved, rejected
+  due_date: timestamp("due_date"),
+  submission_date: timestamp("submission_date"),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id),
+  report_data: jsonb("report_data"),
+  version: integer("version").default(1),
+  attachments: jsonb("attachments"),
+  reviewer_id: integer("reviewer_id").references(() => users.id),
+  reviewer_notes: text("reviewer_notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// Report schedules 
+export const report_schedules = pgTable("report_schedules", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  report_type_id: integer("report_type_id").references(() => compliance_report_types.id),
+  entity_id: integer("entity_id"),
+  entity_type: text("entity_type").notNull(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id),
+  frequency: text("frequency").notNull(), // daily, weekly, monthly, quarterly, annually
+  next_due_date: timestamp("next_due_date").notNull(),
+  last_generated: timestamp("last_generated"),
+  reminders_enabled: boolean("reminders_enabled").default(true),
+  reminder_days_before: integer("reminder_days_before").default(7),
+  auto_generate: boolean("auto_generate").default(false),
+  status: text("status").default('active'), // active, paused, completed
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
 export const regulatory_updates = pgTable("regulatory_updates", {
   id: serial("id").primaryKey(),
   jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
@@ -656,6 +709,74 @@ export const regulatoryUpdateSchema = createInsertSchema(regulatory_updates);
 export const jurisdictionTagSchema = createInsertSchema(jurisdiction_tags);
 export const jurisdictionQueryKeywordSchema = createInsertSchema(jurisdiction_query_keywords);
 
+// Schemas for new compliance reporting tables
+export const complianceReportTypeSchema = createInsertSchema(compliance_report_types)
+  .omit({ id: true, created_at: true, updated_at: true })
+  .extend({
+    category: z.enum([
+      'Risk & Licensing',
+      'Tokens & Protocols',
+      'Stablecoins & Custodial Assets',
+      'Activity, Behavior & Monitoring',
+      'Governance & Market Integrity',
+      'ESG, Transparency, & Controls',
+      'Meta-Compliance & Regulator Interface'
+    ], {
+      required_error: "Category is required"
+    }),
+    frequency: z.enum([
+      'Annual',
+      'Quarterly',
+      'Monthly',
+      'Weekly',
+      'Daily',
+      'Real-time',
+      'As required',
+      'Per major update',
+      'Per issuance/update',
+      'Per campaign',
+      'Per incident',
+      'Per fork/upgrade',
+      'Bi-monthly',
+      'Continuous'
+    ], {
+      required_error: "Frequency is required"
+    })
+  });
+
+export const complianceReportSchema = createInsertSchema(compliance_reports)
+  .omit({ id: true, created_at: true, updated_at: true, user_id: true, reviewer_id: true, version: true })
+  .extend({
+    entity_type: z.enum(['exchange', 'stablecoin', 'defi', 'nft', 'fund', 'general'], {
+      required_error: "Entity type is required"
+    }),
+    status: z.enum(['draft', 'in_progress', 'submitted', 'approved', 'rejected', 'needs_review'], {
+      required_error: "Status is required"
+    }),
+    report_data: z.record(z.unknown()),
+    attachments: z.array(z.object({
+      name: z.string(),
+      url: z.string(),
+      type: z.string(),
+      size: z.number(),
+      uploaded_at: z.date()
+    })).optional()
+  });
+
+export const reportScheduleSchema = createInsertSchema(report_schedules)
+  .omit({ id: true, created_at: true, updated_at: true, user_id: true, last_generated: true })
+  .extend({
+    entity_type: z.enum(['exchange', 'stablecoin', 'defi', 'nft', 'fund', 'general'], {
+      required_error: "Entity type is required"
+    }),
+    frequency: z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'annually', 'custom'], {
+      required_error: "Frequency is required"
+    }),
+    status: z.enum(['active', 'paused', 'completed'], {
+      required_error: "Status is required"
+    })
+  });
+
 // Schemas for new tables
 export const lawSchema = createInsertSchema(laws);
 export const organizationSchema = createInsertSchema(organizations);
@@ -700,6 +821,11 @@ export type Report = typeof reports.$inferSelect;
 export type ObligationAssignment = typeof obligation_assignments.$inferSelect;
 export type RegulatoryKeywordIndex = typeof regulatory_keywords_index.$inferSelect;
 
+// Types for compliance reporting tables
+export type ComplianceReportType = typeof compliance_report_types.$inferSelect;
+export type ComplianceReport = typeof compliance_reports.$inferSelect;
+export type ReportSchedule = typeof report_schedules.$inferSelect;
+
 // Insert types
 export type InsertJurisdiction = z.infer<typeof jurisdictionSchema>;
 export type InsertRegulatoryBody = z.infer<typeof regulatoryBodySchema>;
@@ -716,6 +842,11 @@ export type InsertObligation = z.infer<typeof obligationSchema>;
 export type InsertReport = z.infer<typeof reportSchema>;
 export type InsertObligationAssignment = z.infer<typeof obligationAssignmentSchema>;
 export type InsertRegulatoryKeywordIndex = z.infer<typeof regulatoryKeywordIndexSchema>;
+
+// Insert types for compliance reporting
+export type InsertComplianceReportType = z.infer<typeof complianceReportTypeSchema>;
+export type InsertComplianceReport = z.infer<typeof complianceReportSchema>;  
+export type InsertReportSchedule = z.infer<typeof reportScheduleSchema>;
 
 // Policy Framework Tables
 export const policy_templates = pgTable("policy_templates", {
@@ -821,6 +952,46 @@ export const policyApprovalSchema = createInsertSchema(policy_approvals)
       required_error: "Status is required",
     }),
   });
+
+// Define relationships for compliance reporting tables
+export const complianceReportTypesRelations = relations(compliance_report_types, ({ many }) => ({
+  reports: many(compliance_reports),
+  schedules: many(report_schedules)
+}));
+
+export const complianceReportsRelations = relations(compliance_reports, ({ one }) => ({
+  reportType: one(compliance_report_types, {
+    fields: [compliance_reports.report_type_id],
+    references: [compliance_report_types.id]
+  }),
+  user: one(users, {
+    fields: [compliance_reports.user_id],
+    references: [users.id]
+  }),
+  jurisdiction: one(jurisdictions, {
+    fields: [compliance_reports.jurisdiction_id],
+    references: [jurisdictions.id]
+  }),
+  reviewer: one(users, {
+    fields: [compliance_reports.reviewer_id],
+    references: [users.id]
+  })
+}));
+
+export const reportSchedulesRelations = relations(report_schedules, ({ one }) => ({
+  reportType: one(compliance_report_types, {
+    fields: [report_schedules.report_type_id],
+    references: [compliance_report_types.id]
+  }),
+  user: one(users, {
+    fields: [report_schedules.user_id],
+    references: [users.id]
+  }),
+  jurisdiction: one(jurisdictions, {
+    fields: [report_schedules.jurisdiction_id],
+    references: [jurisdictions.id]
+  })
+}));
 
 // Define relationship between policies and versions
 export const policiesRelations = relations(policies, ({ many, one }) => ({

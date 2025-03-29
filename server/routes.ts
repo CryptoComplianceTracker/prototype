@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
 import { z } from "zod";
+import { eq, and } from "drizzle-orm";
 import axios from "axios";
 import { registerTemplateRoutes } from "./templates";
 import {
@@ -17,7 +18,13 @@ import {
   policyVersionSchema,
   policyObligationMappingSchema,
   policyTagSchema,
-  policyApprovalSchema
+  policyApprovalSchema,
+  complianceReportTypeSchema,
+  complianceReportSchema,
+  reportScheduleSchema,
+  compliance_report_types,
+  compliance_reports,
+  report_schedules
 } from "@shared/schema";
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -365,6 +372,267 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: 'Failed to fetch compliance news',
         error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Compliance reporting routes
+  app.get("/api/compliance/report-types", async (_req, res) => {
+    try {
+      console.log('Fetching compliance report types...');
+      const reportTypes = await db.select().from(compliance_report_types);
+      console.log(`Successfully retrieved ${reportTypes.length} report types`);
+      res.json(reportTypes);
+    } catch (error) {
+      console.error("Error fetching compliance report types:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch compliance report types",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.get("/api/compliance/reports", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/compliance/reports');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      console.log(`Fetching compliance reports for user ${req.user.id}...`);
+      const reports = await db.select().from(compliance_reports)
+        .where(eq(compliance_reports.user_id, req.user.id));
+      console.log(`Successfully retrieved ${reports.length} reports`);
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching compliance reports:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch compliance reports",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.get("/api/compliance/reports/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/compliance/reports/:id');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const reportId = parseInt(req.params.id);
+      console.log(`Fetching compliance report ${reportId} for user ${req.user.id}...`);
+      
+      const [report] = await db.select().from(compliance_reports)
+        .where(and(
+          eq(compliance_reports.id, reportId),
+          eq(compliance_reports.user_id, req.user.id)
+        ));
+      
+      if (!report) {
+        console.log(`Report ${reportId} not found for user ${req.user.id}`);
+        return res.status(404).json({ error: "Report not found" });
+      }
+      
+      console.log(`Successfully retrieved report ${reportId}`);
+      res.json(report);
+    } catch (error) {
+      console.error("Error fetching compliance report:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch compliance report",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.post("/api/compliance/reports", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/compliance/reports');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const reportData = complianceReportSchema.parse(req.body);
+      console.log(`Creating new compliance report for user ${req.user.id}...`);
+      
+      const [report] = await db.insert(compliance_reports).values({
+        ...reportData,
+        user_id: req.user.id,
+        created_at: new Date(),
+        updated_at: new Date()
+      }).returning();
+      
+      console.log(`Successfully created report ${report.id}`);
+      res.status(201).json(report);
+    } catch (error) {
+      console.error("Error creating compliance report:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to create compliance report",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.put("/api/compliance/reports/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to PUT /api/compliance/reports/:id');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const reportId = parseInt(req.params.id);
+      const reportData = complianceReportSchema.parse(req.body);
+      console.log(`Updating compliance report ${reportId} for user ${req.user.id}...`);
+      
+      const [existingReport] = await db.select().from(compliance_reports)
+        .where(and(
+          eq(compliance_reports.id, reportId),
+          eq(compliance_reports.user_id, req.user.id)
+        ));
+      
+      if (!existingReport) {
+        console.log(`Report ${reportId} not found for user ${req.user.id}`);
+        return res.status(404).json({ error: "Report not found" });
+      }
+      
+      const [updatedReport] = await db.update(compliance_reports)
+        .set({
+          ...reportData,
+          version: (existingReport.version || 1) + 1,
+          updated_at: new Date()
+        })
+        .where(eq(compliance_reports.id, reportId))
+        .returning();
+      
+      console.log(`Successfully updated report ${reportId}`);
+      res.json(updatedReport);
+    } catch (error) {
+      console.error("Error updating compliance report:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to update compliance report",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.get("/api/compliance/report-schedules", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/compliance/report-schedules');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      console.log(`Fetching report schedules for user ${req.user.id}...`);
+      const schedules = await db.select().from(report_schedules)
+        .where(eq(report_schedules.user_id, req.user.id));
+      console.log(`Successfully retrieved ${schedules.length} schedules`);
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching report schedules:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch report schedules",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.post("/api/compliance/report-schedules", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/compliance/report-schedules');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const scheduleData = reportScheduleSchema.parse(req.body);
+      console.log(`Creating new report schedule for user ${req.user.id}...`);
+      
+      const [schedule] = await db.insert(report_schedules).values({
+        ...scheduleData,
+        user_id: req.user.id,
+        created_at: new Date(),
+        updated_at: new Date()
+      }).returning();
+      
+      console.log(`Successfully created schedule ${schedule.id}`);
+      res.status(201).json(schedule);
+    } catch (error) {
+      console.error("Error creating report schedule:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to create report schedule",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.put("/api/compliance/report-schedules/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to PUT /api/compliance/report-schedules/:id');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const scheduleId = parseInt(req.params.id);
+      const scheduleData = reportScheduleSchema.parse(req.body);
+      console.log(`Updating report schedule ${scheduleId} for user ${req.user.id}...`);
+      
+      const [existingSchedule] = await db.select().from(report_schedules)
+        .where(and(
+          eq(report_schedules.id, scheduleId),
+          eq(report_schedules.user_id, req.user.id)
+        ));
+      
+      if (!existingSchedule) {
+        console.log(`Schedule ${scheduleId} not found for user ${req.user.id}`);
+        return res.status(404).json({ error: "Schedule not found" });
+      }
+      
+      const [updatedSchedule] = await db.update(report_schedules)
+        .set({
+          ...scheduleData,
+          updated_at: new Date()
+        })
+        .where(eq(report_schedules.id, scheduleId))
+        .returning();
+      
+      console.log(`Successfully updated schedule ${scheduleId}`);
+      res.json(updatedSchedule);
+    } catch (error) {
+      console.error("Error updating report schedule:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to update report schedule",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1283,9 +1551,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: o.id,
               title: o.title,
               description: o.description,
-              deadline: o.deadline,
               frequency: o.frequency,
-              authority: o.authority
+              // Use appropriate fields for deadline and authority
+              deadline: o.due_by_day ? `Day ${o.due_by_day} of ${o.due_months || 'the month'}` : null,
+              authority: o.delivery_method || null
             }))
           };
         })
