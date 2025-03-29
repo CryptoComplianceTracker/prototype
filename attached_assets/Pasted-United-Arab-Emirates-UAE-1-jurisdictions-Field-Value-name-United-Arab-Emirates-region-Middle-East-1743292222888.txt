@@ -1,0 +1,53 @@
+United Arab Emirates (UAE)
+1. jurisdictions
+Field	Value
+name	United Arab Emirates
+region	Middle East
+iso_code	AE
+risk_level	Low
+favorability_score	88
+notes	UAE is rapidly becoming a global crypto hub, with proactive regulatory bodies like VARA and FSRA (ADGM) issuing licenses and compliance frameworks. Multiple free zones support crypto businesses.
+2. regulatory_bodies
+Name	Website
+Virtual Assets Regulatory Authority (VARA) – Dubai	https://vara.ae
+Financial Services Regulatory Authority (FSRA) – ADGM	https://www.adgm.com/operating-in-adgm/financial-services-regulatory-authority
+3. laws
+✅ ADGM Virtual Asset Regulatory Framework
+type: Licensing, Custody, Trading
+
+effective_date: 2018-06-01
+
+source: FSRA Framework
+
+✅ Dubai VARA Regulations (2022)
+type: Licensing, AML, Market Conduct
+
+description: Covers VASPs in Dubai, including exchanges, custodians, and brokers
+
+4. compliance_requirements
+Type	Description
+Licensing Required	VASPs must register with either VARA (Dubai) or FSRA (Abu Dhabi) depending on location
+AML/CFT Controls	Mandatory transaction monitoring, STR reporting to UAE FIU
+Cold Wallet Minimums	80% of client funds must be stored in cold wallets
+Marketing Approvals	Ads and campaigns must be pre-approved
+Custody & Insurance	Custodians must have insurance and segregate assets
+5. taxation_rules
+Field	Value
+income_tax_applicable	No (0% corporate/personal income tax in free zones)
+capital_gains_tax	No
+vat_applicable	Yes (standard 5%, may apply to crypto services)
+description	Crypto activity in free zones is generally tax-exempt unless connected to mainland activity
+tax_authority_url	UAE Federal Tax Authority
+6. reporting_obligations
+Type	Description
+STRs	Must be filed with UAE Financial Intelligence Unit
+Operational Reports	Monthly transaction summaries for VARA/FSRA
+Wallet Proof Reports	Cold/hot wallet audits submitted quarterly
+Client Onboarding Logs	Due diligence reports kept for 5+ years
+7. regulatory_updates
+Title	Date	Summary
+VARA Issuance of Full Licensing Guide	Q1 2024	Clarifies categories: Broker-Dealer, Custodian, Exchange, Wallet Service
+AML Law Aligned to FATF	Q4 2023	UAE adopted new national AML law, increasing FIU monitoring powers
+8. tags
+#VARA, #ADGM, #VASP, #ColdWallet, #FATF, #FreeZone, #CryptoLicensing, #MiddleEast
+
