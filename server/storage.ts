@@ -3,6 +3,7 @@ import {
   registrations, registrationVersions, auditLogs,
   jurisdictions, regulatory_bodies, regulations, compliance_requirements, taxation_rules,
   reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords,
+  policy_templates, policies, policy_versions, policy_obligation_mappings, policy_tags, policy_approvals,
   type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
   type StablecoinInfo, type InsertStablecoinInfo,
   type DefiProtocolInfo, type InsertDefiProtocolInfo,
@@ -17,7 +18,13 @@ import {
   type ReportingObligation, type InsertReportingObligation,
   type RegulatoryUpdate, type InsertRegulatoryUpdate,
   type JurisdictionTag, type InsertJurisdictionTag,
-  type JurisdictionQueryKeyword, type InsertJurisdictionQueryKeyword
+  type JurisdictionQueryKeyword, type InsertJurisdictionQueryKeyword,
+  type PolicyTemplate, type InsertPolicyTemplate,
+  type Policy, type InsertPolicy,
+  type PolicyVersion, type InsertPolicyVersion,
+  type PolicyObligationMapping, type InsertPolicyObligationMapping,
+  type PolicyTag, type InsertPolicyTag,
+  type PolicyApproval, type InsertPolicyApproval
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
@@ -52,6 +59,9 @@ export interface IStorage {
   getAllDefiProtocolInfo(): Promise<DefiProtocolInfo[]>;
   getAllNftMarketplaceInfo(): Promise<NftMarketplaceInfo[]>;
   getAllCryptoFundInfo(): Promise<CryptoFundInfo[]>;
+  
+  // Policy admin operations
+  getAllPolicies(): Promise<Policy[]>;
 
   // Stablecoin operations
   createStablecoinInfo(userId: number, info: InsertStablecoinInfo): Promise<StablecoinInfo>;
@@ -130,6 +140,33 @@ export interface IStorage {
   getJurisdictionTagsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionTag[]>;
   createJurisdictionQueryKeyword(data: InsertJurisdictionQueryKeyword): Promise<JurisdictionQueryKeyword>;
   getJurisdictionQueryKeywordsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionQueryKeyword[]>;
+  
+  // Policy Framework methods
+  createPolicyTemplate(data: InsertPolicyTemplate): Promise<PolicyTemplate>;
+  getPolicyTemplate(id: number): Promise<PolicyTemplate | undefined>;
+  getPolicyTemplatesByCategory(category: string): Promise<PolicyTemplate[]>;
+  getAllPolicyTemplates(): Promise<PolicyTemplate[]>;
+  
+  createPolicy(userId: number, data: InsertPolicy): Promise<Policy>;
+  getPolicy(id: number): Promise<Policy | undefined>;
+  getPoliciesByUserId(userId: number): Promise<Policy[]>;
+  getPoliciesByJurisdictionId(jurisdictionId: number): Promise<Policy[]>;
+  getPoliciesByStatus(status: string): Promise<Policy[]>;
+  getPoliciesByType(type: string): Promise<Policy[]>;
+  updatePolicy(id: number, data: Partial<Policy>): Promise<Policy>;
+  
+  createPolicyVersion(policyId: number, userId: number, data: InsertPolicyVersion): Promise<PolicyVersion>;
+  getPolicyVersions(policyId: number): Promise<PolicyVersion[]>;
+  
+  createPolicyTag(data: InsertPolicyTag): Promise<PolicyTag>;
+  getPolicyTagsByPolicyId(policyId: number): Promise<PolicyTag[]>;
+  
+  createPolicyApproval(data: InsertPolicyApproval): Promise<PolicyApproval>;
+  getPolicyApprovalsByPolicyId(policyId: number): Promise<PolicyApproval[]>;
+  
+  createPolicyObligationMapping(data: InsertPolicyObligationMapping): Promise<PolicyObligationMapping>;
+  getPolicyObligationMappingsByPolicyId(policyId: number): Promise<PolicyObligationMapping[]>;
+  getPolicyObligationMappingsByObligationId(obligationId: number): Promise<PolicyObligationMapping[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -344,6 +381,124 @@ export class DatabaseStorage implements IStorage {
     return await db.select()
       .from(jurisdiction_query_keywords)
       .where(eq(jurisdiction_query_keywords.jurisdiction_id, jurisdictionId));
+  }
+  
+  // Policy Framework methods implementation
+  async createPolicyTemplate(data: InsertPolicyTemplate): Promise<PolicyTemplate> {
+    const [template] = await db.insert(policy_templates).values(data).returning();
+    return template;
+  }
+  
+  async getPolicyTemplate(id: number): Promise<PolicyTemplate | undefined> {
+    const [template] = await db.select().from(policy_templates).where(eq(policy_templates.id, id));
+    return template;
+  }
+  
+  async getPolicyTemplatesByCategory(category: string): Promise<PolicyTemplate[]> {
+    return await db.select()
+      .from(policy_templates)
+      .where(eq(policy_templates.category, category));
+  }
+  
+  async getAllPolicyTemplates(): Promise<PolicyTemplate[]> {
+    return await db.select().from(policy_templates);
+  }
+  
+  async createPolicy(userId: number, data: InsertPolicy): Promise<Policy> {
+    const [policy] = await db.insert(policies).values({
+      ...data,
+      created_by: userId
+    }).returning();
+    return policy;
+  }
+  
+  async getPolicy(id: number): Promise<Policy | undefined> {
+    const [policy] = await db.select().from(policies).where(eq(policies.id, id));
+    return policy;
+  }
+  
+  async getPoliciesByUserId(userId: number): Promise<Policy[]> {
+    return await db.select().from(policies).where(eq(policies.created_by, userId));
+  }
+  
+  async getPoliciesByJurisdictionId(jurisdictionId: number): Promise<Policy[]> {
+    return await db.select().from(policies).where(eq(policies.jurisdiction_id, jurisdictionId));
+  }
+  
+  async getPoliciesByStatus(status: string): Promise<Policy[]> {
+    return await db.select().from(policies).where(eq(policies.status, status));
+  }
+  
+  async getPoliciesByType(type: string): Promise<Policy[]> {
+    return await db.select().from(policies).where(eq(policies.type, type));
+  }
+  
+  async getAllPolicies(): Promise<Policy[]> {
+    return await db.select().from(policies).orderBy(desc(policies.updated_at));
+  }
+  
+  async updatePolicy(id: number, data: Partial<Policy>): Promise<Policy> {
+    const [updated] = await db.update(policies)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(policies.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async createPolicyVersion(policyId: number, userId: number, data: InsertPolicyVersion): Promise<PolicyVersion> {
+    const [version] = await db.insert(policy_versions).values({
+      ...data,
+      policy_id: policyId,
+      created_by: userId
+    }).returning();
+    return version;
+  }
+  
+  async getPolicyVersions(policyId: number): Promise<PolicyVersion[]> {
+    return await db.select()
+      .from(policy_versions)
+      .where(eq(policy_versions.policy_id, policyId))
+      .orderBy(desc(policy_versions.created_at));
+  }
+  
+  async createPolicyTag(data: InsertPolicyTag): Promise<PolicyTag> {
+    const [tag] = await db.insert(policy_tags).values(data).returning();
+    return tag;
+  }
+  
+  async getPolicyTagsByPolicyId(policyId: number): Promise<PolicyTag[]> {
+    return await db.select()
+      .from(policy_tags)
+      .where(eq(policy_tags.policy_id, policyId));
+  }
+  
+  async createPolicyApproval(data: InsertPolicyApproval): Promise<PolicyApproval> {
+    const [approval] = await db.insert(policy_approvals).values(data).returning();
+    return approval;
+  }
+  
+  async getPolicyApprovalsByPolicyId(policyId: number): Promise<PolicyApproval[]> {
+    return await db.select()
+      .from(policy_approvals)
+      .where(eq(policy_approvals.policy_id, policyId))
+      .orderBy(desc(policy_approvals.created_at));
+  }
+  
+  async createPolicyObligationMapping(data: InsertPolicyObligationMapping): Promise<PolicyObligationMapping> {
+    const [mapping] = await db.insert(policy_obligation_mappings).values(data).returning();
+    return mapping;
+  }
+  
+  async getPolicyObligationMappingsByPolicyId(policyId: number): Promise<PolicyObligationMapping[]> {
+    return await db.select()
+      .from(policy_obligation_mappings)
+      .where(eq(policy_obligation_mappings.policy_id, policyId));
+  }
+  
+  async getPolicyObligationMappingsByObligationId(obligationId: number): Promise<PolicyObligationMapping[]> {
+    return await db.select()
+      .from(policy_obligation_mappings)
+      .where(eq(policy_obligation_mappings.obligation_id, obligationId));
   }
 
   async getUser(id: number): Promise<User | undefined> {

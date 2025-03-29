@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -715,3 +716,137 @@ export type InsertObligation = z.infer<typeof obligationSchema>;
 export type InsertReport = z.infer<typeof reportSchema>;
 export type InsertObligationAssignment = z.infer<typeof obligationAssignmentSchema>;
 export type InsertRegulatoryKeywordIndex = z.infer<typeof regulatoryKeywordIndexSchema>;
+
+// Policy Framework Tables
+export const policy_templates = pgTable("policy_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  jurisdiction: text("jurisdiction").notNull(),
+  content: jsonb("content").notNull(),
+  metadata: jsonb("metadata"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const policies = pgTable("policies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  version: text("version").notNull(),
+  status: text("status").notNull(), // draft, active, archived, review_needed
+  content: jsonb("content").notNull(),
+  metadata: jsonb("metadata"),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id),
+  created_by: integer("created_by").notNull().references(() => users.id),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const policy_versions = pgTable("policy_versions", {
+  id: serial("id").primaryKey(),
+  policy_id: integer("policy_id").notNull().references(() => policies.id, { onDelete: 'cascade' }),
+  version: text("version").notNull(),
+  content: jsonb("content").notNull(),
+  change_summary: text("change_summary").notNull(),
+  created_by: integer("created_by").notNull().references(() => users.id),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const policy_obligation_mappings = pgTable("policy_obligation_mappings", {
+  id: serial("id").primaryKey(),
+  policy_id: integer("policy_id").notNull().references(() => policies.id, { onDelete: 'cascade' }),
+  obligation_id: integer("obligation_id").notNull().references(() => obligations.id, { onDelete: 'cascade' }),
+  coverage_percentage: integer("coverage_percentage").notNull(),
+  evidence: jsonb("evidence"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const policy_tags = pgTable("policy_tags", {
+  id: serial("id").primaryKey(),
+  policy_id: integer("policy_id").notNull().references(() => policies.id, { onDelete: 'cascade' }),
+  tag: text("tag").notNull(),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const policy_approvals = pgTable("policy_approvals", {
+  id: serial("id").primaryKey(),
+  policy_id: integer("policy_id").notNull().references(() => policies.id, { onDelete: 'cascade' }),
+  approver_id: integer("approver_id").notNull().references(() => users.id),
+  status: text("status").notNull(), // pending, approved, rejected
+  comments: text("comments"),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+// Create schemas and types for policy framework tables
+export const policyTemplateSchema = createInsertSchema(policy_templates)
+  .omit({ id: true, created_at: true, updated_at: true })
+  .extend({
+    content: z.record(z.unknown()),
+    metadata: z.record(z.unknown()).optional(),
+  });
+
+export const policySchema = createInsertSchema(policies)
+  .omit({ id: true, created_at: true, updated_at: true, created_by: true })
+  .extend({
+    status: z.enum(['draft', 'active', 'archived', 'review_needed'], {
+      required_error: "Status is required",
+    }),
+    content: z.record(z.unknown()),
+    metadata: z.record(z.unknown()).optional(),
+  });
+
+export const policyVersionSchema = createInsertSchema(policy_versions)
+  .omit({ id: true, created_at: true, created_by: true })
+  .extend({
+    content: z.record(z.unknown()),
+  });
+
+export const policyObligationMappingSchema = createInsertSchema(policy_obligation_mappings)
+  .omit({ id: true, created_at: true, updated_at: true })
+  .extend({
+    coverage_percentage: z.number().min(0).max(100),
+    evidence: z.record(z.unknown()).optional(),
+  });
+
+export const policyTagSchema = createInsertSchema(policy_tags)
+  .omit({ id: true, created_at: true });
+
+export const policyApprovalSchema = createInsertSchema(policy_approvals)
+  .omit({ id: true, created_at: true })
+  .extend({
+    status: z.enum(['pending', 'approved', 'rejected'], {
+      required_error: "Status is required",
+    }),
+  });
+
+// Define relationship between policies and versions
+export const policiesRelations = relations(policies, ({ many, one }) => ({
+  versions: many(policy_versions),
+  jurisdiction: one(jurisdictions, {
+    fields: [policies.jurisdiction_id],
+    references: [jurisdictions.id],
+  }),
+  creator: one(users, {
+    fields: [policies.created_by],
+    references: [users.id],
+  }),
+  obligationMappings: many(policy_obligation_mappings),
+  tags: many(policy_tags),
+  approvals: many(policy_approvals),
+}));
+
+export type PolicyTemplate = typeof policy_templates.$inferSelect;
+export type InsertPolicyTemplate = z.infer<typeof policyTemplateSchema>;
+export type Policy = typeof policies.$inferSelect;
+export type InsertPolicy = z.infer<typeof policySchema>;
+export type PolicyVersion = typeof policy_versions.$inferSelect;
+export type InsertPolicyVersion = z.infer<typeof policyVersionSchema>;
+export type PolicyObligationMapping = typeof policy_obligation_mappings.$inferSelect;
+export type InsertPolicyObligationMapping = z.infer<typeof policyObligationMappingSchema>;
+export type PolicyTag = typeof policy_tags.$inferSelect;
+export type InsertPolicyTag = z.infer<typeof policyTagSchema>;
+export type PolicyApproval = typeof policy_approvals.$inferSelect;
+export type InsertPolicyApproval = z.infer<typeof policyApprovalSchema>;

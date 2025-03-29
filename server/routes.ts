@@ -9,7 +9,13 @@ import {
   stablecoinInfoSchema,
   defiProtocolInfoSchema,
   nftMarketplaceInfoSchema,
-  cryptoFundInfoSchema
+  cryptoFundInfoSchema,
+  policyTemplateSchema,
+  policySchema,
+  policyVersionSchema,
+  policyObligationMappingSchema,
+  policyTagSchema,
+  policyApprovalSchema
 } from "@shared/schema";
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -492,6 +498,561 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error performing risk assessment:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Policy Framework API Routes
+
+  // Policy Templates
+  app.get("/api/policy-templates", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/policy-templates');
+      return res.sendStatus(401);
+    }
+    try {
+      const templates = await storage.getAllPolicyTemplates();
+      console.log(`Retrieved ${templates.length} policy templates`);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching policy templates:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/policy-templates/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/policy-templates/:id');
+      return res.sendStatus(401);
+    }
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const template = await storage.getPolicyTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Policy template not found" });
+      }
+      
+      console.log(`Retrieved policy template: ${template.name}`);
+      res.json(template);
+    } catch (error) {
+      console.error('Error fetching policy template:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/policy-templates/category/:category", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/policy-templates/category/:category');
+      return res.sendStatus(401);
+    }
+    try {
+      const { category } = req.params;
+      const templates = await storage.getPolicyTemplatesByCategory(category);
+      console.log(`Retrieved ${templates.length} policy templates for category: ${category}`);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching policy templates by category:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/policy-templates", checkAdminAuth, async (req, res) => {
+    try {
+      const data = policyTemplateSchema.parse(req.body);
+      const template = await storage.createPolicyTemplate(data);
+      console.log(`Created new policy template: ${template.name}`);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error creating policy template:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // Policies
+  app.post("/api/policies", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/policies');
+      return res.sendStatus(401);
+    }
+    try {
+      const data = policySchema.parse(req.body);
+      const policy = await storage.createPolicy(req.user.id, data);
+      console.log(`Created new policy: ${policy.name}`);
+      res.status(201).json(policy);
+    } catch (error) {
+      console.error('Error creating policy:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  app.get("/api/policies", checkAdminAuth, async (req, res) => {
+    try {
+      const policies = await storage.getAllPolicies();
+      console.log(`Retrieved ${policies.length} policies`);
+      res.json(policies);
+    } catch (error) {
+      console.error('Error fetching policies:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/policies/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/policies/:id');
+      return res.sendStatus(401);
+    }
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const policy = await storage.getPolicy(id);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && policy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to access policy owned by user ${policy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to access this policy" });
+      }
+      
+      console.log(`Retrieved policy: ${policy.name}`);
+      res.json(policy);
+    } catch (error) {
+      console.error('Error fetching policy:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/user/:userId/policies", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/user/:userId/policies');
+      return res.sendStatus(401);
+    }
+    
+    const userId = parseInt(req.params.userId);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    
+    // Check if user is requesting their own policies or is an admin
+    if (userId !== req.user.id && !req.user.isAdmin) {
+      console.log(`User ${req.user.id} attempted to access policies for user ${userId}`);
+      return res.status(403).json({ message: "Not authorized to access other user's policies" });
+    }
+    
+    try {
+      const policies = await storage.getPoliciesByUserId(userId);
+      console.log(`Retrieved ${policies.length} policies for user ${userId}`);
+      res.json(policies);
+    } catch (error) {
+      console.error('Error fetching user policies:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/policies/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to PUT /api/policies/:id');
+      return res.sendStatus(401);
+    }
+    
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+    
+    try {
+      // First check if policy exists and user is authorized
+      const existingPolicy = await storage.getPolicy(id);
+      if (!existingPolicy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && existingPolicy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to update policy owned by user ${existingPolicy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to update this policy" });
+      }
+      
+      // Validate update data
+      const updateData = req.body;
+      const updatedPolicy = await storage.updatePolicy(id, updateData);
+      
+      console.log(`Updated policy: ${updatedPolicy.name}`);
+      res.json(updatedPolicy);
+    } catch (error) {
+      console.error('Error updating policy:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // Policy Versions
+  app.post("/api/policies/:policyId/versions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/policies/:policyId/versions');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      // Check if policy exists and user is authorized
+      const policy = await storage.getPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && policy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to add version to policy owned by user ${policy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to update this policy" });
+      }
+      
+      const data = policyVersionSchema.parse(req.body);
+      const version = await storage.createPolicyVersion(policyId, req.user.id, data);
+      
+      console.log(`Created new version ${version.version} for policy: ${policy.name}`);
+      res.status(201).json(version);
+    } catch (error) {
+      console.error('Error creating policy version:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  app.get("/api/policies/:policyId/versions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/policies/:policyId/versions');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      // Check if policy exists
+      const policy = await storage.getPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && policy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to view versions of policy owned by user ${policy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to view this policy's versions" });
+      }
+      
+      const versions = await storage.getPolicyVersions(policyId);
+      console.log(`Retrieved ${versions.length} versions for policy: ${policy.name}`);
+      res.json(versions);
+    } catch (error) {
+      console.error('Error fetching policy versions:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Policy Tags
+  app.post("/api/policies/:policyId/tags", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/policies/:policyId/tags');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      // Check if policy exists and user is authorized
+      const policy = await storage.getPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && policy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to add tag to policy owned by user ${policy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to update this policy" });
+      }
+      
+      const tagSchema = policyTagSchema.extend({
+        policy_id: z.number().optional()
+      });
+      
+      const data = tagSchema.parse(req.body);
+      const tag = await storage.createPolicyTag({
+        ...data,
+        policy_id: policyId
+      });
+      
+      console.log(`Added tag "${tag.tag}" to policy: ${policy.name}`);
+      res.status(201).json(tag);
+    } catch (error) {
+      console.error('Error adding policy tag:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  app.get("/api/policies/:policyId/tags", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/policies/:policyId/tags');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      const tags = await storage.getPolicyTagsByPolicyId(policyId);
+      console.log(`Retrieved ${tags.length} tags for policy ID: ${policyId}`);
+      res.json(tags);
+    } catch (error) {
+      console.error('Error fetching policy tags:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Policy Obligation Mappings
+  app.post("/api/policies/:policyId/obligations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/policies/:policyId/obligations');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      // Check if policy exists and user is authorized
+      const policy = await storage.getPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && policy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to add obligation mapping to policy owned by user ${policy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to update this policy" });
+      }
+      
+      const mappingSchema = policyObligationMappingSchema.extend({
+        policy_id: z.number().optional()
+      });
+      
+      const data = mappingSchema.parse(req.body);
+      const mapping = await storage.createPolicyObligationMapping({
+        ...data,
+        policy_id: policyId
+      });
+      
+      console.log(`Added obligation mapping for obligation ID ${mapping.obligation_id} to policy: ${policy.name}`);
+      res.status(201).json(mapping);
+    } catch (error) {
+      console.error('Error adding policy obligation mapping:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  app.get("/api/policies/:policyId/obligations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/policies/:policyId/obligations');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      const mappings = await storage.getPolicyObligationMappingsByPolicyId(policyId);
+      console.log(`Retrieved ${mappings.length} obligation mappings for policy ID: ${policyId}`);
+      res.json(mappings);
+    } catch (error) {
+      console.error('Error fetching policy obligation mappings:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Policy Approvals
+  app.post("/api/policies/:policyId/approvals", checkAdminAuth, async (req, res) => {
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      // Check if policy exists
+      const policy = await storage.getPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      const approvalSchema = policyApprovalSchema.extend({
+        policy_id: z.number().optional(),
+        approver_id: z.number().optional(),
+      });
+      
+      const data = approvalSchema.parse(req.body);
+      const approval = await storage.createPolicyApproval({
+        ...data,
+        policy_id: policyId,
+        approver_id: req.user.id
+      });
+      
+      // Update policy status if approval is granted or rejected
+      if (data.status === 'approved' || data.status === 'rejected') {
+        const newStatus = data.status === 'approved' ? 'active' : 'review_needed';
+        await storage.updatePolicy(policyId, { status: newStatus });
+      }
+      
+      console.log(`Added ${data.status} approval for policy: ${policy.name}`);
+      res.status(201).json(approval);
+    } catch (error) {
+      console.error('Error adding policy approval:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  app.get("/api/policies/:policyId/approvals", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/policies/:policyId/approvals');
+      return res.sendStatus(401);
+    }
+    
+    const policyId = parseInt(req.params.policyId);
+    if (isNaN(policyId)) {
+      return res.status(400).json({ message: "Invalid policy ID format" });
+    }
+    
+    try {
+      // Check if policy exists
+      const policy = await storage.getPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ message: "Policy not found" });
+      }
+      
+      // Check if user is admin or policy creator
+      if (!req.user.isAdmin && policy.created_by !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to view approvals of policy owned by user ${policy.created_by}`);
+        return res.status(403).json({ message: "Not authorized to view this policy's approvals" });
+      }
+      
+      const approvals = await storage.getPolicyApprovalsByPolicyId(policyId);
+      console.log(`Retrieved ${approvals.length} approvals for policy: ${policy.name}`);
+      res.json(approvals);
+    } catch (error) {
+      console.error('Error fetching policy approvals:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Jurisdiction Obligation lookup for Policy Framework integration
+  app.get("/api/jurisdictions/obligations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/jurisdictions/obligations');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      // This would be more complex in a real system, combining 
+      // multiple tables and data sources to provide a unified view
+      // of all obligations across jurisdictions
+      
+      // For now, we'll provide a simplified response structure
+      const jurisdictions = await storage.getAllJurisdictions();
+      
+      // Map jurisdictions to a list of obligations
+      const obligationsByJurisdiction = await Promise.all(
+        jurisdictions.map(async (jurisdiction) => {
+          // In a real system, we'd query specific obligation tables
+          // For now, simulate with reporting obligations which should exist
+          const obligations = await storage.getReportingObligationsByJurisdictionId(jurisdiction.id);
+          
+          return {
+            jurisdiction_id: jurisdiction.id,
+            jurisdiction_name: jurisdiction.name,
+            obligations: obligations.map(o => ({
+              id: o.id,
+              title: o.title,
+              description: o.description,
+              deadline: o.deadline,
+              frequency: o.frequency,
+              authority: o.authority
+            }))
+          };
+        })
+      );
+      
+      console.log(`Retrieved obligations data for ${jurisdictions.length} jurisdictions`);
+      res.json(obligationsByJurisdiction);
+    } catch (error) {
+      console.error('Error fetching jurisdiction obligations:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
