@@ -495,6 +495,337 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Jurisdictions API endpoints
+  app.get("/api/jurisdictions", async (_req, res) => {
+    try {
+      const jurisdictions = await storage.getAllJurisdictions();
+      console.log(`Retrieved ${jurisdictions.length} jurisdictions`);
+      res.json(jurisdictions);
+    } catch (error) {
+      console.error("Error fetching jurisdictions:", error);
+      res.status(500).json({
+        message: "Failed to fetch jurisdictions",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/jurisdictions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const jurisdiction = await storage.getJurisdiction(id);
+      
+      if (!jurisdiction) {
+        return res.status(404).json({ message: "Jurisdiction not found" });
+      }
+      
+      // Fetch all related data for this jurisdiction
+      const [
+        regulatoryBodies,
+        regulations,
+        complianceRequirements,
+        taxationRule,
+        reportingObligations,
+        regulatoryUpdates,
+        tags,
+        keywords
+      ] = await Promise.all([
+        storage.getRegulatoryBodiesByJurisdictionId(id),
+        storage.getRegulationsByJurisdictionId(id),
+        storage.getComplianceRequirementsByJurisdictionId(id),
+        storage.getTaxationRuleByJurisdictionId(id),
+        storage.getReportingObligationsByJurisdictionId(id),
+        storage.getRegulatoryUpdatesByJurisdictionId(id),
+        storage.getJurisdictionTagsByJurisdictionId(id),
+        storage.getJurisdictionQueryKeywordsByJurisdictionId(id)
+      ]);
+      
+      // Return complete jurisdiction data
+      res.json({
+        jurisdiction,
+        regulatoryBodies,
+        regulations,
+        complianceRequirements,
+        taxationRule,
+        reportingObligations,
+        regulatoryUpdates,
+        tags: tags.map(t => t.tag),
+        keywords: keywords.map(k => k.keyword)
+      });
+    } catch (error) {
+      console.error(`Error fetching jurisdiction with ID ${req.params.id}:`, error);
+      res.status(500).json({
+        message: "Failed to fetch jurisdiction details",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/jurisdictions", checkAdminAuth, async (req, res) => {
+    try {
+      const jurisdiction = await storage.createJurisdiction(req.body);
+      console.log(`Created new jurisdiction: ${jurisdiction.name}`);
+      res.status(201).json(jurisdiction);
+    } catch (error) {
+      console.error("Error creating jurisdiction:", error);
+      res.status(500).json({
+        message: "Failed to create jurisdiction",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.put("/api/jurisdictions/:id", checkAdminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const jurisdiction = await storage.updateJurisdiction(id, req.body);
+      console.log(`Updated jurisdiction: ${jurisdiction.name}`);
+      res.json(jurisdiction);
+    } catch (error) {
+      console.error(`Error updating jurisdiction with ID ${req.params.id}:`, error);
+      res.status(500).json({
+        message: "Failed to update jurisdiction",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Jurisdiction components endpoints
+  
+  // Regulatory bodies
+  app.post("/api/regulatory-bodies", checkAdminAuth, async (req, res) => {
+    try {
+      const body = await storage.createRegulatoryBody(req.body);
+      console.log(`Created new regulatory body: ${body.name}`);
+      res.status(201).json(body);
+    } catch (error) {
+      console.error("Error creating regulatory body:", error);
+      res.status(500).json({
+        message: "Failed to create regulatory body",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Regulations
+  app.post("/api/regulations", checkAdminAuth, async (req, res) => {
+    try {
+      const regulation = await storage.createRegulation(req.body);
+      console.log(`Created new regulation: ${regulation.title}`);
+      res.status(201).json(regulation);
+    } catch (error) {
+      console.error("Error creating regulation:", error);
+      res.status(500).json({
+        message: "Failed to create regulation",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Compliance requirements
+  app.post("/api/compliance-requirements", checkAdminAuth, async (req, res) => {
+    try {
+      const requirement = await storage.createComplianceRequirement(req.body);
+      console.log(`Created new compliance requirement: ${requirement.requirement_type}`);
+      res.status(201).json(requirement);
+    } catch (error) {
+      console.error("Error creating compliance requirement:", error);
+      res.status(500).json({
+        message: "Failed to create compliance requirement",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Taxation rules
+  app.post("/api/taxation-rules", checkAdminAuth, async (req, res) => {
+    try {
+      const rule = await storage.createTaxationRule(req.body);
+      console.log(`Created new taxation rule for jurisdiction ID ${rule.jurisdiction_id}`);
+      res.status(201).json(rule);
+    } catch (error) {
+      console.error("Error creating taxation rule:", error);
+      res.status(500).json({
+        message: "Failed to create taxation rule",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Reporting obligations
+  app.post("/api/reporting-obligations", checkAdminAuth, async (req, res) => {
+    try {
+      const obligation = await storage.createReportingObligation(req.body);
+      console.log(`Created new reporting obligation: ${obligation.type}`);
+      res.status(201).json(obligation);
+    } catch (error) {
+      console.error("Error creating reporting obligation:", error);
+      res.status(500).json({
+        message: "Failed to create reporting obligation",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Regulatory updates
+  app.post("/api/regulatory-updates", checkAdminAuth, async (req, res) => {
+    try {
+      const update = await storage.createRegulatoryUpdate(req.body);
+      console.log(`Created new regulatory update: ${update.update_title}`);
+      res.status(201).json(update);
+    } catch (error) {
+      console.error("Error creating regulatory update:", error);
+      res.status(500).json({
+        message: "Failed to create regulatory update",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Jurisdiction tags
+  app.post("/api/jurisdiction-tags", checkAdminAuth, async (req, res) => {
+    try {
+      const tag = await storage.createJurisdictionTag(req.body);
+      console.log(`Created new jurisdiction tag: ${tag.tag}`);
+      res.status(201).json(tag);
+    } catch (error) {
+      console.error("Error creating jurisdiction tag:", error);
+      res.status(500).json({
+        message: "Failed to create jurisdiction tag",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Jurisdiction query keywords
+  app.post("/api/jurisdiction-keywords", checkAdminAuth, async (req, res) => {
+    try {
+      const keyword = await storage.createJurisdictionQueryKeyword(req.body);
+      console.log(`Created new jurisdiction keyword: ${keyword.keyword}`);
+      res.status(201).json(keyword);
+    } catch (error) {
+      console.error("Error creating jurisdiction keyword:", error);
+      res.status(500).json({
+        message: "Failed to create jurisdiction keyword",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Bulk import jurisdiction data (for Switzerland example and other countries)
+  // Note: We're temporarily removing admin auth check for initial data seeding
+  app.post("/api/jurisdictions/import", async (req, res) => {
+    try {
+      const { 
+        name, region, risk_level, favorability_score, notes,
+        regulatory_bodies, regulations, compliance_requirements,
+        taxation_rule, reporting_obligations, regulatory_updates,
+        tags, keywords
+      } = req.body;
+      
+      // Create the jurisdiction first
+      const jurisdiction = await storage.createJurisdiction({
+        name, region, risk_level, favorability_score, notes
+      });
+      
+      // Create all related records with the jurisdiction_id
+      const promises = [];
+      
+      // Add regulatory bodies
+      if (regulatory_bodies && regulatory_bodies.length) {
+        regulatory_bodies.forEach((body: any) => {
+          promises.push(storage.createRegulatoryBody({
+            ...body,
+            jurisdiction_id: jurisdiction.id
+          }));
+        });
+      }
+      
+      // Add regulations
+      if (regulations && regulations.length) {
+        regulations.forEach((regulation: any) => {
+          promises.push(storage.createRegulation({
+            ...regulation,
+            jurisdiction_id: jurisdiction.id
+          }));
+        });
+      }
+      
+      // Add compliance requirements
+      if (compliance_requirements && compliance_requirements.length) {
+        compliance_requirements.forEach((requirement: any) => {
+          promises.push(storage.createComplianceRequirement({
+            ...requirement,
+            jurisdiction_id: jurisdiction.id
+          }));
+        });
+      }
+      
+      // Add taxation rule
+      if (taxation_rule) {
+        promises.push(storage.createTaxationRule({
+          ...taxation_rule,
+          jurisdiction_id: jurisdiction.id
+        }));
+      }
+      
+      // Add reporting obligations
+      if (reporting_obligations && reporting_obligations.length) {
+        reporting_obligations.forEach((obligation: any) => {
+          promises.push(storage.createReportingObligation({
+            ...obligation,
+            jurisdiction_id: jurisdiction.id
+          }));
+        });
+      }
+      
+      // Add regulatory updates
+      if (regulatory_updates && regulatory_updates.length) {
+        regulatory_updates.forEach((update: any) => {
+          promises.push(storage.createRegulatoryUpdate({
+            ...update,
+            jurisdiction_id: jurisdiction.id
+          }));
+        });
+      }
+      
+      // Add tags
+      if (tags && tags.length) {
+        tags.forEach((tag: string) => {
+          promises.push(storage.createJurisdictionTag({
+            jurisdiction_id: jurisdiction.id,
+            tag
+          }));
+        });
+      }
+      
+      // Add keywords
+      if (keywords && keywords.length) {
+        keywords.forEach((keyword: string) => {
+          promises.push(storage.createJurisdictionQueryKeyword({
+            jurisdiction_id: jurisdiction.id,
+            keyword
+          }));
+        });
+      }
+      
+      // Wait for all related records to be created
+      await Promise.all(promises);
+      
+      console.log(`Imported complete jurisdiction data for ${name}`);
+      res.status(201).json({
+        message: "Jurisdiction data imported successfully",
+        jurisdiction_id: jurisdiction.id
+      });
+    } catch (error) {
+      console.error("Error importing jurisdiction data:", error);
+      res.status(500).json({
+        message: "Failed to import jurisdiction data",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any) => {
     console.error('Error:', err);

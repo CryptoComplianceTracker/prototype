@@ -1,0 +1,63 @@
+Here’s an expanded and enriched data entry for Switzerland that fills out each field from the schema and adds real-world context for a compliance/reporting database focused on cryptocurrencies:
+
+🇨🇭 Switzerland — Full Data Entry
+1. jurisdictions
+Field	Value
+name	Switzerland
+region	Europe
+risk_level	Low
+favorability_score	92
+notes	Switzerland is home to “Crypto Valley” (Zug), and offers a clear regulatory framework for blockchain innovation. It supports tokenized assets, DAOs, and stablecoins.
+2. regulatory_bodies
+Field	Value
+name	Swiss Financial Market Supervisory Authority (FINMA)
+jurisdiction_id	Linked to Switzerland
+website_url	https://www.finma.ch
+description	FINMA regulates financial markets in Switzerland and provides token classification and licensing guidelines for blockchain/crypto companies.
+3. regulations
+✅ Regulation A
+Field	Value
+title	FINMA ICO Guidelines
+type	ICO, Token Classification
+description	Classifies tokens into three types: payment, utility, and asset tokens. Provides guidance on when a token constitutes a security.
+compliance_url	FINMA ICO Guidelines (PDF)
+effective_date	2018-02-16
+last_updated	2023-08-01
+✅ Regulation B
+| title | Financial Institutions Act (FinIA) | | type | Licensing, Custody | | description | Regulates independent asset managers and fintech companies, including crypto custody providers. | | compliance_url | FinIA Overview | | effective_date | 2020-01-01 | | last_updated | 2024-06-01 |
+
+✅ Regulation C
+| title | DLT Framework Amendments | | type | DLT, Asset Tokenization, DAOs | | description | Introduced a new license type for trading platforms dealing exclusively with DLT securities. | | compliance_url | Swiss DLT Law Portal | | effective_date | 2021-08-01 | | last_updated | 2024-03-01 |
+
+4. compliance_requirements
+Requirement Type	Summary
+KYC	Required for all ICOs and crypto exchanges. Companies must verify the identity of users. Applies to payment and asset tokens.
+AML	Entities must file Suspicious Activity Reports (SARs) and register under AMLA.
+Token Classification	Companies must classify tokens and determine whether securities law applies, based on FINMA's framework.
+Custody Regulation	Crypto custody providers require a FinIA license.
+Client Asset Segregation	Required under the DLT regulations for platform operators.
+Banking License (optional)	Necessary for crypto firms offering interest-bearing accounts or taking deposits.
+5. taxation_rules
+Field	Value
+income_tax_applicable	Yes (if earned via mining, salary, or services)
+capital_gains_tax	Exempt for individuals (personal investment), taxable for professionals
+vat_applicable	No VAT on exchange of cryptocurrencies (exempt)
+tax_description	Private investors are not subject to capital gains tax. Mining income, staking rewards, and crypto used in business operations are subject to income tax.
+tax_authority_url	Swiss Federal Tax Administration
+last_updated	2024-05-01
+6. reporting_obligations
+Field	Value
+type	Suspicious Activity Reporting (SAR), Periodic Compliance Reporting
+frequency	Real-time (SAR), Annually (compliance audit if licensed)
+submission_url	MROS Reporting Portal
+penalties	Up to CHF 500,000 fine, license suspension or revocation
+last_reviewed	2024-12-31
+7. regulatory_updates
+Update Title	Date	Summary	Source
+FINMA expands tokenization sandbox	Q1 2025	FINMA has broadened its sandbox license to allow non-banks to issue and manage tokenized securities up to CHF 2 million in customer assets.	FINMA Newsroom
+AML 6th Directive Compliance	Q4 2024	Switzerland has updated AML rules to align with the 6th EU Directive. Expanded obligations for VASPs (Virtual Asset Service Providers).	Swiss AML Updates
+ESG Disclosure Guidance	Q3 2024	New FINMA guidance suggests crypto firms disclose ESG impact in whitepapers or investor disclosures.	FINMA Guidelines
+💡 Suggested Tags / Indexes for Querying
+tag: #ICO, #TokenClassification, #KYCAML, #DLT, #Custody, #TaxExempt, #FINMA
+
+query_keywords: “Token Security Classification Switzerland”, “Crypto Taxation Swiss Individuals”, “DLT License Zug”, “FINMA AML reporting”

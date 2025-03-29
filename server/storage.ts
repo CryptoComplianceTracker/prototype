@@ -1,12 +1,23 @@
 import { 
   users, transactions, exchangeInfo, stablecoinInfo, defiProtocolInfo, nftMarketplaceInfo, cryptoFundInfo,
   registrations, registrationVersions, auditLogs,
+  jurisdictions, regulatory_bodies, regulations, compliance_requirements, taxation_rules,
+  reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords,
   type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
   type StablecoinInfo, type InsertStablecoinInfo,
   type DefiProtocolInfo, type InsertDefiProtocolInfo,
   type NftMarketplaceInfo, type InsertNftMarketplaceInfo,
   type CryptoFundInfo, type InsertCryptoFundInfo,
-  type Registration, type InsertRegistration, type RegistrationVersion, type AuditLog
+  type Registration, type InsertRegistration, type RegistrationVersion, type AuditLog,
+  type Jurisdiction, type InsertJurisdiction,
+  type RegulatoryBody, type InsertRegulatoryBody,
+  type Regulation, type InsertRegulation,
+  type ComplianceRequirement, type InsertComplianceRequirement,
+  type TaxationRule, type InsertTaxationRule,
+  type ReportingObligation, type InsertReportingObligation,
+  type RegulatoryUpdate, type InsertRegulatoryUpdate,
+  type JurisdictionTag, type InsertJurisdictionTag,
+  type JurisdictionQueryKeyword, type InsertJurisdictionQueryKeyword
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
@@ -76,6 +87,49 @@ export interface IStorage {
   // Audit logging
   createAuditLog(log: Omit<AuditLog, "id" | "createdAt">): Promise<AuditLog>;
   getAuditLogs(tableName: string, recordId: number): Promise<AuditLog[]>;
+  
+  // Jurisdiction database
+  createJurisdiction(data: InsertJurisdiction): Promise<Jurisdiction>;
+  getJurisdiction(id: number): Promise<Jurisdiction | undefined>;
+  getJurisdictionByName(name: string): Promise<Jurisdiction | undefined>;
+  getAllJurisdictions(): Promise<Jurisdiction[]>;
+  updateJurisdiction(id: number, data: Partial<Jurisdiction>): Promise<Jurisdiction>;
+  
+  // Regulatory bodies
+  createRegulatoryBody(data: InsertRegulatoryBody): Promise<RegulatoryBody>;
+  getRegulatoryBodiesByJurisdictionId(jurisdictionId: number): Promise<RegulatoryBody[]>;
+  updateRegulatoryBody(id: number, data: Partial<RegulatoryBody>): Promise<RegulatoryBody>;
+  
+  // Regulations
+  createRegulation(data: InsertRegulation): Promise<Regulation>;
+  getRegulationsByJurisdictionId(jurisdictionId: number): Promise<Regulation[]>;
+  updateRegulation(id: number, data: Partial<Regulation>): Promise<Regulation>;
+  
+  // Compliance requirements
+  createComplianceRequirement(data: InsertComplianceRequirement): Promise<ComplianceRequirement>;
+  getComplianceRequirementsByJurisdictionId(jurisdictionId: number): Promise<ComplianceRequirement[]>;
+  updateComplianceRequirement(id: number, data: Partial<ComplianceRequirement>): Promise<ComplianceRequirement>;
+  
+  // Taxation rules
+  createTaxationRule(data: InsertTaxationRule): Promise<TaxationRule>;
+  getTaxationRuleByJurisdictionId(jurisdictionId: number): Promise<TaxationRule | undefined>;
+  updateTaxationRule(id: number, data: Partial<TaxationRule>): Promise<TaxationRule>;
+  
+  // Reporting obligations
+  createReportingObligation(data: InsertReportingObligation): Promise<ReportingObligation>;
+  getReportingObligationsByJurisdictionId(jurisdictionId: number): Promise<ReportingObligation[]>;
+  updateReportingObligation(id: number, data: Partial<ReportingObligation>): Promise<ReportingObligation>;
+  
+  // Regulatory updates
+  createRegulatoryUpdate(data: InsertRegulatoryUpdate): Promise<RegulatoryUpdate>;
+  getRegulatoryUpdatesByJurisdictionId(jurisdictionId: number): Promise<RegulatoryUpdate[]>;
+  updateRegulatoryUpdate(id: number, data: Partial<RegulatoryUpdate>): Promise<RegulatoryUpdate>;
+  
+  // Tags and keywords
+  createJurisdictionTag(data: InsertJurisdictionTag): Promise<JurisdictionTag>;
+  getJurisdictionTagsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionTag[]>;
+  createJurisdictionQueryKeyword(data: InsertJurisdictionQueryKeyword): Promise<JurisdictionQueryKeyword>;
+  getJurisdictionQueryKeywordsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionQueryKeyword[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -86,6 +140,178 @@ export class DatabaseStorage implements IStorage {
       pool,
       createTableIfMissing: true,
     });
+  }
+  
+  // Jurisdiction methods
+  async createJurisdiction(data: InsertJurisdiction): Promise<Jurisdiction> {
+    const [jurisdiction] = await db.insert(jurisdictions).values(data).returning();
+    return jurisdiction;
+  }
+
+  async getJurisdiction(id: number): Promise<Jurisdiction | undefined> {
+    const [jurisdiction] = await db.select().from(jurisdictions).where(eq(jurisdictions.id, id));
+    return jurisdiction;
+  }
+
+  async getJurisdictionByName(name: string): Promise<Jurisdiction | undefined> {
+    const [jurisdiction] = await db.select().from(jurisdictions).where(eq(jurisdictions.name, name));
+    return jurisdiction;
+  }
+
+  async getAllJurisdictions(): Promise<Jurisdiction[]> {
+    return await db.select().from(jurisdictions);
+  }
+
+  async updateJurisdiction(id: number, data: Partial<Jurisdiction>): Promise<Jurisdiction> {
+    const [updated] = await db.update(jurisdictions)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(jurisdictions.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Regulatory bodies methods
+  async createRegulatoryBody(data: InsertRegulatoryBody): Promise<RegulatoryBody> {
+    const [body] = await db.insert(regulatory_bodies).values(data).returning();
+    return body;
+  }
+
+  async getRegulatoryBodiesByJurisdictionId(jurisdictionId: number): Promise<RegulatoryBody[]> {
+    return await db.select()
+      .from(regulatory_bodies)
+      .where(eq(regulatory_bodies.jurisdiction_id, jurisdictionId));
+  }
+
+  async updateRegulatoryBody(id: number, data: Partial<RegulatoryBody>): Promise<RegulatoryBody> {
+    const [updated] = await db.update(regulatory_bodies)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(regulatory_bodies.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Regulations methods
+  async createRegulation(data: InsertRegulation): Promise<Regulation> {
+    const [regulation] = await db.insert(regulations).values(data).returning();
+    return regulation;
+  }
+
+  async getRegulationsByJurisdictionId(jurisdictionId: number): Promise<Regulation[]> {
+    return await db.select()
+      .from(regulations)
+      .where(eq(regulations.jurisdiction_id, jurisdictionId));
+  }
+
+  async updateRegulation(id: number, data: Partial<Regulation>): Promise<Regulation> {
+    const [updated] = await db.update(regulations)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(regulations.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Compliance requirements methods
+  async createComplianceRequirement(data: InsertComplianceRequirement): Promise<ComplianceRequirement> {
+    const [requirement] = await db.insert(compliance_requirements).values(data).returning();
+    return requirement;
+  }
+
+  async getComplianceRequirementsByJurisdictionId(jurisdictionId: number): Promise<ComplianceRequirement[]> {
+    return await db.select()
+      .from(compliance_requirements)
+      .where(eq(compliance_requirements.jurisdiction_id, jurisdictionId));
+  }
+
+  async updateComplianceRequirement(id: number, data: Partial<ComplianceRequirement>): Promise<ComplianceRequirement> {
+    const [updated] = await db.update(compliance_requirements)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(compliance_requirements.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Taxation rules methods
+  async createTaxationRule(data: InsertTaxationRule): Promise<TaxationRule> {
+    const [rule] = await db.insert(taxation_rules).values(data).returning();
+    return rule;
+  }
+
+  async getTaxationRuleByJurisdictionId(jurisdictionId: number): Promise<TaxationRule | undefined> {
+    const [rule] = await db.select()
+      .from(taxation_rules)
+      .where(eq(taxation_rules.jurisdiction_id, jurisdictionId));
+    return rule;
+  }
+
+  async updateTaxationRule(id: number, data: Partial<TaxationRule>): Promise<TaxationRule> {
+    const [updated] = await db.update(taxation_rules)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(taxation_rules.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Reporting obligations methods
+  async createReportingObligation(data: InsertReportingObligation): Promise<ReportingObligation> {
+    const [obligation] = await db.insert(reporting_obligations).values(data).returning();
+    return obligation;
+  }
+
+  async getReportingObligationsByJurisdictionId(jurisdictionId: number): Promise<ReportingObligation[]> {
+    return await db.select()
+      .from(reporting_obligations)
+      .where(eq(reporting_obligations.jurisdiction_id, jurisdictionId));
+  }
+
+  async updateReportingObligation(id: number, data: Partial<ReportingObligation>): Promise<ReportingObligation> {
+    const [updated] = await db.update(reporting_obligations)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(reporting_obligations.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Regulatory updates methods
+  async createRegulatoryUpdate(data: InsertRegulatoryUpdate): Promise<RegulatoryUpdate> {
+    const [update] = await db.insert(regulatory_updates).values(data).returning();
+    return update;
+  }
+
+  async getRegulatoryUpdatesByJurisdictionId(jurisdictionId: number): Promise<RegulatoryUpdate[]> {
+    return await db.select()
+      .from(regulatory_updates)
+      .where(eq(regulatory_updates.jurisdiction_id, jurisdictionId));
+  }
+
+  async updateRegulatoryUpdate(id: number, data: Partial<RegulatoryUpdate>): Promise<RegulatoryUpdate> {
+    const [updated] = await db.update(regulatory_updates)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(regulatory_updates.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Tags and keywords methods
+  async createJurisdictionTag(data: InsertJurisdictionTag): Promise<JurisdictionTag> {
+    const [tag] = await db.insert(jurisdiction_tags).values(data).returning();
+    return tag;
+  }
+
+  async getJurisdictionTagsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionTag[]> {
+    return await db.select()
+      .from(jurisdiction_tags)
+      .where(eq(jurisdiction_tags.jurisdiction_id, jurisdictionId));
+  }
+
+  async createJurisdictionQueryKeyword(data: InsertJurisdictionQueryKeyword): Promise<JurisdictionQueryKeyword> {
+    const [keyword] = await db.insert(jurisdiction_query_keywords).values(data).returning();
+    return keyword;
+  }
+
+  async getJurisdictionQueryKeywordsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionQueryKeyword[]> {
+    return await db.select()
+      .from(jurisdiction_query_keywords)
+      .where(eq(jurisdiction_query_keywords.jurisdiction_id, jurisdictionId));
   }
 
   async getUser(id: number): Promise<User | undefined> {

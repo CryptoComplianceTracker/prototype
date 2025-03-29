@@ -436,3 +436,132 @@ export interface RiskAssessment {
   categories: RiskScore[];
   timestamp: string;
 }
+
+// Global compliance database schema
+
+export const jurisdictions = pgTable("jurisdictions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  region: text("region").notNull(),
+  risk_level: text("risk_level").notNull(),
+  favorability_score: integer("favorability_score"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const regulatory_bodies = pgTable("regulatory_bodies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  website_url: text("website_url"),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const regulations = pgTable("regulations", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  title: text("title").notNull(),
+  type: text("type").notNull(),
+  description: text("description"),
+  compliance_url: text("compliance_url"),
+  effective_date: timestamp("effective_date"),
+  last_updated: timestamp("last_updated"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const compliance_requirements = pgTable("compliance_requirements", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  requirement_type: text("requirement_type").notNull(),
+  summary: text("summary").notNull(),
+  details: text("details"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const taxation_rules = pgTable("taxation_rules", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  income_tax_applicable: boolean("income_tax_applicable"),
+  capital_gains_tax: boolean("capital_gains_tax"),
+  vat_applicable: boolean("vat_applicable"),
+  tax_description: text("tax_description"),
+  tax_authority_url: text("tax_authority_url"),
+  last_updated: timestamp("last_updated"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const reporting_obligations = pgTable("reporting_obligations", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(),
+  frequency: text("frequency"),
+  submission_url: text("submission_url"),
+  penalties: text("penalties"),
+  last_reviewed: timestamp("last_reviewed"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const regulatory_updates = pgTable("regulatory_updates", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  update_title: text("update_title").notNull(),
+  update_date: timestamp("update_date"),
+  summary: text("summary"),
+  source: text("source"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const jurisdiction_tags = pgTable("jurisdiction_tags", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  tag: text("tag").notNull(),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+export const jurisdiction_query_keywords = pgTable("jurisdiction_query_keywords", {
+  id: serial("id").primaryKey(),
+  jurisdiction_id: integer("jurisdiction_id").references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  keyword: text("keyword").notNull(),
+  created_at: timestamp("created_at").defaultNow()
+});
+
+// Schemas for data insertion
+export const jurisdictionSchema = createInsertSchema(jurisdictions);
+export const regulatoryBodySchema = createInsertSchema(regulatory_bodies);
+export const regulationSchema = createInsertSchema(regulations);
+export const complianceRequirementSchema = createInsertSchema(compliance_requirements);
+export const taxationRuleSchema = createInsertSchema(taxation_rules);
+export const reportingObligationSchema = createInsertSchema(reporting_obligations);
+export const regulatoryUpdateSchema = createInsertSchema(regulatory_updates);
+export const jurisdictionTagSchema = createInsertSchema(jurisdiction_tags);
+export const jurisdictionQueryKeywordSchema = createInsertSchema(jurisdiction_query_keywords);
+
+// Types for the new tables
+export type Jurisdiction = typeof jurisdictions.$inferSelect;
+export type RegulatoryBody = typeof regulatory_bodies.$inferSelect;
+export type Regulation = typeof regulations.$inferSelect;
+export type ComplianceRequirement = typeof compliance_requirements.$inferSelect;
+export type TaxationRule = typeof taxation_rules.$inferSelect;
+export type ReportingObligation = typeof reporting_obligations.$inferSelect;
+export type RegulatoryUpdate = typeof regulatory_updates.$inferSelect;
+export type JurisdictionTag = typeof jurisdiction_tags.$inferSelect;
+export type JurisdictionQueryKeyword = typeof jurisdiction_query_keywords.$inferSelect;
+
+// Insert types
+export type InsertJurisdiction = z.infer<typeof jurisdictionSchema>;
+export type InsertRegulatoryBody = z.infer<typeof regulatoryBodySchema>;
+export type InsertRegulation = z.infer<typeof regulationSchema>;
+export type InsertComplianceRequirement = z.infer<typeof complianceRequirementSchema>;
+export type InsertTaxationRule = z.infer<typeof taxationRuleSchema>;
+export type InsertReportingObligation = z.infer<typeof reportingObligationSchema>;
+export type InsertRegulatoryUpdate = z.infer<typeof regulatoryUpdateSchema>;
+export type InsertJurisdictionTag = z.infer<typeof jurisdictionTagSchema>;
+export type InsertJurisdictionQueryKeyword = z.infer<typeof jurisdictionQueryKeywordSchema>;
