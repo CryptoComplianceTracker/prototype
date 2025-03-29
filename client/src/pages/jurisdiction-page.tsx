@@ -134,7 +134,7 @@ export default function JurisdictionPage() {
                   variant="default" 
                   className="w-full flex items-center justify-center gap-2"
                   onClick={() => {
-                    window.location.href = `/jurisdiction/${jurisdiction.id}`;
+                    setLocation(`/jurisdiction/${jurisdiction.id}`);
                   }}
                 >
                   View Details
@@ -158,7 +158,7 @@ export default function JurisdictionPage() {
           variant="outline" 
           className="mt-4"
           onClick={() => {
-            window.location.href = "/jurisdiction-page";
+            setLocation("/jurisdiction-page");
           }}
         >
           Back to Jurisdictions
@@ -223,7 +223,7 @@ export default function JurisdictionPage() {
           size="sm" 
           className="flex items-center gap-1"
           onClick={() => {
-            window.location.href = "/jurisdiction-page";
+            setLocation("/jurisdiction-page");
           }}
         >
           <Globe className="h-4 w-4" />
