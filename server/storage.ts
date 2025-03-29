@@ -405,11 +405,40 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createPolicy(userId: number, data: InsertPolicy): Promise<Policy> {
-    const [policy] = await db.insert(policies).values({
-      ...data,
-      created_by: userId
-    }).returning();
-    return policy;
+    // Check if the schema has a description field
+    const hasDescription = await this.tableHasColumn('policies', 'description');
+    
+    if (hasDescription) {
+      // Insert with description if the column exists
+      const [policy] = await db.insert(policies).values({
+        ...data,
+        created_by: userId
+      }).returning();
+      return policy;
+    } else {
+      // Remove description if the column doesn't exist
+      const { description, ...restData } = data as any;
+      const [policy] = await db.insert(policies).values({
+        ...restData,
+        created_by: userId
+      }).returning();
+      return policy;
+    }
+  }
+  
+  // Helper method to check if a table has a specific column
+  async tableHasColumn(tableName: string, columnName: string): Promise<boolean> {
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = '${tableName}' AND column_name = '${columnName}'
+      `);
+      return result.rows.length > 0;
+    } catch (error) {
+      console.error(`Error checking if table ${tableName} has column ${columnName}:`, error);
+      return false;
+    }
   }
   
   async getPolicy(id: number): Promise<Policy | undefined> {

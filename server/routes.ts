@@ -586,8 +586,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
     try {
-      // Create the policy tables if they don't exist yet
+      // Force recreate policy tables
       try {
+        // First check if we need to drop the policies table and recreate it
+        try {
+          // Try to get the table schema to check if version column exists
+          const result = await db.execute(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'policies' AND column_name = 'version'
+          `);
+          
+          // If no version column is found, drop and recreate all policy tables
+          if (result.rows.length === 0) {
+            console.log('Version column not found in policies table, recreating tables...');
+            
+            // Drop dependent tables first due to foreign key constraints
+            await db.execute(`DROP TABLE IF EXISTS "policy_obligation_mappings" CASCADE`);
+            await db.execute(`DROP TABLE IF EXISTS "policy_tags" CASCADE`);
+            await db.execute(`DROP TABLE IF EXISTS "policy_approvals" CASCADE`);
+            await db.execute(`DROP TABLE IF EXISTS "policy_versions" CASCADE`);
+            await db.execute(`DROP TABLE IF EXISTS "policies" CASCADE`);
+            await db.execute(`DROP TABLE IF EXISTS "policy_templates" CASCADE`);
+            
+            console.log('Policy tables dropped successfully');
+          }
+        } catch (error) {
+          console.log('Error checking for version column, will recreate tables:', error);
+        }
+        
+        // Now create all tables
         await db.execute(`
           CREATE TABLE IF NOT EXISTS "policies" (
             "id" SERIAL PRIMARY KEY,
