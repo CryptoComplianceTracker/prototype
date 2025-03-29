@@ -18,8 +18,7 @@ import ComplianceNewsPage from "@/pages/compliance-news";
 import ComplianceDashboardPage from "@/pages/compliance-dashboard";
 import ComplianceReportingPage from "@/pages/compliance-reporting";
 import FundRegistrationPage from "@/pages/fund-registration";
-import JurisdictionsList from "@/pages/jurisdictions-list";
-import JurisdictionDetails from "@/pages/jurisdiction-details";
+import JurisdictionsListModal from "@/pages/jurisdictions-list-modal";
 import TemplateStudioPage from "@/pages/template-studio";
 import { RegistrationView } from "@/components/registration-view";
 import NotFound from "@/pages/not-found";
@@ -47,8 +46,7 @@ function Router() {
           <ProtectedRoute path="/template-studio" component={TemplateStudioPage} />
           
           {/* Jurisdiction Routes */}
-          <ProtectedRoute path="/jurisdictions" component={JurisdictionsList} />
-          <ProtectedRoute path="/jurisdiction-detail/:id" component={JurisdictionDetails} />
+          <ProtectedRoute path="/jurisdictions" component={JurisdictionsListModal} />
 
           {/* Registration View Routes */}
           <Route path="/:type-view/:id" component={RegistrationView} />
