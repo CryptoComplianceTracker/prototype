@@ -52,8 +52,11 @@ app.use((req, res, next) => {
     }
 
     // Start server
-    const port = 5000;
-    server.listen(port, "0.0.0.0", () => {
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+    server.listen({
+      port: port,
+      host: "0.0.0.0"
+    }, () => {
       log(`Server started on port ${port}`);
     });
   } catch (error) {
