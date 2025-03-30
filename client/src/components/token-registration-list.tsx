@@ -24,7 +24,7 @@ export default function TokenRegistrationList({ isAdmin = false }: TokenListProp
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
   
   // Fetch token registrations
   const { data: tokens, isLoading, error } = useQuery<TokenRegistration[]>({
@@ -39,7 +39,7 @@ export default function TokenRegistrationList({ isAdmin = false }: TokenListProp
       token.tokenSymbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
       token.issuerName.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesCategory = filterCategory === "" || token.tokenCategory === filterCategory;
+    const matchesCategory = filterCategory === "all" || token.tokenCategory === filterCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -106,7 +106,7 @@ export default function TokenRegistrationList({ isAdmin = false }: TokenListProp
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {TOKEN_CATEGORIES.map(category => (
                 <SelectItem key={category} value={category}>
                   {category.replace(/_/g, ' ')}
