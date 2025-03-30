@@ -83,6 +83,7 @@ export function NavBar() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Link href="/tokens" className="hover:text-primary transition-colors">Tokens</Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="px-3 flex items-center gap-1">
@@ -134,6 +135,9 @@ export function NavBar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/jurisdictions" className="hover:text-primary transition-colors">Jurisdictions</Link>
+              {user?.isAdmin && (
+                <Link href="/admin" className="hover:text-primary transition-colors text-primary/70">Admin</Link>
+              )}
             </>
           )}
         </div>

@@ -1,0 +1,67 @@
+Comprehensive List of Token Types That Can Be Issued and Registered
+🏦 1. Financial Instrument Tokens (Regulated Securities)
+Tokens that derive their value from traditional financial instruments and are typically subject to securities laws.
+
+Type	Description	Examples
+Equity Tokens	Represent ownership shares in a company (tokenized stock)	Tokenized private equity, startup shares
+Debt Tokens / Bond Tokens	Tokenized debt instruments	Tokenized corporate bonds, US Treasuries
+Revenue-Share Tokens	Grant access to a % of project’s earnings	Royalty tokens, artist revenue tokens
+Convertible Tokens	Convertible to equity under predefined conditions	SAFT, tokenized convertible notes
+Structured Product Tokens	Complex hybrid instruments (with triggers/options)	Tokenized credit default swaps
+🏘 2. Real-World Asset (RWA) Tokens
+Tokens backed by physical or off-chain financial assets.
+
+Type	Description	Examples
+Real Estate Tokens	Fractional ownership in physical properties	Tokenized commercial buildings, apartments
+Precious Metal Tokens	1:1 backed by gold, silver, etc.	Paxos Gold (PAXG), Tether Gold
+Commodity Tokens	Represent oil, wheat, natural gas, etc.	Oil-backed tokens, agricultural tokens
+Invoice & Trade Finance Tokens	Represent receivables, invoices, PO financing	Centrifuge, Goldfinch
+Carbon Credit Tokens	Represent certified carbon offsets	Toucan Protocol, KlimaDAO
+Art & Collectible Tokens	Physical fine art or collectibles tokenized	Asset-backed art NFTs
+Vehicle / Equipment Tokens	Fractional ownership or leasing rights	Luxury car tokens, airplane parts
+Music / IP Royalties	Rights to future streaming/publishing revenues	Royal.io, Opulous
+💸 3. Payment & Stable Tokens
+Type	Description	Examples
+Fiat-Backed Stablecoins	Pegged to fiat and fully collateralized	USDC, USDT, PYUSD
+Algorithmic Stablecoins	Pegged via code/supply mechanisms (no 1:1 backing)	DAI, Frax
+CBDCs (Central Bank Digital Currencies)	Sovereign-issued stablecoins	eNaira, e-CNY, Digital Euro
+Payment Tokens	General-purpose money-like assets	Bitcoin, Litecoin
+🛠 4. Utility Tokens
+Tokens that grant access to a product or platform feature but do not represent ownership or securities.
+
+Type	Description	Examples
+Platform Access Tokens	Access to services/features	BNB (Binance), CRO (Crypto.com)
+Staking Tokens	Lock tokens to earn rewards or access governance	ETH (staking), Lido (stETH)
+API/Service Usage Tokens	Pay to access decentralized APIs, bandwidth, storage	Filecoin, Helium
+Gaming/Metaverse Tokens	In-game currencies or items	AXS (Axie Infinity), SAND (The Sandbox)
+🏛 5. Governance Tokens
+Tokens that allow holders to participate in decision-making or DAO voting.
+
+Type	Description	Examples
+DAO Governance Tokens	Represent voting rights in DAOs	UNI (Uniswap), AAVE, COMP
+Quadratic Voting Tokens	Vote with square-root weighting	Gitcoin-style community votes
+Delegated Governance Tokens	Allow delegation of votes to trusted parties	Aragon, Compound
+🧪 6. Synthetic & Derivative Tokens
+Type	Description	Examples
+Synthetic Asset Tokens	Mirror real-world asset prices without holding them	Synthetix (sUSD, sBTC), Mirror (mTSLA)
+Option Tokens	Represent on-chain call/put options	Hegic, Opyn
+Futures Tokens	Tokenized forward contracts	Perpetual Protocol, dYdX
+Leveraged Tokens	Tokens with built-in leverage mechanics	FTX leveraged tokens (e.g., BTC3L, BTC3S)
+🖼 7. Non-Fungible Tokens (NFTs)
+Type	Description	Examples
+Art NFTs	Represent digital or physical artwork	Beeple NFTs, Foundation, SuperRare
+Music NFTs	Represent audio tracks, albums, royalties	Royal.io, Sound.xyz
+Game NFTs	In-game items or characters	Axies, loot boxes, weapon skins
+Identity NFTs / Soulbound Tokens	Tied to user achievements or reputation	Proof of Humanity, Lens Protocol
+Domain NFTs	Blockchain-based web addresses	ENS, Unstoppable Domains
+🧾 8. Compliance, Access & Identity Tokens
+Type	Description	Examples
+KYC-Verified Tokens	Whitelisted identity layer on chain	Quadrata, Polygon ID
+Access-Controlled Tokens	Only tradable or usable by verified users	RegD tokens, zkKYC-gated assets
+Compliance-Aware Tokens	Tokens that auto-block based on geography/rules	Tokeny, Securitize DS Protocol
+🧩 9. Special Purpose & Novelty Tokens
+Type	Description	Examples
+Memecoins	Cultural/speculative tokens with no inherent utility	DOGE, SHIB, PEPE
+Fan Tokens	Issued by sports teams/celebrities for fan engagement	Chiliz (CHZ), PSG, ACM
+Voucher/Coupon Tokens	Redeemable for services, discounts, or access	Gift card tokens, early user drops
+Time Tokens	Tokens representing someone's time or service hours	Ethan Buchman’s “Hour” token (conceptual)

@@ -22,9 +22,16 @@ import {
   complianceReportTypeSchema,
   complianceReportSchema,
   reportScheduleSchema,
+  tokenRegistrationSchema,
+  tokenRegistrationDocumentSchema,
   compliance_report_types,
   compliance_reports,
-  report_schedules
+  report_schedules,
+  token_registrations,
+  token_registration_documents,
+  token_registration_verifications,
+  token_risk_assessments,
+  token_jurisdiction_approvals
 } from "@shared/schema";
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -2111,6 +2118,490 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Token Registration Module Routes
+  
+  // Get all token registrations (admin only)
+  app.get("/api/tokens/admin", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Fetching all token registrations...');
+      const tokens = await storage.getAllTokenRegistrations();
+      console.log(`Successfully retrieved ${tokens.length} token registrations`);
+      res.json(tokens);
+    } catch (error) {
+      console.error("Error fetching token registrations:", error);
+      res.status(500).json({
+        message: "Failed to fetch token registrations",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get all token registrations by category (admin only)
+  app.get("/api/tokens/admin/category/:category", checkAdminAuth, async (req, res) => {
+    try {
+      const { category } = req.params;
+      console.log(`Fetching token registrations for category: ${category}...`);
+      const tokens = await storage.getTokenRegistrationsByCategory(category);
+      console.log(`Successfully retrieved ${tokens.length} token registrations for category ${category}`);
+      res.json(tokens);
+    } catch (error) {
+      console.error(`Error fetching token registrations for category:`, error);
+      res.status(500).json({
+        message: "Failed to fetch token registrations by category",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get user's token registrations
+  app.get("/api/tokens", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/tokens');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      console.log(`Fetching token registrations for user ${req.user.id}...`);
+      const tokens = await storage.getTokenRegistrationsByUserId(req.user.id);
+      console.log(`Successfully retrieved ${tokens.length} token registrations for user ${req.user.id}`);
+      res.json(tokens);
+    } catch (error) {
+      console.error("Error fetching user token registrations:", error);
+      res.status(500).json({
+        message: "Failed to fetch token registrations",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get a specific token registration
+  app.get("/api/tokens/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/tokens/:id');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Fetching token registration ${tokenId}...`);
+      const token = await storage.getTokenRegistration(tokenId);
+      
+      if (!token) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only view their own token registrations
+      if (!req.user.isAdmin && token.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to access token registration ${tokenId} belonging to user ${token.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      console.log(`Successfully retrieved token registration ${tokenId}`);
+      res.json(token);
+    } catch (error) {
+      console.error("Error fetching token registration:", error);
+      res.status(500).json({
+        message: "Failed to fetch token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Register a new token
+  app.post("/api/tokens", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/tokens');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      console.log('Validating token registration data...');
+      const tokenData = tokenRegistrationSchema.parse(req.body);
+      
+      console.log(`Creating new token registration for user ${req.user.id}...`);
+      const registration = await storage.createTokenRegistration(req.user.id, tokenData);
+      
+      // Create blockchain attestation if user has a wallet
+      if (req.user.walletAddress) {
+        console.log(`Creating attestation for token registration ${registration.id}...`);
+        const attestation = await createRegistrationAttestation(
+          'token',
+          registration.id.toString(),
+          req.user.walletAddress
+        );
+        
+        if (!attestation.success) {
+          console.warn('Attestation creation failed:', attestation.error);
+        } else {
+          console.log(`Attestation created successfully for token registration ${registration.id}`);
+        }
+      }
+      
+      console.log(`Token registration ${registration.id} created successfully`);
+      res.status(201).json(registration);
+    } catch (error) {
+      console.error('Error registering token:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Internal server error",
+          details: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Update a token registration
+  app.patch("/api/tokens/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to PATCH /api/tokens/:id');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Updating token registration ${tokenId}...`);
+      
+      // Verify token exists and belongs to user
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only update their own token registrations
+      if (!req.user.isAdmin && existingToken.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to update token registration ${tokenId} belonging to user ${existingToken.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      // Partial update validation
+      const updateData = req.body;
+      
+      // Update token registration
+      const updatedToken = await storage.updateTokenRegistration(tokenId, updateData);
+      
+      console.log(`Token registration ${tokenId} updated successfully`);
+      res.json(updatedToken);
+    } catch (error) {
+      console.error('Error updating token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to update token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Add document to token registration
+  app.post("/api/tokens/:id/documents", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/tokens/:id/documents');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Adding document to token registration ${tokenId}...`);
+      
+      // Verify token exists and belongs to user
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only add documents to their own token registrations
+      if (!req.user.isAdmin && existingToken.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to add document to token registration ${tokenId} belonging to user ${existingToken.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      // Validate document data
+      const documentData = tokenRegistrationDocumentSchema.parse(req.body);
+      
+      // Create document
+      const document = await storage.createTokenRegistrationDocument({
+        ...documentData,
+        tokenRegistrationId: tokenId
+      });
+      
+      console.log(`Document added to token registration ${tokenId}`);
+      res.status(201).json(document);
+    } catch (error) {
+      console.error('Error adding document to token registration:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to add document to token registration",
+          details: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Get documents for a token registration
+  app.get("/api/tokens/:id/documents", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/tokens/:id/documents');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Fetching documents for token registration ${tokenId}...`);
+      
+      // Verify token exists and belongs to user
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only view documents for their own token registrations
+      if (!req.user.isAdmin && existingToken.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to view documents for token registration ${tokenId} belonging to user ${existingToken.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      // Get documents
+      const documents = await storage.getTokenRegistrationDocuments(tokenId);
+      
+      console.log(`Successfully retrieved ${documents.length} documents for token registration ${tokenId}`);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching documents for token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch documents for token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin-only: Add verification to token registration
+  app.post("/api/tokens/:id/verifications", checkAdminAuth, async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Adding verification to token registration ${tokenId}...`);
+      
+      // Verify token exists
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Create verification with admin as verifier
+      const verification = await storage.createTokenRegistrationVerification({
+        tokenRegistrationId: tokenId,
+        verifierUserId: req.user.id,
+        verificationType: req.body.verificationType,
+        verificationStatus: req.body.verificationStatus,
+        verificationDetails: req.body.verificationDetails,
+        expiryDate: req.body.expiryDate
+      });
+      
+      console.log(`Verification added to token registration ${tokenId}`);
+      res.status(201).json(verification);
+    } catch (error) {
+      console.error('Error adding verification to token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to add verification to token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get verifications for a token registration
+  app.get("/api/tokens/:id/verifications", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/tokens/:id/verifications');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Fetching verifications for token registration ${tokenId}...`);
+      
+      // Verify token exists
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only view verifications for their own token registrations
+      if (!req.user.isAdmin && existingToken.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to view verifications for token registration ${tokenId} belonging to user ${existingToken.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      // Get verifications
+      const verifications = await storage.getTokenRegistrationVerifications(tokenId);
+      
+      console.log(`Successfully retrieved ${verifications.length} verifications for token registration ${tokenId}`);
+      res.json(verifications);
+    } catch (error) {
+      console.error('Error fetching verifications for token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch verifications for token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin-only: Add risk assessment to token registration
+  app.post("/api/tokens/:id/risk-assessments", checkAdminAuth, async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Adding risk assessment to token registration ${tokenId}...`);
+      
+      // Verify token exists
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Create risk assessment with admin as assessor
+      const assessment = await storage.createTokenRiskAssessment({
+        tokenRegistrationId: tokenId,
+        assessorUserId: req.user.id,
+        riskCategory: req.body.riskCategory,
+        riskLevel: req.body.riskLevel,
+        riskDetails: req.body.riskDetails,
+        mitigationMeasures: req.body.mitigationMeasures
+      });
+      
+      console.log(`Risk assessment added to token registration ${tokenId}`);
+      res.status(201).json(assessment);
+    } catch (error) {
+      console.error('Error adding risk assessment to token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to add risk assessment to token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get risk assessments for a token registration
+  app.get("/api/tokens/:id/risk-assessments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/tokens/:id/risk-assessments');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Fetching risk assessments for token registration ${tokenId}...`);
+      
+      // Verify token exists
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only view risk assessments for their own token registrations
+      if (!req.user.isAdmin && existingToken.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to view risk assessments for token registration ${tokenId} belonging to user ${existingToken.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      // Get risk assessments
+      const assessments = await storage.getTokenRiskAssessments(tokenId);
+      
+      console.log(`Successfully retrieved ${assessments.length} risk assessments for token registration ${tokenId}`);
+      res.json(assessments);
+    } catch (error) {
+      console.error('Error fetching risk assessments for token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch risk assessments for token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin-only: Add jurisdiction approval to token registration
+  app.post("/api/tokens/:id/jurisdiction-approvals", checkAdminAuth, async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Adding jurisdiction approval to token registration ${tokenId}...`);
+      
+      // Verify token exists
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Create jurisdiction approval
+      const approval = await storage.createTokenJurisdictionApproval({
+        tokenRegistrationId: tokenId,
+        jurisdictionId: req.body.jurisdictionId,
+        approvalStatus: req.body.approvalStatus,
+        approvalDetails: req.body.approvalDetails,
+        restrictionDetails: req.body.restrictionDetails,
+        approvalDate: req.body.approvalDate ? new Date(req.body.approvalDate) : new Date(),
+        expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null
+      });
+      
+      console.log(`Jurisdiction approval added to token registration ${tokenId}`);
+      res.status(201).json(approval);
+    } catch (error) {
+      console.error('Error adding jurisdiction approval to token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to add jurisdiction approval to token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get jurisdiction approvals for a token registration
+  app.get("/api/tokens/:id/jurisdiction-approvals", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to GET /api/tokens/:id/jurisdiction-approvals');
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const tokenId = parseInt(req.params.id);
+      console.log(`Fetching jurisdiction approvals for token registration ${tokenId}...`);
+      
+      // Verify token exists
+      const existingToken = await storage.getTokenRegistration(tokenId);
+      if (!existingToken) {
+        console.log(`Token registration ${tokenId} not found`);
+        return res.status(404).json({ message: "Token registration not found" });
+      }
+      
+      // Non-admins can only view jurisdiction approvals for their own token registrations
+      if (!req.user.isAdmin && existingToken.userId !== req.user.id) {
+        console.log(`User ${req.user.id} attempted to view jurisdiction approvals for token registration ${tokenId} belonging to user ${existingToken.userId}`);
+        return res.sendStatus(403);
+      }
+      
+      // Get jurisdiction approvals
+      const approvals = await storage.getTokenJurisdictionApprovals(tokenId);
+      
+      console.log(`Successfully retrieved ${approvals.length} jurisdiction approvals for token registration ${tokenId}`);
+      res.json(approvals);
+    } catch (error) {
+      console.error('Error fetching jurisdiction approvals for token registration:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch jurisdiction approvals for token registration",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

@@ -7,8 +7,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, AlertCircle, CheckCircle, Loader2, Download } from "lucide-react";
+import { ChevronDown, AlertCircle, CheckCircle, Loader2, Download, Coins } from "lucide-react";
 import * as React from "react";
+import { Link } from "wouter";
 import type { 
   ExchangeInfo, 
   StablecoinInfo, 
@@ -165,13 +166,19 @@ export default function AdminDashboard() {
         defaultValue="exchanges" 
         onValueChange={value => setActiveTab(value)}
       >
-        <TabsList className="grid grid-cols-6">
+        <TabsList className="grid grid-cols-7">
           <TabsTrigger value="exchanges">Exchanges</TabsTrigger>
           <TabsTrigger value="stablecoins">Stablecoins</TabsTrigger>
           <TabsTrigger value="defi">DeFi Protocols</TabsTrigger>
           <TabsTrigger value="nft">NFT Marketplaces</TabsTrigger>
           <TabsTrigger value="funds">Crypto Funds</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="tokens" asChild>
+            <Link href="/admin/tokens" className="flex items-center gap-1">
+              <Coins className="h-4 w-4" />
+              <span>Tokens</span>
+            </Link>
+          </TabsTrigger>
         </TabsList>
 
         {/* Exchange Registrations Tab */}

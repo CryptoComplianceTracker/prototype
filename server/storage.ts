@@ -4,6 +4,7 @@ import {
   jurisdictions, regulatory_bodies, regulations, compliance_requirements, taxation_rules,
   reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords,
   policy_templates, policies, policy_versions, policy_obligation_mappings, policy_tags, policy_approvals,
+  token_registrations, token_registration_documents, token_registration_verifications, token_risk_assessments, token_jurisdiction_approvals,
   type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
   type StablecoinInfo, type InsertStablecoinInfo,
   type DefiProtocolInfo, type InsertDefiProtocolInfo,
@@ -24,7 +25,10 @@ import {
   type PolicyVersion, type InsertPolicyVersion,
   type PolicyObligationMapping, type InsertPolicyObligationMapping,
   type PolicyTag, type InsertPolicyTag,
-  type PolicyApproval, type InsertPolicyApproval
+  type PolicyApproval, type InsertPolicyApproval,
+  type TokenRegistration, type InsertTokenRegistration,
+  type TokenRegistrationDocument, type InsertTokenRegistrationDocument,
+  type TokenRegistrationVerification, type TokenRiskAssessment, type TokenJurisdictionApproval
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, desc } from "drizzle-orm";
@@ -167,6 +171,31 @@ export interface IStorage {
   createPolicyObligationMapping(data: InsertPolicyObligationMapping): Promise<PolicyObligationMapping>;
   getPolicyObligationMappingsByPolicyId(policyId: number): Promise<PolicyObligationMapping[]>;
   getPolicyObligationMappingsByObligationId(obligationId: number): Promise<PolicyObligationMapping[]>;
+  
+  // Token Registration methods
+  createTokenRegistration(userId: number, data: InsertTokenRegistration): Promise<TokenRegistration>;
+  getTokenRegistration(id: number): Promise<TokenRegistration | undefined>;
+  getTokenRegistrationsByUserId(userId: number): Promise<TokenRegistration[]>;
+  getAllTokenRegistrations(): Promise<TokenRegistration[]>;
+  getTokenRegistrationsByCategory(category: string): Promise<TokenRegistration[]>;
+  updateTokenRegistration(id: number, data: Partial<TokenRegistration>): Promise<TokenRegistration>;
+  
+  // Token Registration Documents
+  createTokenRegistrationDocument(data: InsertTokenRegistrationDocument): Promise<TokenRegistrationDocument>;
+  getTokenRegistrationDocuments(tokenRegistrationId: number): Promise<TokenRegistrationDocument[]>;
+  
+  // Token Registration Verifications
+  createTokenRegistrationVerification(data: Omit<TokenRegistrationVerification, "id" | "verificationDate">): Promise<TokenRegistrationVerification>;
+  getTokenRegistrationVerifications(tokenRegistrationId: number): Promise<TokenRegistrationVerification[]>;
+  
+  // Token Risk Assessments
+  createTokenRiskAssessment(data: Omit<TokenRiskAssessment, "id" | "assessmentDate">): Promise<TokenRiskAssessment>;
+  getTokenRiskAssessments(tokenRegistrationId: number): Promise<TokenRiskAssessment[]>;
+  
+  // Token Jurisdiction Approvals
+  createTokenJurisdictionApproval(data: Omit<TokenJurisdictionApproval, "id">): Promise<TokenJurisdictionApproval>;
+  getTokenJurisdictionApprovals(tokenRegistrationId: number): Promise<TokenJurisdictionApproval[]>;
+  getTokenJurisdictionApprovalsByJurisdiction(jurisdictionId: number): Promise<TokenJurisdictionApproval[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -826,6 +855,110 @@ export class DatabaseStorage implements IStorage {
         if (!b.createdAt) return -1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
+  }
+
+  // Token Registration Methods
+  async createTokenRegistration(userId: number, data: InsertTokenRegistration): Promise<TokenRegistration> {
+    const [tokenRegistration] = await db.insert(token_registrations).values({
+      ...data,
+      userId,
+      updatedAt: new Date()
+    }).returning();
+    return tokenRegistration;
+  }
+
+  async getTokenRegistration(id: number): Promise<TokenRegistration | undefined> {
+    const [tokenRegistration] = await db.select().from(token_registrations).where(eq(token_registrations.id, id));
+    return tokenRegistration;
+  }
+
+  async getTokenRegistrationsByUserId(userId: number): Promise<TokenRegistration[]> {
+    return await db.select()
+      .from(token_registrations)
+      .where(eq(token_registrations.userId, userId))
+      .orderBy(desc(token_registrations.updatedAt));
+  }
+
+  async getAllTokenRegistrations(): Promise<TokenRegistration[]> {
+    return await db.select().from(token_registrations).orderBy(desc(token_registrations.updatedAt));
+  }
+
+  async getTokenRegistrationsByCategory(category: string): Promise<TokenRegistration[]> {
+    // Use SQL for enum type comparison to fix type error
+    return await db.select()
+      .from(token_registrations)
+      .where(sql`${token_registrations.tokenCategory} = ${category}`)
+      .orderBy(desc(token_registrations.updatedAt));
+  }
+
+  async updateTokenRegistration(id: number, data: Partial<TokenRegistration>): Promise<TokenRegistration> {
+    const [updated] = await db.update(token_registrations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(token_registrations.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Token Registration Documents
+  async createTokenRegistrationDocument(data: InsertTokenRegistrationDocument): Promise<TokenRegistrationDocument> {
+    const [document] = await db.insert(token_registration_documents).values(data).returning();
+    return document;
+  }
+
+  async getTokenRegistrationDocuments(tokenRegistrationId: number): Promise<TokenRegistrationDocument[]> {
+    return await db.select()
+      .from(token_registration_documents)
+      .where(eq(token_registration_documents.tokenRegistrationId, tokenRegistrationId));
+  }
+
+  // Token Registration Verifications
+  async createTokenRegistrationVerification(data: Omit<TokenRegistrationVerification, "id" | "verificationDate">): Promise<TokenRegistrationVerification> {
+    const [verification] = await db.insert(token_registration_verifications).values({
+      ...data,
+      verificationDate: new Date()
+    }).returning();
+    return verification;
+  }
+
+  async getTokenRegistrationVerifications(tokenRegistrationId: number): Promise<TokenRegistrationVerification[]> {
+    return await db.select()
+      .from(token_registration_verifications)
+      .where(eq(token_registration_verifications.tokenRegistrationId, tokenRegistrationId))
+      .orderBy(desc(token_registration_verifications.verificationDate));
+  }
+
+  // Token Risk Assessments
+  async createTokenRiskAssessment(data: Omit<TokenRiskAssessment, "id" | "assessmentDate">): Promise<TokenRiskAssessment> {
+    const [assessment] = await db.insert(token_risk_assessments).values({
+      ...data,
+      assessmentDate: new Date()
+    }).returning();
+    return assessment;
+  }
+
+  async getTokenRiskAssessments(tokenRegistrationId: number): Promise<TokenRiskAssessment[]> {
+    return await db.select()
+      .from(token_risk_assessments)
+      .where(eq(token_risk_assessments.tokenRegistrationId, tokenRegistrationId))
+      .orderBy(desc(token_risk_assessments.assessmentDate));
+  }
+
+  // Token Jurisdiction Approvals
+  async createTokenJurisdictionApproval(data: Omit<TokenJurisdictionApproval, "id">): Promise<TokenJurisdictionApproval> {
+    const [approval] = await db.insert(token_jurisdiction_approvals).values(data).returning();
+    return approval;
+  }
+
+  async getTokenJurisdictionApprovals(tokenRegistrationId: number): Promise<TokenJurisdictionApproval[]> {
+    return await db.select()
+      .from(token_jurisdiction_approvals)
+      .where(eq(token_jurisdiction_approvals.tokenRegistrationId, tokenRegistrationId));
+  }
+
+  async getTokenJurisdictionApprovalsByJurisdiction(jurisdictionId: number): Promise<TokenJurisdictionApproval[]> {
+    return await db.select()
+      .from(token_jurisdiction_approvals)
+      .where(eq(token_jurisdiction_approvals.jurisdictionId, jurisdictionId));
   }
 }
 

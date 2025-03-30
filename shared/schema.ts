@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, date, pgEnum } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1058,3 +1058,232 @@ export type PolicyTag = typeof policy_tags.$inferSelect;
 export type InsertPolicyTag = z.infer<typeof policyTagSchema>;
 export type PolicyApproval = typeof policy_approvals.$inferSelect;
 export type InsertPolicyApproval = z.infer<typeof policyApprovalSchema>;
+
+// Token Registration Module
+
+// Token Category Enum
+export const tokenCategoryEnum = pgEnum("token_category", [
+  "FINANCIAL_INSTRUMENT", 
+  "REAL_WORLD_ASSET", 
+  "PAYMENT_STABLE", 
+  "UTILITY", 
+  "GOVERNANCE", 
+  "SYNTHETIC_DERIVATIVE", 
+  "NFT", 
+  "COMPLIANCE_ACCESS", 
+  "SPECIAL_PURPOSE"
+]);
+
+// Token Registration Table
+export const token_registrations = pgTable("token_registrations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tokenName: text("token_name").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  tokenCategory: tokenCategoryEnum("token_category").notNull(),
+  tokenType: text("token_type").notNull(),
+  description: text("description").notNull(),
+  issuerName: text("issuer_name").notNull(),
+  issuerLegalEntity: text("issuer_legal_entity").notNull(),
+  websiteUrl: text("website_url").notNull(),
+  whitepaperUrl: text("whitepaper_url"),
+  blockchainNetworks: jsonb("blockchain_networks").notNull(),
+  contractAddresses: jsonb("contract_addresses").notNull(),
+  tokenStandard: text("token_standard"), // e.g., ERC-20, ERC-721, etc.
+  totalSupply: text("total_supply"),
+  regulatoryStatus: text("regulatory_status"),
+  jurisdictions: jsonb("jurisdictions"), // List of jurisdictions where the token is registered
+  complianceContacts: jsonb("compliance_contacts"),
+  kycRequirements: text("kyc_requirements"),
+  amlPolicyUrl: text("aml_policy_url"),
+  transferRestrictions: text("transfer_restrictions"),
+  
+  // Token-type specific fields
+  assetBackingDetails: jsonb("asset_backing_details"), // For RWA tokens
+  pegDetails: jsonb("peg_details"), // For stablecoins
+  securityFeatures: jsonb("security_features"),
+  tokenomicsDetails: jsonb("tokenomics_details"),
+  whitelistStatus: boolean("whitelist_status").default(false),
+  
+  // Audit information
+  securityAuditDetails: jsonb("security_audit_details"),
+  lastAuditDate: date("last_audit_date"),
+  
+  // Status and metadata
+  registrationStatus: text("registration_status").default("draft").notNull(),
+  riskAssessment: jsonb("risk_assessment"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Token Registration Documents
+export const token_registration_documents = pgTable("token_registration_documents", {
+  id: serial("id").primaryKey(),
+  tokenRegistrationId: integer("token_registration_id").notNull().references(() => token_registrations.id),
+  documentType: text("document_type").notNull(), // legal opinion, audit report, whitepaper, etc.
+  documentName: text("document_name").notNull(),
+  documentUrl: text("document_url").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+// Token Registration Verification
+export const token_registration_verifications = pgTable("token_registration_verifications", {
+  id: serial("id").primaryKey(),
+  tokenRegistrationId: integer("token_registration_id").notNull().references(() => token_registrations.id),
+  verifierUserId: integer("verifier_user_id").references(() => users.id),
+  verificationType: text("verification_type").notNull(), // KYC, smart contract, legal, etc.
+  verificationStatus: text("verification_status").notNull(),
+  verificationDate: timestamp("verification_date").defaultNow(),
+  verificationDetails: jsonb("verification_details"),
+  expiryDate: date("expiry_date"),
+});
+
+// Token Risk Assessments
+export const token_risk_assessments = pgTable("token_risk_assessments", {
+  id: serial("id").primaryKey(),
+  tokenRegistrationId: integer("token_registration_id").notNull().references(() => token_registrations.id),
+  assessorUserId: integer("assessor_user_id").references(() => users.id),
+  riskCategory: text("risk_category").notNull(), // regulatory, technical, market, etc.
+  riskLevel: text("risk_level").notNull(), // low, medium, high, critical
+  riskDetails: text("risk_details"),
+  mitigationMeasures: text("mitigation_measures"),
+  assessmentDate: timestamp("assessment_date").defaultNow(),
+});
+
+// Token Jurisdiction Approvals
+export const token_jurisdiction_approvals = pgTable("token_jurisdiction_approvals", {
+  id: serial("id").primaryKey(),
+  tokenRegistrationId: integer("token_registration_id").notNull().references(() => token_registrations.id),
+  jurisdictionId: integer("jurisdiction_id").notNull().references(() => jurisdictions.id),
+  approvalStatus: text("approval_status").notNull(), // pending, approved, rejected, restricted
+  approvalDetails: jsonb("approval_details"),
+  restrictionDetails: text("restriction_details"),
+  approvalDate: timestamp("approval_date"),
+  expiryDate: date("expiry_date"),
+});
+
+// Relations for token registrations
+export const tokenRegistrationsRelations = relations(token_registrations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [token_registrations.userId],
+    references: [users.id]
+  }),
+  documents: many(token_registration_documents),
+  verifications: many(token_registration_verifications),
+  riskAssessments: many(token_risk_assessments),
+  jurisdictionApprovals: many(token_jurisdiction_approvals)
+}));
+
+export const tokenRegistrationDocumentsRelations = relations(token_registration_documents, ({ one }) => ({
+  tokenRegistration: one(token_registrations, {
+    fields: [token_registration_documents.tokenRegistrationId],
+    references: [token_registrations.id]
+  })
+}));
+
+export const tokenRegistrationVerificationsRelations = relations(token_registration_verifications, ({ one }) => ({
+  tokenRegistration: one(token_registrations, {
+    fields: [token_registration_verifications.tokenRegistrationId],
+    references: [token_registrations.id]
+  }),
+  verifier: one(users, {
+    fields: [token_registration_verifications.verifierUserId],
+    references: [users.id]
+  })
+}));
+
+export const tokenRiskAssessmentsRelations = relations(token_risk_assessments, ({ one }) => ({
+  tokenRegistration: one(token_registrations, {
+    fields: [token_risk_assessments.tokenRegistrationId],
+    references: [token_registrations.id]
+  }),
+  assessor: one(users, {
+    fields: [token_risk_assessments.assessorUserId],
+    references: [users.id]
+  })
+}));
+
+export const tokenJurisdictionApprovalsRelations = relations(token_jurisdiction_approvals, ({ one }) => ({
+  tokenRegistration: one(token_registrations, {
+    fields: [token_jurisdiction_approvals.tokenRegistrationId],
+    references: [token_registrations.id]
+  }),
+  jurisdiction: one(jurisdictions, {
+    fields: [token_jurisdiction_approvals.jurisdictionId],
+    references: [jurisdictions.id]
+  })
+}));
+
+// Zod schemas for token registration
+export const tokenRegistrationSchema = createInsertSchema(token_registrations)
+  .omit({ 
+    id: true, 
+    userId: true, 
+    createdAt: true, 
+    updatedAt: true,
+    riskAssessment: true 
+  })
+  .extend({
+    tokenCategory: z.enum([
+      "FINANCIAL_INSTRUMENT", 
+      "REAL_WORLD_ASSET", 
+      "PAYMENT_STABLE", 
+      "UTILITY", 
+      "GOVERNANCE", 
+      "SYNTHETIC_DERIVATIVE", 
+      "NFT", 
+      "COMPLIANCE_ACCESS", 
+      "SPECIAL_PURPOSE"
+    ], {
+      required_error: "Please select a token category"
+    }),
+    tokenType: z.string().min(1, {
+      message: "Token type is required"
+    }),
+    websiteUrl: z.string().url({
+      message: "Please enter a valid website URL"
+    }),
+    whitepaperUrl: z.string().url({
+      message: "Please enter a valid whitepaper URL"
+    }).optional(),
+    blockchainNetworks: z.array(
+      z.object({
+        name: z.string(),
+        chainId: z.string()
+      })
+    ),
+    contractAddresses: z.array(
+      z.object({
+        network: z.string(),
+        address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
+          message: "Invalid Ethereum address format"
+        })
+      })
+    ),
+    complianceContacts: z.array(
+      z.object({
+        name: z.string(),
+        email: z.string().email({
+          message: "Please enter a valid email address"
+        }),
+        role: z.string()
+      })
+    ).optional()
+  });
+
+export const tokenRegistrationDocumentSchema = createInsertSchema(token_registration_documents)
+  .omit({ id: true, uploadedAt: true })
+  .extend({
+    documentUrl: z.string().url({
+      message: "Please enter a valid document URL"
+    })
+  });
+
+// Export types
+export type TokenRegistration = typeof token_registrations.$inferSelect;
+export type InsertTokenRegistration = z.infer<typeof tokenRegistrationSchema>;
+export type TokenRegistrationDocument = typeof token_registration_documents.$inferSelect;
+export type InsertTokenRegistrationDocument = z.infer<typeof tokenRegistrationDocumentSchema>;
+export type TokenRegistrationVerification = typeof token_registration_verifications.$inferSelect;
+export type TokenRiskAssessment = typeof token_risk_assessments.$inferSelect;
+export type TokenJurisdictionApproval = typeof token_jurisdiction_approvals.$inferSelect;

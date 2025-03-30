@@ -22,6 +22,11 @@ import JurisdictionsListModal from "@/pages/jurisdictions-list-modal";
 import TemplateStudioPage from "@/pages/template-studio";
 import { RegistrationView } from "@/components/registration-view";
 import NotFound from "@/pages/not-found";
+// Token Registration Module
+import TokenRegistrationPage from "@/pages/token-registration-page";
+import TokenListingPage from "@/pages/token-listing-page";
+import TokenDetailsPage from "@/pages/token-details-page";
+import AdminTokenListingPage from "@/pages/admin-token-listing-page";
 
 function Router() {
   return (
@@ -44,6 +49,12 @@ function Router() {
           <ProtectedRoute path="/compliance-dashboard" component={ComplianceDashboardPage} />
           <ProtectedRoute path="/compliance-reporting" component={ComplianceReportingPage} />
           <ProtectedRoute path="/template-studio" component={TemplateStudioPage} />
+          
+          {/* Token Registration Routes */}
+          <ProtectedRoute path="/tokens" component={TokenListingPage} />
+          <ProtectedRoute path="/tokens/register" component={TokenRegistrationPage} />
+          <ProtectedRoute path="/tokens/:id" component={TokenDetailsPage} />
+          <AdminProtectedRoute path="/admin/tokens" component={AdminTokenListingPage} />
           
           {/* Jurisdiction Routes */}
           <ProtectedRoute path="/jurisdictions" component={JurisdictionsListModal} />

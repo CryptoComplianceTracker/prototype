@@ -29,6 +29,12 @@ export const registrationTypes = [
     name: 'Crypto Fund Registration',
     formRoute: '/fund-registration',
     description: 'Register cryptocurrency investment funds'
+  },
+  { 
+    id: 'token',
+    name: 'Token Registration',
+    formRoute: '/tokens/register',
+    description: 'Register and classify tokenized assets'
   }
 ];
 
