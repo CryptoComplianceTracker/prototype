@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -28,9 +33,22 @@ app.use((req, res, next) => {
       res.status(500).json({ message: "Internal server error" });
     });
 
-    // Set up Vite in development mode
+    // Set up Vite in development mode or serve static files in production
     if (process.env.NODE_ENV !== 'production') {
       await setupVite(app, server);
+    } else {
+      // In production, serve the static files
+      const distPath = path.resolve(__dirname, '../dist');
+      app.use(express.static(distPath));
+      
+      // Handle client-side routing - send index.html for any non-API routes
+      app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api')) {
+          res.sendFile(path.resolve(distPath, 'index.html'));
+        }
+      });
+      
+      console.log('Running in production mode, serving static files from:', distPath);
     }
 
     // Start server
