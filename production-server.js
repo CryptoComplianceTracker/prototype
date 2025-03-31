@@ -3,35 +3,25 @@
  */
 
 import express from 'express';
-import { fileURLToPath } from 'url';
 import path from 'path';
-import helmet from 'helmet';
+import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { createServer } from 'http';
 import { setupAuth } from './server/auth.js';
+import { registerRoutes } from './server/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
+  // Initialize Express app
   const app = express();
-  
-  // Security headers
-  app.use(helmet({
-    contentSecurityPolicy: false
-  }));
-  
-  // Basic middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
-  
-  // Create HTTP server
-  const httpServer = createServer(app);
   
   // Basic request logging
   app.use((req, res, next) => {
     const start = Date.now();
-    res.on("finish", () => {
+    res.on('finish', () => {
       const duration = Date.now() - start;
       console.log(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
     });
@@ -39,49 +29,28 @@ async function startServer() {
   });
   
   try {
-    // Set up authentication
-    console.log('🔐 Setting up authentication...');
-    setupAuth(app);
-    
-    // Health check endpoint
-    app.get('/api/health', (req, res) => {
-      res.json({ 
-        status: 'ok', 
-        environment: process.env.NODE_ENV || 'production',
-        timestamp: new Date().toISOString()
-      });
-    });
-    
-    // API endpoints
-    console.log('🔌 Registering API endpoints...');
-    
-    // Determine client files location
-    let staticPath = './client/dist';
-    if (fs.existsSync('./dist')) {
-      staticPath = './dist';
-    }
+    // Register API routes
+    const httpServer = await registerRoutes(app);
     
     // Serve static files
-    app.use(express.static(staticPath));
+    app.use(express.static(path.join(__dirname, 'client/dist')));
     
-    // Always return the main index.html for any non-API request (client-side routing)
+    // Always return the main index.html for client-side routing
     app.get('*', (req, res) => {
       if (!req.path.startsWith('/api')) {
-        res.sendFile(path.resolve(staticPath, 'index.html'));
-      } else {
-        res.status(404).json({ message: "API endpoint not found" });
+        res.sendFile(path.join(__dirname, 'client/dist', 'index.html'));
       }
     });
     
     // Start server
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 3000;
     httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ DARA Platform server running on port ${PORT}`);
+      console.log(`DARA Platform server running on port ${PORT} in production mode`);
     });
     
     return httpServer;
   } catch (error) {
-    console.error("❌ Server startup error:", error);
+    console.error('Error starting server:', error);
     process.exit(1);
   }
 }
