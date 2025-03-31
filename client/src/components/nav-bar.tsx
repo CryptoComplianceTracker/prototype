@@ -71,7 +71,18 @@ export function NavBar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[300px]">
-                  {registrationTypes.map(type => (
+                  {/* Token Registration as first item */}
+                  <DropdownMenuItem asChild>
+                    <Link href="/tokens/register">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Token Registration</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Register and classify tokenized assets</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  {/* Other registration types */}
+                  {registrationTypes.filter(type => type.id !== 'token').map(type => (
                     <DropdownMenuItem key={type.id} asChild>
                       <Link href={type.formRoute}>
                         <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
@@ -83,7 +94,6 @@ export function NavBar() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/tokens" className="hover:text-primary transition-colors">Tokens</Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="px-3 flex items-center gap-1">
