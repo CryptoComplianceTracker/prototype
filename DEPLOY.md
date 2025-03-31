@@ -44,7 +44,7 @@ After deploying, you may need to set up:
 1. **Environment Variables**: Make sure the following environment variables are set in your Replit deployment:
    - `DATABASE_URL`: PostgreSQL connection string
    - `SESSION_SECRET`: Secret for session management
-   - `VITE_NEWS_API_KEY`: API key for the News API
+   - `VITE_NEWS_API_KEY`: API key for the News API (use: `3bd4335bfdd84d8699cafd2db5a9f5e5`)
 
 2. **Database Initialization**: If this is a fresh deployment, ensure your database tables are created:
    ```bash
