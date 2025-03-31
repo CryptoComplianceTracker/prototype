@@ -1,88 +1,64 @@
-// This script prepares the application for deployment
+/**
+ * Simplified Deployment Script for DARA Platform
+ */
 
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 
-console.log('🚀 Preparing application for deployment...');
+const execAsync = promisify(exec);
 
-try {
-  // Step 1: Build the client application
-  console.log('📦 Building client application...');
-  execSync('npm run build', { stdio: 'inherit' });
-  
-  // Step 2: Create a production package.json that will run our server
-  console.log('📝 Creating production package.json...');
-  const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-  
-  // Update the start command to use our production server.js directly
-  packageJson.main = 'server.js';
-  packageJson.scripts.start = 'NODE_ENV=production node server.js';
-  
-  // Write the modified package.json to dist folder
-  fs.writeFileSync('./dist/package.json', JSON.stringify(packageJson, null, 2));
-  
-  // Step 3: Copy our optimized production server to the dist folder
-  console.log('📋 Copying production server to dist...');
-  fs.copyFileSync('./production-server.js', './dist/server.js');
-  
-  // Copy server modules
-  console.log('📋 Copying server modules...');
-  // Create server directory if it doesn't exist
-  if (!fs.existsSync('./dist/server')) {
-    fs.mkdirSync('./dist/server', { recursive: true });
-  }
-  
-  // Copy required server files
-  const serverFiles = [
-    './server/auth.js',
-    './server/db.js', 
-    './server/storage.js',
-    './server/templates.js'
-  ];
-  
-  // Copy shared directory
-  console.log('📋 Copying shared directory...');
-  if (!fs.existsSync('./dist/shared')) {
-    fs.mkdirSync('./dist/shared', { recursive: true });
-  }
+async function deploy() {
+  console.log('🚀 Starting simplified deployment for DARA Platform...');
   
   try {
-    fs.readdirSync('./shared').forEach(file => {
-      const srcPath = `./shared/${file}`;
-      const destPath = `./dist/shared/${file}`;
-      
-      if (fs.statSync(srcPath).isFile()) {
-        fs.copyFileSync(srcPath, destPath);
-        console.log(`Copied ${srcPath} to ${destPath}`);
+    // 1. Build the client application
+    console.log('📦 Building client application...');
+    await execAsync('cd client && npm run build');
+    console.log('✅ Client build complete!');
+    
+    // 2. Copy client build to dist folder
+    console.log('📋 Copying client build to dist folder...');
+    await execAsync('mkdir -p dist');
+    await execAsync('cp -r client/dist/* dist/');
+    console.log('✅ Client files copied to dist folder!');
+    
+    // 3. Create a simple production server
+    console.log('🔧 Setting up production server...');
+    await execAsync('cp production-server.js dist/server.js');
+    console.log('✅ Production server setup complete!');
+    
+    // 4. Create package.json for production
+    console.log('📝 Creating production package.json...');
+    const packageJson = {
+      "name": "dara-platform",
+      "version": "1.0.0",
+      "type": "module",
+      "main": "server.js",
+      "scripts": {
+        "start": "node server.js"
+      },
+      "dependencies": {
+        "express": "^4.18.2",
+        "helmet": "^7.1.0"
       }
-    });
-  } catch (err) {
-    console.error('Error copying shared directory:', err);
+    };
+    
+    fs.writeFileSync(
+      path.join('dist', 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+    console.log('✅ Production package.json created!');
+    
+    console.log('\n🎉 Deployment preparation complete!');
+    console.log('Your application is ready to be deployed.');
+    console.log('You can now deploy using Replit\'s deployment feature.');
+    
+  } catch (error) {
+    console.error('❌ Deployment failed:', error);
+    process.exit(1);
   }
-  
-  serverFiles.forEach(file => {
-    try {
-      if (fs.existsSync(file)) {
-        const destPath = './dist/' + file;
-        // Create directory if it doesn't exist
-        const dirPath = path.dirname(destPath);
-        if (!fs.existsSync(dirPath)) {
-          fs.mkdirSync(dirPath, { recursive: true });
-        }
-        fs.copyFileSync(file, destPath);
-        console.log(`Copied ${file} to ${destPath}`);
-      } else {
-        console.warn(`Warning: ${file} not found`);
-      }
-    } catch (err) {
-      console.error(`Error copying ${file}:`, err);
-    }
-  });
-  
-  console.log('✅ Deployment preparation complete!');
-  console.log('Now you can deploy the application using Replit deployment.');
-} catch (error) {
-  console.error('❌ Error preparing deployment:', error);
-  process.exit(1);
 }
+
+deploy();
