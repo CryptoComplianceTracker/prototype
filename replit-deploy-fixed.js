@@ -150,7 +150,7 @@ async function startServer() {
     const httpServer = createServer(app);
     const PORT = process.env.PORT || 3000;
     httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ DARA Platform server running on port ${PORT} in production mode`);
+      console.log("✅ DARA Platform server running on port " + PORT + " in production mode");
     });
     
     return httpServer;

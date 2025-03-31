@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * DARA Platform - Specialized Replit Deployment Script
  * 
@@ -15,123 +14,41 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuration
-const DIST_DIR = path.join(__dirname, 'dist');
-const SERVER_DIR = path.join(__dirname, 'server');
-const SHARED_DIR = path.join(__dirname, 'shared');
-const CLIENT_DIR = path.join(__dirname, 'client');
-
-console.log('🚀 DARA Platform - Preparing for Replit Deployment');
-
-try {
-  // Step 1: Clean up previous build if it exists
-  if (fs.existsSync(DIST_DIR)) {
-    console.log('🧹 Cleaning up previous build...');
-    fs.rmSync(DIST_DIR, { recursive: true, force: true });
-  }
-  
-  // Step 2: Create dist directory
-  console.log('📁 Creating distribution directory...');
-  fs.mkdirSync(DIST_DIR, { recursive: true });
-  
-  // Step 3: Build client application
-  console.log('📦 Building client application...');
-  execSync('npm run build', { stdio: 'inherit' });
-  
-  // Step 4: Compile server TypeScript
-  console.log('🔨 Compiling server files...');
-  execSync('npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/server.js', 
-    { stdio: 'inherit' });
-  
-  // Step 5: Create a tailored package.json for deployment
-  console.log('📝 Creating production package.json...');
-  const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-  
-  // Modify package.json for production
-  const prodPackageJson = {
-    name: packageJson.name,
-    version: packageJson.version,
-    type: "module",
-    main: "server.js",
-    scripts: {
-      start: "NODE_ENV=production node server.js"
-    },
-    dependencies: packageJson.dependencies
-  };
-  
-  fs.writeFileSync(
-    path.join(DIST_DIR, 'package.json'), 
-    JSON.stringify(prodPackageJson, null, 2)
-  );
-  
-  // Step 6: Copy necessary server files
-  console.log('📋 Copying required server modules...');
-  
-  // Create server directory in dist
-  fs.mkdirSync(path.join(DIST_DIR, 'server'), { recursive: true });
-  
-  // Copy compiled JS files
-  const serverJsFiles = [
-    'auth.js',
-    'db.js',
-    'storage.js',
-    'templates.js'
-  ];
-  
-  for (const file of serverJsFiles) {
-    const srcPath = path.join(SERVER_DIR, file);
-    const destPath = path.join(DIST_DIR, 'server', file);
-    
-    if (fs.existsSync(srcPath)) {
-      fs.copyFileSync(srcPath, destPath);
-      console.log(`Copied ${srcPath} to ${destPath}`);
-    } else {
-      console.warn(`Warning: ${srcPath} not found, compiling from TypeScript...`);
-      const tsFile = srcPath.replace('.js', '.ts');
-      if (fs.existsSync(tsFile)) {
-        execSync(`npx esbuild ${tsFile} --platform=node --packages=external --bundle --format=esm --outfile=${destPath}`, 
-          { stdio: 'inherit' });
-        console.log(`Compiled ${tsFile} to ${destPath}`);
-      } else {
-        console.error(`Error: Neither ${srcPath} nor ${tsFile} could be found`);
-      }
-    }
-  }
-  
-  // Step 7: Copy shared directory and its contents
-  console.log('📋 Copying shared directory...');
-  fs.mkdirSync(path.join(DIST_DIR, 'shared'), { recursive: true });
+async function deploy() {
+  console.log('🚀 Starting Replit deployment for DARA Platform...');
   
   try {
-    const sharedFiles = fs.readdirSync(SHARED_DIR);
-    for (const file of sharedFiles) {
-      const srcPath = path.join(SHARED_DIR, file);
-      const destPath = path.join(DIST_DIR, 'shared', file);
-      
-      if (fs.statSync(srcPath).isFile()) {
-        fs.copyFileSync(srcPath, destPath);
-        console.log(`Copied ${srcPath} to ${destPath}`);
-      }
+    // Clean up the dist directory
+    console.log('🧹 Cleaning dist directory...');
+    if (fs.existsSync('./dist')) {
+      execSync('rm -rf ./dist');
     }
-  } catch (err) {
-    console.error('Error copying shared directory:', err);
-  }
-  
-  // Step 8: Copy public assets directory (compiled client)
-  console.log('📋 Copying client assets...');
-  const publicSrcDir = path.join(SERVER_DIR, 'public');
-  
-  if (fs.existsSync(publicSrcDir)) {
-    // Recursively copy the contents
+    fs.mkdirSync('./dist');
+    
+    // Build the client
+    console.log('🏗️ Building client...');
+    try {
+      execSync('cd client && npm run build', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('❌ Error building client:', error);
+      process.exit(1);
+    }
+    
+    // Create client/dist directory in the dist folder
+    console.log('📁 Creating client/dist directory in the dist folder...');
+    fs.mkdirSync('./dist/client', { recursive: true });
+    fs.mkdirSync('./dist/client/dist', { recursive: true });
+    
+    // Copy the client build to dist/client/dist
+    console.log('📋 Copying client build...');
     function copyDir(src, dest) {
-      fs.mkdirSync(dest, { recursive: true });
       const entries = fs.readdirSync(src, { withFileTypes: true });
-      
-      for (const entry of entries) {
+      for (let entry of entries) {
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         
         if (entry.isDirectory()) {
+          fs.mkdirSync(destPath, { recursive: true });
           copyDir(srcPath, destPath);
         } else {
           fs.copyFileSync(srcPath, destPath);
@@ -139,210 +56,120 @@ try {
       }
     }
     
-    copyDir(publicSrcDir, path.join(DIST_DIR, 'public'));
-    console.log(`Copied public assets from ${publicSrcDir} to ${path.join(DIST_DIR, 'public')}`);
-  } else {
-    console.warn(`Warning: Public assets directory ${publicSrcDir} not found`);
-  }
-  
-  // Step 9: Create a specialized server entry point for production
-  console.log('📝 Creating optimized production server entry point...');
-  
-  const serverEntry = `
-// DARA Platform - Production Server Entry Point
-// This file is auto-generated by deploy-replit.js
-
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { createServer } from 'http';
-import axios from 'axios';
-import rateLimit from 'express-rate-limit';
-import helmet from 'helmet';
-import { setupAuth } from './server/auth.js';
-import { storage } from './server/storage.js';
-import { registerTemplateRoutes } from './server/templates.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Initialize Express application
-const app = express();
-
-// Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Create HTTP server
-const httpServer = createServer(app);
-
-// Security configurations
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
-});
-
-// Apply security headers with appropriate CSP for production
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], 
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'", "https://newsapi.org", "https://sepolia.easscan.org"],
-        fontSrc: ["'self'", "data:"],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-  })
-);
-
-// Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
-
-// Request logging middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    console.log(\`\${req.method} \${req.path} \${res.statusCode} \${duration}ms\`);
-  });
-  next();
-});
-
-// Authentication setup
-setupAuth(app);
-
-// API Routes
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', environment: process.env.NODE_ENV });
-});
-
-// Register template routes
-registerTemplateRoutes(app);
-
-// Compliance news API endpoint
-app.get("/api/compliance/news", async (req, res) => {
-  try {
-    const NEWS_API_KEY = process.env.VITE_NEWS_API_KEY;
-    const NEWS_API_ENDPOINT = "https://newsapi.org/v2/everything";
+    copyDir('./client/dist', './dist/client/dist');
     
-    console.log('Fetching news with API key:', NEWS_API_KEY ? 'Key provided' : 'No key');
+    // Copy server files
+    console.log('📋 Copying server files...');
+    fs.mkdirSync('./dist/server', { recursive: true });
+    copyDir('./server', './dist/server');
     
-    const response = await axios.get(NEWS_API_ENDPOINT, {
-      params: {
-        q: "(crypto OR cryptocurrency OR blockchain) AND (compliance OR regulation OR regulatory)",
-        language: "en",
-        sortBy: "publishedAt",
-        pageSize: 15,
-        apiKey: NEWS_API_KEY,
-      },
-      headers: {
-        "X-Api-Key": NEWS_API_KEY,
-        "Content-Type": "application/json",
-        "User-Agent": "DARA-Compliance-Platform/1.0",
-      },
-    });
+    // Copy shared files
+    console.log('📋 Copying shared files...');
+    fs.mkdirSync('./dist/shared', { recursive: true });
+    copyDir('./shared', './dist/shared');
     
-    console.log('Successfully fetched compliance news from API');
+    // Copy necessary config files
+    console.log('📋 Copying config files...');
+    const configFiles = [
+      'package.json',
+      'package-lock.json',
+      'drizzle.config.ts',
+      'tailwind.config.ts',
+      'postcss.config.js',
+      'tsconfig.json',
+      'vite.config.ts'
+    ];
     
-    // Transform the response data
-    const articles = response.data.articles.map((article) => ({
-      title: article.title || 'No title available',
-      description: article.description || 'No description available',
-      url: article.url,
-      publishedAt: article.publishedAt,
-      source: article.source.name,
-    }));
+    for (const file of configFiles) {
+      if (fs.existsSync(file)) {
+        fs.copyFileSync(file, `./dist/${file}`);
+      }
+    }
     
-    res.json(articles);
-  } catch (error) {
-    console.error('Error fetching compliance news:', error.message);
+    // Copy the replit-deploy-fixed.js as index.js
+    console.log('📋 Creating production server entry point...');
+    fs.copyFileSync('./replit-deploy-fixed.js', './dist/index.js');
     
-    res.status(500).json({ 
-      message: 'Failed to fetch compliance news',
-      error: error.message
-    });
-  }
-});
+    // Create a .replit file
+    console.log('📝 Creating .replit file...');
+    const replitConfig = `
+run = "node index.js"
+hidden = [".config", "package-lock.json"]
 
-// User registration data endpoints
-app.get('/api/user/registrations', async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  
-  try {
-    const registrations = await storage.getUserRegistrations(req.user.id);
-    console.log(\`Retrieved \${registrations.length} registrations for user \${req.user.id}\`);
-    res.json(registrations);
-  } catch (error) {
-    console.error('Error fetching user registrations:', error);
-    res.status(500).json({ message: "Failed to fetch registrations" });
-  }
-});
+[env]
+PORT = "3000"
 
-// Jurisdictions endpoints
-app.get('/api/jurisdictions', async (req, res) => {
-  try {
-    console.log('Fetching all jurisdictions from database...');
-    const jurisdictions = await storage.getAllJurisdictions();
-    console.log(\`Successfully retrieved \${jurisdictions.length} jurisdictions\`);
-    res.json(jurisdictions);
-  } catch (error) {
-    console.error('Error fetching jurisdictions:', error);
-    res.status(500).json({ message: "Failed to fetch jurisdictions" });
-  }
-});
+[nix]
+channel = "stable-22_11"
 
-// Token registrations endpoints
-// Admin token routes
-app.get('/api/tokens/admin', async (req, res) => {
-  if (!req.isAuthenticated() || !req.user.isAdmin) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-  
-  try {
-    console.log('Fetching all token registrations for admin...');
-    const tokenRegistrations = await storage.getAllTokenRegistrations();
-    console.log(\`Successfully retrieved \${tokenRegistrations.length} token registrations\`);
-    res.json(tokenRegistrations);
-  } catch (error) {
-    console.error('Error fetching token registrations for admin:', error);
-    res.status(500).json({ message: "Failed to fetch token registrations" });
-  }
-});
-
-// Serve static files from public directory
-const publicPath = path.join(__dirname, 'public');
-app.use(express.static(publicPath));
-
-// Always return the main index.html for any path that doesn't match an API endpoint
-// This is crucial for client-side routing
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(publicPath, 'index.html'));
-  } else {
-    res.status(404).json({ message: "API endpoint not found" });
-  }
-});
-
-// Start the server
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(\`DARA Platform server running on port \${PORT} in \${process.env.NODE_ENV || 'development'} mode\`);
-  console.log(\`Server started at: \${new Date().toISOString()}\`);
-});
+[deployment]
+run = ["node", "index.js"]
+deploymentTarget = "cloudrun"
+ignorePorts = false
 `;
+    
+    fs.writeFileSync('./dist/.replit', replitConfig);
+    
+    // Create a replit.nix file
+    console.log('📝 Creating replit.nix file...');
+    const replitNix = `{ pkgs }: {
+  deps = [
+    pkgs.nodejs-18_x
+    pkgs.nodePackages.typescript
+    pkgs.postgresql
+  ];
+}`;
+    
+    fs.writeFileSync('./dist/replit.nix', replitNix);
+    
+    // Create a README.md file
+    console.log('📝 Creating README.md file...');
+    const readme = `# DARA Platform - Crypto Regulatory Compliance Platform
 
-  fs.writeFileSync(path.join(DIST_DIR, 'server.js'), serverEntry);
+A comprehensive Web3 compliance platform that simplifies regulatory processes for crypto ecosystem participants through intelligent geospatial regulatory tracking and advanced blockchain attestation services.
 
-  console.log('✅ Deployment preparation complete!');
-  console.log('Now you can deploy the application by clicking "Deploy" in the Replit interface.');
-} catch (error) {
-  console.error('❌ Error preparing deployment:', error);
-  process.exit(1);
+## Deployment
+
+This is a production build of the DARA Platform. To start the server, run:
+
+\`\`\`
+node index.js
+\`\`\`
+
+## Environment Variables
+
+Make sure the following environment variables are set:
+
+- \`DATABASE_URL\`: PostgreSQL connection string
+- \`SESSION_SECRET\`: Secret for session management
+- \`VITE_NEWS_API_KEY\`: API key for the News API
+
+## Features
+
+- TypeScript React frontend
+- Ethereum Attestation Service (EAS) integration
+- Sepolia testnet for attestation testing
+- Web3 wallet authentication
+- PostgreSQL 16.8 database
+- Multi-jurisdiction support (USA, UAE)
+- Role-based access control
+- Dynamic regulatory compliance mapping
+- Enhanced security with rate limiting
+- Unified user registration system
+- News API integration with server-side proxy
+- Token registration data management
+`;
+    
+    fs.writeFileSync('./dist/README.md', readme);
+    
+    console.log('\n✅ Replit deployment preparation complete!');
+    console.log('Your application is ready to be deployed on Replit.');
+    console.log('Navigate to the dist directory and deploy using Replit\'s deployment feature.');
+    
+  } catch (error) {
+    console.error('❌ Deployment failed:', error);
+    process.exit(1);
+  }
 }
+
+deploy();
