@@ -111,10 +111,10 @@ export function NavBar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/compliance">
+                    <Link href="/compliance-reporting">
                       <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Compliance Portal</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Access compliance resources</span>
+                        <div className="font-medium group-hover:text-primary">Reporting</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance report management</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
@@ -131,14 +131,6 @@ export function NavBar() {
                       <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
                         <div className="font-medium group-hover:text-primary">Template Studio</div>
                         <span className="text-sm text-muted-foreground group-hover:text-primary/70">Policy template library</span>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/compliance-reporting">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Reporting</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance report management</span>
                       </div>
                     </Link>
                   </DropdownMenuItem>
