@@ -1,0 +1,57 @@
+UAE Crypto Exchange Compliance & Operations Checklist
+🗂 For setting up and operating a compliant exchange in Dubai (VARA) or Abu Dhabi (FSRA)
+
+🏁 Phase 1: Legal & Strategic Planning
+Task	Responsible	Notes
+📝 Incorporate UAE legal entity	Legal team	Preferably in ADGM, DIFC, or VARA-compatible zone
+🗂 Choose regulatory zone: VARA vs. ADGM	Founders + Legal	Depending on audience, asset types, local vs global focus
+📚 Legal gap analysis	Legal + Compliance	Compare business model to UAE/VARA/FSRA frameworks
+📄 Secure legal opinions	Legal	On token types, custody model, KYC scope
+📋 Prepare business plan & whitepaper	Legal + Product	Required for licensing
+📑 Phase 2: Regulatory Licensing & Approvals
+Task	Responsible	Notes
+📤 Submit license application (VASP)	Legal + Compliance	VARA or FSRA — include full documentation package
+🔒 Finalize AML/CFT program	Compliance Officer	Risk-based, aligned with UAE AML Law + FATF
+👥 Appoint Compliance Officer & MLRO	CEO + Board	UAE-resident officers with relevant experience
+🔐 Develop custody framework	CTO + Compliance	80% cold wallet requirement (FSRA)
+📃 Submit KYC/CDD policy for approval	Compliance	Aligned with UAE FIU requirements
+🎓 File Training Program summary	Compliance	Staff must be trained on UAE AML law, Travel Rule
+🚀 Phase 3: Go-Live Readiness
+Task	Responsible	Notes
+🛠 Build & test platform (AML-integrated)	Engineering + Compliance	Ensure monitoring, STR triggers, Travel Rule integrations
+🔌 Integrate Travel Rule solution	Engineering	e.g., Notabene, TRISA, SumSub, Elliptic
+🔗 Integrate wallet screening + transaction monitoring	Engineering + Compliance	Chainalysis, TRM Labs, or equivalent
+📊 Create report templates	Compliance	STR, wallet audits, transaction summaries, onboarding logs
+🧾 Finalize tax strategy	Legal + Finance	While UAE is tax-light, VAT may apply to some services
+✅ Perform internal audit	Internal Control	Ensure license conditions are met
+🔐 Perform security audit	CTO + External	Required under FSRA/VARA rules
+📆 Phase 4: Ongoing Operational Compliance
+Task	Frequency	Report/Output
+📥 Submit STRs (Suspicious Transaction Reports)	As needed	To UAE FIU
+🧾 File Monthly Wallet Reports	Monthly	Hot vs cold storage audit, wallet proofs
+📊 Submit Monthly Operational Summary to VARA/FSRA	Monthly	Volumes, user stats, risk metrics
+🔁 Quarterly Audit Report	Quarterly	External or internal audit required
+🗂 Maintain Customer Due Diligence Files	Ongoing	Minimum 5-year retention
+📤 Submit Annual Risk Assessment	Annually	Required under UAE AML law
+🗃️ Maintain Onboarding Logs	Ongoing	Record IP, device, KYC vendor used
+🔄 Reassess Risk Scoring Models	Quarterly	Document changes and board sign-off
+📑 Annual Cold Wallet Attestation	Annually	Show adherence to 80% rule (FSRA)
+📣 Seek Marketing Material Approval	Per campaign	Required before public promotion in UAE
+🧠 Advanced / Optional (Recommended)
+Task	Notes
+🛡️ Implement a whistleblower mechanism	Internal or external hotline with escalation
+🔍 Monitor for insider trading behavior	Watch for front-running, dev wallet misuse
+💬 Track public influencer disclosures	Check if any affiliates are marketing on your behalf
+🧾 Establish legal entity for each jurisdiction	For tax planning, licensing isolation, etc.
+📤 Connect regulatory API (where supported)	Enables STR upload automation, transaction logs
+📂 Documents to Prepare + Store
+Document Name	Purpose
+🧾 AML/CFT Program	Core compliance reference
+📄 SAR Template & Logs	Internal review + submissions
+🧠 Risk Assessment Policy	Reviewed annually
+👤 KYC Policy & Provider SLAs	External and internal policy alignment
+🪙 Token Classification Matrix	If listing 10+ assets
+🔒 Custody Protocol & Key Management Plan	Reviewed annually, for regulator and insurers
+📃 FATF Travel Rule Compliance SOP	Required under UAE AML reforms
+📜 Training Program & Certification Records	Must show staff were trained
+📅 Obligation Calendar	Timeline of compliance reporting per authority
