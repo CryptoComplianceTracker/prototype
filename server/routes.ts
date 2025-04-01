@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import axios from "axios";
 import { registerTemplateRoutes } from "./templates";
 import {
@@ -2882,7 +2882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For each category, get its items
       const items = await db.select().from(checklist_items)
         .where(
-          checklist_items.category_id.in(categoryIds)
+          inArray(checklist_items.category_id, categoryIds)
         );
       
       if (items.length === 0) {
@@ -2896,7 +2896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(user_checklist_progress.user_id, req.user.id),
-            user_checklist_progress.checklist_item_id.in(itemIds)
+            inArray(user_checklist_progress.checklist_item_id, itemIds)
           )
         );
       
@@ -3080,7 +3080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(user_checklist_progress.user_id, req.user.id),
-            user_checklist_progress.checklist_item_id.in(itemIds)
+            inArray(user_checklist_progress.checklist_item_id, itemIds)
           )
         );
       
