@@ -747,7 +747,7 @@ export const regulatory_keywords_index = pgTable("regulatory_keywords_index", {
 
 // Schemas for data insertion
 export const jurisdictionSchema = createInsertSchema(jurisdictions);
-export const userJurisdictionSchema = createInsertSchema(userJurisdictions).omit({ id: true, added_at: true });
+export const userJurisdictionSchema = createInsertSchema(userJurisdictions).omit({ id: true, added_at: true, user_id: true });
 export const regulatoryBodySchema = createInsertSchema(regulatory_bodies);
 export const regulationSchema = createInsertSchema(regulations);
 export const complianceRequirementSchema = createInsertSchema(compliance_requirements);
