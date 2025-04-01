@@ -46,6 +46,11 @@ export default function JurisdictionsListModal() {
   });
   
   const filteredJurisdictions = jurisdictions?.filter(jurisdiction => {
+    // Filter out Switzerland cards with IDs 1, 2, and 3
+    if (jurisdiction.name === "Switzerland" && (jurisdiction.id === 1 || jurisdiction.id === 2 || jurisdiction.id === 3)) {
+      return false;
+    }
+    
     // Apply search filter
     const matchesSearch = searchQuery === "" || 
       jurisdiction.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
