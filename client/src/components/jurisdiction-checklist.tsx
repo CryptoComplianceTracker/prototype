@@ -56,6 +56,8 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [itemNotes, setItemNotes] = useState<Record<number, string>>({});
   
+  console.log(`JurisdictionChecklist component rendering with ID: ${jurisdictionId}, Name: ${jurisdictionName}`);
+  
   // Fetch checklist categories
   const {
     data: categories,
@@ -64,11 +66,16 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
   } = useQuery({
     queryKey: [`/api/jurisdictions/${jurisdictionId}/checklists`],
     queryFn: async () => {
+      console.log(`Fetching checklists for jurisdiction ID: ${jurisdictionId}`);
       const response = await fetch(`/api/jurisdictions/${jurisdictionId}/checklists`);
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error fetching checklists: ${errorText}`);
         throw new Error('Failed to fetch checklists');
       }
-      return response.json() as Promise<ChecklistCategory[]>;
+      const data = await response.json();
+      console.log(`Successfully fetched ${data.length} checklist categories`);
+      return data as ChecklistCategory[];
     },
     enabled: !!user && !!jurisdictionId
   });
@@ -81,11 +88,16 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
   } = useQuery({
     queryKey: [`/api/jurisdictions/${jurisdictionId}/checklist-progress`],
     queryFn: async () => {
+      console.log(`Fetching checklist progress for jurisdiction ID: ${jurisdictionId}`);
       const response = await fetch(`/api/jurisdictions/${jurisdictionId}/checklist-progress`);
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error fetching checklist progress: ${errorText}`);
         throw new Error('Failed to fetch checklist progress');
       }
-      return response.json() as Promise<ChecklistProgress[]>;
+      const data = await response.json();
+      console.log(`Successfully fetched checklist progress: ${data.length} items`);
+      return data as ChecklistProgress[];
     },
     enabled: !!user && !!jurisdictionId
   });
@@ -93,6 +105,7 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
   // Update item progress mutation
   const updateProgressMutation = useMutation({
     mutationFn: async ({ itemId, status, notes }: { itemId: number, status: string, notes: string | null }) => {
+      console.log(`Updating progress for item ${itemId} to status ${status}`);
       const response = await fetch(`/api/checklist-items/${itemId}/progress`, {
         method: 'POST',
         headers: {
@@ -102,10 +115,14 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update progress');
+        const errorText = await response.text();
+        console.error(`Error updating progress: ${errorText}`);
+        throw new Error(`Failed to update progress: ${response.status} ${response.statusText}`);
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log(`Successfully updated progress for item ${itemId}`);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/jurisdictions/${jurisdictionId}/checklist-progress`] });

@@ -10,29 +10,38 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbS
 import JurisdictionChecklist from "@/components/jurisdiction-checklist";
 
 export default function JurisdictionChecklistPage() {
-  const { jurisdictionId } = useParams();
+  const params = useParams<{ jurisdictionId: string }>();
+  const jurisdictionId = params.jurisdictionId;
   const [_, setLocation] = useLocation();
   const { user } = useAuth();
   
   // Convert jurisdictionId to number
-  const id = parseInt(jurisdictionId);
+  const id = parseInt(jurisdictionId || '0');
   
   // Fetch jurisdiction details
   const {
-    data: jurisdiction,
+    data: jurisdictionData,
     isLoading,
     error
   } = useQuery({
     queryKey: [`/api/jurisdictions/${id}`],
     queryFn: async () => {
+      console.log(`Fetching jurisdiction with ID: ${id}`);
       const response = await fetch(`/api/jurisdictions/${id}`);
       if (!response.ok) {
+        const error = await response.text();
+        console.error(`Error fetching jurisdiction: ${error}`);
         throw new Error('Failed to fetch jurisdiction details');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Received jurisdiction data:', data);
+      return data;
     },
     enabled: !!user && !isNaN(id)
   });
+  
+  // Extract the jurisdiction from the response
+  const jurisdiction = jurisdictionData?.jurisdiction || jurisdictionData;
   
   if (isLoading) {
     return (
