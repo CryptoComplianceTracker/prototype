@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Check, ListChecks } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface JurisdictionCardProps {
   id: number;
@@ -29,6 +31,7 @@ export function JurisdictionCard({
 }: JurisdictionCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [_, navigate] = useLocation();
 
   // Get risk level color
   const getRiskLevelColor = (level: string) => {
@@ -114,9 +117,20 @@ export function JurisdictionCard({
           </div>
         )}
       </CardContent>
-      {showSubscribeButton && (
-        <CardFooter className="pt-2">
-          {isSubscribed ? (
+      <CardFooter className="pt-2 flex flex-col gap-2">
+        {isSubscribed && (
+          <Button 
+            variant="default" 
+            className="w-full"
+            onClick={() => navigate(`/jurisdictions/${id}/checklist`)}
+          >
+            <ListChecks className="mr-2 h-4 w-4" />
+            View Compliance Checklist
+          </Button>
+        )}
+        
+        {showSubscribeButton && (
+          isSubscribed ? (
             <Button 
               variant="outline" 
               className="w-full" 
@@ -134,9 +148,9 @@ export function JurisdictionCard({
             >
               {subscribeMutation.isPending ? 'Subscribing...' : 'Subscribe'}
             </Button>
-          )}
-        </CardFooter>
-      )}
+          )
+        )}
+      </CardFooter>
     </Card>
   );
 }

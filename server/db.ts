@@ -2,6 +2,7 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
+import * as checklistSchema from "@shared/checklist-schema";
 
 // Configure WebSocket for Neon
 neonConfig.webSocketConstructor = ws;
@@ -18,5 +19,5 @@ export const pool = new Pool({
   } : undefined
 });
 
-// Export database instance
-export const db = drizzle(pool, { schema });
+// Export database instance with merged schemas
+export const db = drizzle(pool, { schema: { ...schema, ...checklistSchema } });

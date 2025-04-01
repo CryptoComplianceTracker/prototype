@@ -36,6 +36,14 @@ import {
   userJurisdictions,
   jurisdictions
 } from "@shared/schema";
+import {
+  checklist_categories,
+  checklist_items,
+  user_checklist_progress,
+  checklistCategorySchema,
+  checklistItemSchema,
+  userChecklistProgressSchema
+} from "@shared/checklist-schema";
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { createRegistrationAttestation } from "@/lib/attestation-service";
@@ -2773,6 +2781,592 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: "Failed to fetch jurisdiction approvals for token registration",
         details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // ===== UAE Jurisdiction Checklist API Routes =====
+  
+  // Get checklist categories for a jurisdiction
+  app.get("/api/jurisdictions/:jurisdictionId/checklists", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/jurisdictions/:jurisdictionId/checklists');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const jurisdictionId = parseInt(req.params.jurisdictionId);
+      console.log(`Fetching checklist categories for jurisdiction ${jurisdictionId}...`);
+      
+      // First verify the jurisdiction exists and the user is subscribed to it
+      const [jurisdictionSubscription] = await db.select()
+        .from(userJurisdictions)
+        .where(
+          and(
+            eq(userJurisdictions.jurisdiction_id, jurisdictionId),
+            eq(userJurisdictions.user_id, req.user.id)
+          )
+        );
+      
+      if (!jurisdictionSubscription && !req.user.isAdmin) {
+        console.log(`User ${req.user.id} attempted to access checklists for jurisdiction ${jurisdictionId} without a subscription`);
+        return res.status(403).json({ error: "You must be subscribed to this jurisdiction to view its checklists" });
+      }
+      
+      // Get checklist categories with their items
+      const categories = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.jurisdiction_id, jurisdictionId))
+        .orderBy(checklist_categories.sequence);
+      
+      // For each category, fetch its items
+      const categoriesWithItems = await Promise.all(
+        categories.map(async (category) => {
+          const items = await db.select().from(checklist_items)
+            .where(eq(checklist_items.category_id, category.id))
+            .orderBy(checklist_items.sequence);
+          
+          return {
+            ...category,
+            items
+          };
+        })
+      );
+      
+      console.log(`Successfully retrieved ${categories.length} checklist categories for jurisdiction ${jurisdictionId}`);
+      res.json(categoriesWithItems);
+    } catch (error) {
+      console.error("Error fetching checklist categories:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch checklist categories",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get user progress for a jurisdiction's checklist
+  app.get("/api/jurisdictions/:jurisdictionId/checklist-progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/jurisdictions/:jurisdictionId/checklist-progress');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const jurisdictionId = parseInt(req.params.jurisdictionId);
+      console.log(`Fetching checklist progress for jurisdiction ${jurisdictionId} and user ${req.user.id}...`);
+      
+      // First verify the jurisdiction exists and the user is subscribed to it
+      const [jurisdictionSubscription] = await db.select()
+        .from(userJurisdictions)
+        .where(
+          and(
+            eq(userJurisdictions.jurisdiction_id, jurisdictionId),
+            eq(userJurisdictions.user_id, req.user.id)
+          )
+        );
+      
+      if (!jurisdictionSubscription && !req.user.isAdmin) {
+        console.log(`User ${req.user.id} attempted to access checklist progress for jurisdiction ${jurisdictionId} without a subscription`);
+        return res.status(403).json({ error: "You must be subscribed to this jurisdiction to view your checklist progress" });
+      }
+      
+      // Get all checklist items for this jurisdiction
+      const categories = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.jurisdiction_id, jurisdictionId));
+      
+      if (categories.length === 0) {
+        return res.json([]);
+      }
+      
+      const categoryIds = categories.map(cat => cat.id);
+      
+      // For each category, get its items
+      const items = await db.select().from(checklist_items)
+        .where(
+          checklist_items.category_id.in(categoryIds)
+        );
+      
+      if (items.length === 0) {
+        return res.json([]);
+      }
+      
+      const itemIds = items.map(item => item.id);
+      
+      // Get the user's progress for these items
+      const progress = await db.select().from(user_checklist_progress)
+        .where(
+          and(
+            eq(user_checklist_progress.user_id, req.user.id),
+            user_checklist_progress.checklist_item_id.in(itemIds)
+          )
+        );
+      
+      console.log(`Successfully retrieved ${progress.length} checklist progress items for user ${req.user.id} and jurisdiction ${jurisdictionId}`);
+      
+      // Create a progress map that includes all items (including those without progress)
+      const progressMap = items.map(item => {
+        const itemProgress = progress.find(p => p.checklist_item_id === item.id);
+        return {
+          itemId: item.id,
+          categoryId: item.category_id,
+          status: itemProgress ? itemProgress.status : 'not_started',
+          notes: itemProgress ? itemProgress.notes : null,
+          completedAt: itemProgress ? itemProgress.completed_at : null,
+          task: item.task,
+          responsible: item.responsible,
+          sequence: item.sequence
+        };
+      });
+      
+      res.json(progressMap);
+    } catch (error) {
+      console.error("Error fetching checklist progress:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch checklist progress",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Update user progress for a checklist item
+  app.post("/api/checklist-items/:itemId/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/checklist-items/:itemId/progress');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const itemId = parseInt(req.params.itemId);
+      console.log(`Updating progress for checklist item ${itemId} by user ${req.user.id}...`);
+      
+      // Validate the input data
+      const data = userChecklistProgressSchema.parse(req.body);
+      
+      // Get the checklist item to verify it exists and get its jurisdiction
+      const [item] = await db.select().from(checklist_items)
+        .where(eq(checklist_items.id, itemId));
+      
+      if (!item) {
+        console.log(`Checklist item ${itemId} not found`);
+        return res.status(404).json({ error: "Checklist item not found" });
+      }
+      
+      // Get the category to find the jurisdiction
+      const [category] = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.id, item.category_id));
+      
+      if (!category) {
+        console.log(`Checklist category ${item.category_id} not found`);
+        return res.status(404).json({ error: "Checklist category not found" });
+      }
+      
+      // Check if the user is subscribed to the jurisdiction
+      const [jurisdictionSubscription] = await db.select()
+        .from(userJurisdictions)
+        .where(
+          and(
+            eq(userJurisdictions.jurisdiction_id, category.jurisdiction_id),
+            eq(userJurisdictions.user_id, req.user.id)
+          )
+        );
+      
+      if (!jurisdictionSubscription && !req.user.isAdmin) {
+        console.log(`User ${req.user.id} attempted to update progress for an item in jurisdiction ${category.jurisdiction_id} without a subscription`);
+        return res.status(403).json({ error: "You must be subscribed to this jurisdiction to update checklist progress" });
+      }
+      
+      // Check if there's an existing progress entry
+      const [existingProgress] = await db.select()
+        .from(user_checklist_progress)
+        .where(
+          and(
+            eq(user_checklist_progress.user_id, req.user.id),
+            eq(user_checklist_progress.checklist_item_id, itemId)
+          )
+        );
+      
+      let result;
+      const now = new Date();
+      const completedAt = data.status === 'completed' ? now : null;
+      
+      if (existingProgress) {
+        // Update existing progress
+        [result] = await db.update(user_checklist_progress)
+          .set({
+            status: data.status,
+            notes: data.notes,
+            completed_at: completedAt,
+            updated_at: now
+          })
+          .where(eq(user_checklist_progress.id, existingProgress.id))
+          .returning();
+        
+        console.log(`Updated progress entry ${existingProgress.id} for checklist item ${itemId}`);
+      } else {
+        // Create new progress entry
+        [result] = await db.insert(user_checklist_progress)
+          .values({
+            user_id: req.user.id,
+            checklist_item_id: itemId,
+            status: data.status,
+            notes: data.notes,
+            completed_at: completedAt
+          })
+          .returning();
+        
+        console.log(`Created new progress entry ${result.id} for checklist item ${itemId}`);
+      }
+      
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Error updating checklist progress:", error);
+      
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to update checklist progress",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Get specific category with items
+  app.get("/api/checklist-categories/:categoryId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/checklist-categories/:categoryId');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      console.log(`Fetching checklist category ${categoryId}...`);
+      
+      // Get the category
+      const [category] = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.id, categoryId));
+      
+      if (!category) {
+        console.log(`Checklist category ${categoryId} not found`);
+        return res.status(404).json({ error: "Checklist category not found" });
+      }
+      
+      // Check if the user is subscribed to the jurisdiction
+      const [jurisdictionSubscription] = await db.select()
+        .from(userJurisdictions)
+        .where(
+          and(
+            eq(userJurisdictions.jurisdiction_id, category.jurisdiction_id),
+            eq(userJurisdictions.user_id, req.user.id)
+          )
+        );
+      
+      if (!jurisdictionSubscription && !req.user.isAdmin) {
+        console.log(`User ${req.user.id} attempted to access category ${categoryId} in jurisdiction ${category.jurisdiction_id} without a subscription`);
+        return res.status(403).json({ error: "You must be subscribed to this jurisdiction to view its checklists" });
+      }
+      
+      // Get the items for this category
+      const items = await db.select().from(checklist_items)
+        .where(eq(checklist_items.category_id, categoryId))
+        .orderBy(checklist_items.sequence);
+      
+      // Get the user's progress for these items
+      const itemIds = items.map(item => item.id);
+      const progress = await db.select().from(user_checklist_progress)
+        .where(
+          and(
+            eq(user_checklist_progress.user_id, req.user.id),
+            user_checklist_progress.checklist_item_id.in(itemIds)
+          )
+        );
+      
+      // Merge items with progress
+      const itemsWithProgress = items.map(item => {
+        const itemProgress = progress.find(p => p.checklist_item_id === item.id);
+        return {
+          ...item,
+          progress: itemProgress ? {
+            status: itemProgress.status,
+            notes: itemProgress.notes,
+            completedAt: itemProgress.completed_at
+          } : {
+            status: 'not_started',
+            notes: null,
+            completedAt: null
+          }
+        };
+      });
+      
+      const categoryWithItems = {
+        ...category,
+        items: itemsWithProgress
+      };
+      
+      console.log(`Successfully retrieved category ${categoryId} with ${items.length} items`);
+      res.json(categoryWithItems);
+    } catch (error) {
+      console.error("Error fetching checklist category:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch checklist category",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin endpoints to manage checklists
+  
+  // Create a new checklist category
+  app.post("/api/admin/checklist-categories", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Creating new checklist category...');
+      
+      // Validate the input data
+      const data = checklistCategorySchema.parse(req.body);
+      
+      // Verify the jurisdiction exists
+      const [jurisdiction] = await db.select().from(jurisdictions)
+        .where(eq(jurisdictions.id, data.jurisdiction_id));
+      
+      if (!jurisdiction) {
+        console.log(`Jurisdiction ${data.jurisdiction_id} not found`);
+        return res.status(404).json({ error: "Jurisdiction not found" });
+      }
+      
+      // Create the category
+      const [category] = await db.insert(checklist_categories)
+        .values({
+          jurisdiction_id: data.jurisdiction_id,
+          name: data.name,
+          description: data.description,
+          sequence: data.sequence
+        })
+        .returning();
+      
+      console.log(`Created new checklist category ${category.id} for jurisdiction ${data.jurisdiction_id}`);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating checklist category:", error);
+      
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to create checklist category",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Create a new checklist item
+  app.post("/api/admin/checklist-items", checkAdminAuth, async (req, res) => {
+    try {
+      console.log('Creating new checklist item...');
+      
+      // Validate the input data
+      const data = checklistItemSchema.parse(req.body);
+      
+      // Verify the category exists
+      const [category] = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.id, data.category_id));
+      
+      if (!category) {
+        console.log(`Checklist category ${data.category_id} not found`);
+        return res.status(404).json({ error: "Checklist category not found" });
+      }
+      
+      // Create the item
+      const [item] = await db.insert(checklist_items)
+        .values({
+          category_id: data.category_id,
+          task: data.task,
+          responsible: data.responsible,
+          notes: data.notes,
+          sequence: data.sequence
+        })
+        .returning();
+      
+      console.log(`Created new checklist item ${item.id} for category ${data.category_id}`);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating checklist item:", error);
+      
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to create checklist item",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Update a checklist category
+  app.put("/api/admin/checklist-categories/:id", checkAdminAuth, async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      console.log(`Updating checklist category ${categoryId}...`);
+      
+      // Validate the input data
+      const data = checklistCategorySchema.parse(req.body);
+      
+      // Verify the category exists
+      const [existingCategory] = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.id, categoryId));
+      
+      if (!existingCategory) {
+        console.log(`Checklist category ${categoryId} not found`);
+        return res.status(404).json({ error: "Checklist category not found" });
+      }
+      
+      // Update the category
+      const [updatedCategory] = await db.update(checklist_categories)
+        .set({
+          jurisdiction_id: data.jurisdiction_id,
+          name: data.name,
+          description: data.description,
+          sequence: data.sequence,
+          updated_at: new Date()
+        })
+        .where(eq(checklist_categories.id, categoryId))
+        .returning();
+      
+      console.log(`Updated checklist category ${categoryId}`);
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error("Error updating checklist category:", error);
+      
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to update checklist category",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Update a checklist item
+  app.put("/api/admin/checklist-items/:id", checkAdminAuth, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      console.log(`Updating checklist item ${itemId}...`);
+      
+      // Validate the input data
+      const data = checklistItemSchema.parse(req.body);
+      
+      // Verify the item exists
+      const [existingItem] = await db.select().from(checklist_items)
+        .where(eq(checklist_items.id, itemId));
+      
+      if (!existingItem) {
+        console.log(`Checklist item ${itemId} not found`);
+        return res.status(404).json({ error: "Checklist item not found" });
+      }
+      
+      // Update the item
+      const [updatedItem] = await db.update(checklist_items)
+        .set({
+          category_id: data.category_id,
+          task: data.task,
+          responsible: data.responsible,
+          notes: data.notes,
+          sequence: data.sequence,
+          updated_at: new Date()
+        })
+        .where(eq(checklist_items.id, itemId))
+        .returning();
+      
+      console.log(`Updated checklist item ${itemId}`);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating checklist item:", error);
+      
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to update checklist item",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  // Delete a checklist category
+  app.delete("/api/admin/checklist-categories/:id", checkAdminAuth, async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      console.log(`Deleting checklist category ${categoryId}...`);
+      
+      // Verify the category exists
+      const [existingCategory] = await db.select().from(checklist_categories)
+        .where(eq(checklist_categories.id, categoryId));
+      
+      if (!existingCategory) {
+        console.log(`Checklist category ${categoryId} not found`);
+        return res.status(404).json({ error: "Checklist category not found" });
+      }
+      
+      // Delete the category (cascade will handle related items)
+      await db.delete(checklist_categories)
+        .where(eq(checklist_categories.id, categoryId));
+      
+      console.log(`Deleted checklist category ${categoryId}`);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting checklist category:", error);
+      res.status(500).json({ 
+        message: "Failed to delete checklist category",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Delete a checklist item
+  app.delete("/api/admin/checklist-items/:id", checkAdminAuth, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      console.log(`Deleting checklist item ${itemId}...`);
+      
+      // Verify the item exists
+      const [existingItem] = await db.select().from(checklist_items)
+        .where(eq(checklist_items.id, itemId));
+      
+      if (!existingItem) {
+        console.log(`Checklist item ${itemId} not found`);
+        return res.status(404).json({ error: "Checklist item not found" });
+      }
+      
+      // Delete the item (cascade will handle related progress)
+      await db.delete(checklist_items)
+        .where(eq(checklist_items.id, itemId));
+      
+      console.log(`Deleted checklist item ${itemId}`);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting checklist item:", error);
+      res.status(500).json({ 
+        message: "Failed to delete checklist item",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });

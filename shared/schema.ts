@@ -868,7 +868,7 @@ export type Obligation = typeof obligations.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type ObligationAssignment = typeof obligation_assignments.$inferSelect;
 export type RegulatoryKeywordIndex = typeof regulatory_keywords_index.$inferSelect;
-export type UserJurisdiction = typeof userJurisdictions.$inferSelect;
+// Export type UserJurisdiction
 
 // Types for compliance reporting tables
 export type ComplianceReportType = typeof compliance_report_types.$inferSelect;
@@ -885,7 +885,7 @@ export type InsertReportingObligation = z.infer<typeof reportingObligationSchema
 export type InsertRegulatoryUpdate = z.infer<typeof regulatoryUpdateSchema>;
 export type InsertJurisdictionTag = z.infer<typeof jurisdictionTagSchema>;
 export type InsertJurisdictionQueryKeyword = z.infer<typeof jurisdictionQueryKeywordSchema>;
-export type InsertUserJurisdiction = z.infer<typeof userJurisdictionSchema>;
+// Export type InsertUserJurisdiction
 export type InsertLaw = z.infer<typeof lawSchema>;
 export type InsertOrganization = z.infer<typeof organizationSchema>;
 export type InsertObligation = z.infer<typeof obligationSchema>;
@@ -1323,6 +1323,4 @@ export type TokenRegistrationVerification = typeof token_registration_verificati
 export type TokenRiskAssessment = typeof token_risk_assessments.$inferSelect;
 export type TokenJurisdictionApproval = typeof token_jurisdiction_approvals.$inferSelect;
 
-// Jurisdiction subscription types
-export type UserJurisdiction = typeof userJurisdictions.$inferSelect;
-export type InsertUserJurisdiction = z.infer<typeof userJurisdictionSchema>;
+// Type already defined elsewhere in the file
