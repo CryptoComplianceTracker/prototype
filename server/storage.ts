@@ -2,7 +2,7 @@ import {
   users, transactions, exchangeInfo, stablecoinInfo, defiProtocolInfo, nftMarketplaceInfo, cryptoFundInfo,
   registrations, registrationVersions, auditLogs,
   jurisdictions, regulatory_bodies, regulations, compliance_requirements, taxation_rules,
-  reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords,
+  reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords, userJurisdictions,
   policy_templates, policies, policy_versions, policy_obligation_mappings, policy_tags, policy_approvals,
   token_registrations, token_registration_documents, token_registration_verifications, token_risk_assessments, token_jurisdiction_approvals,
   type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
@@ -20,6 +20,7 @@ import {
   type RegulatoryUpdate, type InsertRegulatoryUpdate,
   type JurisdictionTag, type InsertJurisdictionTag,
   type JurisdictionQueryKeyword, type InsertJurisdictionQueryKeyword,
+  type UserJurisdiction, type InsertUserJurisdiction,
   type PolicyTemplate, type InsertPolicyTemplate,
   type Policy, type InsertPolicy,
   type PolicyVersion, type InsertPolicyVersion,
@@ -144,6 +145,13 @@ export interface IStorage {
   getJurisdictionTagsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionTag[]>;
   createJurisdictionQueryKeyword(data: InsertJurisdictionQueryKeyword): Promise<JurisdictionQueryKeyword>;
   getJurisdictionQueryKeywordsByJurisdictionId(jurisdictionId: number): Promise<JurisdictionQueryKeyword[]>;
+  
+  // User Jurisdictions methods
+  getUserJurisdictions(userId: number): Promise<UserJurisdiction[]>;
+  getUserJurisdictionWithDetails(userId: number): Promise<any[]>;
+  createUserJurisdiction(data: InsertUserJurisdiction): Promise<UserJurisdiction>;
+  updateUserJurisdiction(id: number, data: Partial<UserJurisdiction>): Promise<UserJurisdiction>;
+  deleteUserJurisdiction(id: number): Promise<void>;
   
   // Policy Framework methods
   createPolicyTemplate(data: InsertPolicyTemplate): Promise<PolicyTemplate>;
@@ -410,6 +418,54 @@ export class DatabaseStorage implements IStorage {
     return await db.select()
       .from(jurisdiction_query_keywords)
       .where(eq(jurisdiction_query_keywords.jurisdiction_id, jurisdictionId));
+  }
+  
+  // User Jurisdictions methods implementation
+  async getUserJurisdictions(userId: number): Promise<UserJurisdiction[]> {
+    return await db.select()
+      .from(userJurisdictions)
+      .where(eq(userJurisdictions.user_id, userId));
+  }
+  
+  async getUserJurisdictionWithDetails(userId: number): Promise<any[]> {
+    return await db.select({
+      id: userJurisdictions.id,
+      user_id: userJurisdictions.user_id,
+      jurisdiction_id: userJurisdictions.jurisdiction_id,
+      is_primary: userJurisdictions.is_primary,
+      notes: userJurisdictions.notes,
+      added_at: userJurisdictions.added_at,
+      // Join with jurisdictions to get jurisdiction details
+      jurisdiction_name: jurisdictions.name,
+      jurisdiction_region: jurisdictions.region,
+      jurisdiction_risk_level: jurisdictions.risk_level
+    })
+    .from(userJurisdictions)
+    .innerJoin(jurisdictions, eq(userJurisdictions.jurisdiction_id, jurisdictions.id))
+    .where(eq(userJurisdictions.user_id, userId));
+  }
+  
+  async createUserJurisdiction(data: InsertUserJurisdiction): Promise<UserJurisdiction> {
+    const [subscription] = await db.insert(userJurisdictions)
+      .values({
+        ...data,
+        added_at: new Date()
+      })
+      .returning();
+    return subscription;
+  }
+  
+  async updateUserJurisdiction(id: number, data: Partial<UserJurisdiction>): Promise<UserJurisdiction> {
+    const [updated] = await db.update(userJurisdictions)
+      .set(data)
+      .where(eq(userJurisdictions.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteUserJurisdiction(id: number): Promise<void> {
+    await db.delete(userJurisdictions)
+      .where(eq(userJurisdictions.id, id));
   }
   
   // Policy Framework methods implementation

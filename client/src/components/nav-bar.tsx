@@ -136,7 +136,33 @@ export function NavBar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/jurisdictions" className="hover:text-primary transition-colors">Jurisdictions</Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="px-3 flex items-center gap-1">
+                    Jurisdictions
+                    <ChevronDown className="h-4 w-4 transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[250px]">
+                  <DropdownMenuItem asChild>
+                    <Link href="/jurisdictions">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">Browse Jurisdictions</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">View all available jurisdictions</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-jurisdictions">
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
+                        <div className="font-medium group-hover:text-primary">My Jurisdictions</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Manage your subscribed jurisdictions</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               {user?.isAdmin && (
                 <Link href="/admin" className="hover:text-primary transition-colors text-primary/70">Admin</Link>
               )}

@@ -497,6 +497,16 @@ export const jurisdictions = pgTable("jurisdictions", {
   last_updated: timestamp("last_updated").defaultNow()
 });
 
+// User jurisdiction subscriptions
+export const userJurisdictions = pgTable("user_jurisdictions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  jurisdiction_id: integer("jurisdiction_id").notNull().references(() => jurisdictions.id, { onDelete: 'cascade' }),
+  is_primary: boolean("is_primary").default(false),
+  notes: text("notes"),
+  added_at: timestamp("added_at").defaultNow()
+});
+
 export const regulatory_bodies = pgTable("regulatory_bodies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -737,6 +747,7 @@ export const regulatory_keywords_index = pgTable("regulatory_keywords_index", {
 
 // Schemas for data insertion
 export const jurisdictionSchema = createInsertSchema(jurisdictions);
+export const userJurisdictionSchema = createInsertSchema(userJurisdictions).omit({ id: true, added_at: true });
 export const regulatoryBodySchema = createInsertSchema(regulatory_bodies);
 export const regulationSchema = createInsertSchema(regulations);
 export const complianceRequirementSchema = createInsertSchema(compliance_requirements);
@@ -857,6 +868,7 @@ export type Obligation = typeof obligations.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type ObligationAssignment = typeof obligation_assignments.$inferSelect;
 export type RegulatoryKeywordIndex = typeof regulatory_keywords_index.$inferSelect;
+export type UserJurisdiction = typeof userJurisdictions.$inferSelect;
 
 // Types for compliance reporting tables
 export type ComplianceReportType = typeof compliance_report_types.$inferSelect;
@@ -873,6 +885,7 @@ export type InsertReportingObligation = z.infer<typeof reportingObligationSchema
 export type InsertRegulatoryUpdate = z.infer<typeof regulatoryUpdateSchema>;
 export type InsertJurisdictionTag = z.infer<typeof jurisdictionTagSchema>;
 export type InsertJurisdictionQueryKeyword = z.infer<typeof jurisdictionQueryKeywordSchema>;
+export type InsertUserJurisdiction = z.infer<typeof userJurisdictionSchema>;
 export type InsertLaw = z.infer<typeof lawSchema>;
 export type InsertOrganization = z.infer<typeof organizationSchema>;
 export type InsertObligation = z.infer<typeof obligationSchema>;
@@ -989,6 +1002,11 @@ export const policyApprovalSchema = createInsertSchema(policy_approvals)
       required_error: "Status is required",
     }),
   });
+
+// Define relationships for users and jurisdictions
+export const usersRelations = relations(users, ({ many }) => ({
+  jurisdictions: many(userJurisdictions)
+}));
 
 // Define relationships for compliance reporting tables
 export const complianceReportTypesRelations = relations(compliance_report_types, ({ many }) => ({
@@ -1214,6 +1232,23 @@ export const tokenJurisdictionApprovalsRelations = relations(token_jurisdiction_
   })
 }));
 
+// User jurisdiction subscription relations
+export const userJurisdictionsRelations = relations(userJurisdictions, ({ one }) => ({
+  user: one(users, {
+    fields: [userJurisdictions.user_id],
+    references: [users.id]
+  }),
+  jurisdiction: one(jurisdictions, {
+    fields: [userJurisdictions.jurisdiction_id],
+    references: [jurisdictions.id]
+  })
+}));
+
+// Jurisdiction relations
+export const jurisdictionsRelations = relations(jurisdictions, ({ many }) => ({
+  userSubscriptions: many(userJurisdictions)
+}));
+
 // Zod schemas for token registration
 export const tokenRegistrationSchema = createInsertSchema(token_registrations)
   .omit({ 
@@ -1287,3 +1322,7 @@ export type InsertTokenRegistrationDocument = z.infer<typeof tokenRegistrationDo
 export type TokenRegistrationVerification = typeof token_registration_verifications.$inferSelect;
 export type TokenRiskAssessment = typeof token_risk_assessments.$inferSelect;
 export type TokenJurisdictionApproval = typeof token_jurisdiction_approvals.$inferSelect;
+
+// Jurisdiction subscription types
+export type UserJurisdiction = typeof userJurisdictions.$inferSelect;
+export type InsertUserJurisdiction = z.infer<typeof userJurisdictionSchema>;

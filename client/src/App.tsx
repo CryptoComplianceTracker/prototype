@@ -6,6 +6,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AdminProtectedRoute } from "@/lib/admin-protected-route";
 import { NavBar } from "@/components/nav-bar";
+import { lazy, Suspense } from "react";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -27,6 +28,7 @@ import TokenRegistrationPage from "@/pages/token-registration-page";
 import TokenListingPage from "@/pages/token-listing-page";
 import TokenDetailsPage from "@/pages/token-details-page";
 import AdminTokenListingPage from "@/pages/admin-token-listing-page";
+import UserJurisdictionsPage from "@/pages/user-jurisdictions-page";
 
 function Router() {
   return (
@@ -58,6 +60,7 @@ function Router() {
           
           {/* Jurisdiction Routes */}
           <ProtectedRoute path="/jurisdictions" component={JurisdictionsListModal} />
+          <ProtectedRoute path="/my-jurisdictions" component={UserJurisdictionsPage} />
 
           {/* Registration View Routes */}
           <Route path="/:type-view/:id" component={RegistrationView} />

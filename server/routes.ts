@@ -24,6 +24,7 @@ import {
   reportScheduleSchema,
   tokenRegistrationSchema,
   tokenRegistrationDocumentSchema,
+  userJurisdictionSchema,
   compliance_report_types,
   compliance_reports,
   report_schedules,
@@ -31,7 +32,9 @@ import {
   token_registration_documents,
   token_registration_verifications,
   token_risk_assessments,
-  token_jurisdiction_approvals
+  token_jurisdiction_approvals,
+  userJurisdictions,
+  jurisdictions
 } from "@shared/schema";
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -1869,6 +1872,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         message: "Failed to update jurisdiction",
         details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // User jurisdiction subscription routes
+  app.get("/api/user/jurisdictions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to /api/user/jurisdictions');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      console.log(`Fetching jurisdiction subscriptions for user ${req.user.id}...`);
+      const subscriptions = await db.select({
+        id: userJurisdictions.id,
+        user_id: userJurisdictions.user_id,
+        jurisdiction_id: userJurisdictions.jurisdiction_id,
+        is_primary: userJurisdictions.is_primary,
+        notes: userJurisdictions.notes,
+        added_at: userJurisdictions.added_at,
+        // Join with jurisdictions to get jurisdiction details
+        jurisdiction_name: jurisdictions.name,
+        jurisdiction_region: jurisdictions.region,
+        jurisdiction_risk_level: jurisdictions.risk_level
+      })
+      .from(userJurisdictions)
+      .innerJoin(jurisdictions, eq(userJurisdictions.jurisdiction_id, jurisdictions.id))
+      .where(eq(userJurisdictions.user_id, req.user.id));
+      
+      console.log(`Retrieved ${subscriptions.length} jurisdiction subscriptions`);
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching user jurisdiction subscriptions:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch jurisdiction subscriptions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.post("/api/user/jurisdictions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to POST /api/user/jurisdictions');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const data = userJurisdictionSchema.parse(req.body);
+      
+      // Check if jurisdiction exists
+      const [jurisdiction] = await db.select().from(jurisdictions)
+        .where(eq(jurisdictions.id, data.jurisdiction_id));
+      
+      if (!jurisdiction) {
+        console.log(`Jurisdiction with ID ${data.jurisdiction_id} not found`);
+        return res.status(404).json({ error: "Jurisdiction not found" });
+      }
+      
+      // Check if subscription already exists
+      const [existingSubscription] = await db.select().from(userJurisdictions)
+        .where(and(
+          eq(userJurisdictions.user_id, req.user.id),
+          eq(userJurisdictions.jurisdiction_id, data.jurisdiction_id)
+        ));
+      
+      if (existingSubscription) {
+        console.log(`User ${req.user.id} already subscribed to jurisdiction ${data.jurisdiction_id}`);
+        return res.status(409).json({ error: "Already subscribed to this jurisdiction" });
+      }
+      
+      // Create subscription
+      const [subscription] = await db.insert(userJurisdictions)
+        .values({
+          user_id: req.user.id,
+          jurisdiction_id: data.jurisdiction_id,
+          is_primary: data.is_primary || false,
+          notes: data.notes
+        })
+        .returning();
+      
+      console.log(`Created new jurisdiction subscription for user ${req.user.id}`);
+      res.status(201).json(subscription);
+    } catch (error) {
+      console.error("Error creating jurisdiction subscription:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to create jurisdiction subscription",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  });
+  
+  app.put("/api/user/jurisdictions/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to PUT /api/user/jurisdictions/:id');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const subscriptionId = parseInt(req.params.id);
+      
+      // Check if subscription exists and belongs to user
+      const [existingSubscription] = await db.select().from(userJurisdictions)
+        .where(and(
+          eq(userJurisdictions.id, subscriptionId),
+          eq(userJurisdictions.user_id, req.user.id)
+        ));
+      
+      if (!existingSubscription) {
+        console.log(`Subscription ${subscriptionId} not found for user ${req.user.id}`);
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+      
+      // Update subscription
+      const [subscription] = await db.update(userJurisdictions)
+        .set({
+          is_primary: req.body.is_primary !== undefined ? req.body.is_primary : existingSubscription.is_primary,
+          notes: req.body.notes !== undefined ? req.body.notes : existingSubscription.notes
+        })
+        .where(eq(userJurisdictions.id, subscriptionId))
+        .returning();
+      
+      console.log(`Updated jurisdiction subscription ${subscriptionId} for user ${req.user.id}`);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error updating jurisdiction subscription:", error);
+      res.status(500).json({ 
+        message: "Failed to update jurisdiction subscription",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  app.delete("/api/user/jurisdictions/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      console.log('Unauthorized access attempt to DELETE /api/user/jurisdictions/:id');
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const subscriptionId = parseInt(req.params.id);
+      
+      // Check if subscription exists and belongs to user
+      const [existingSubscription] = await db.select().from(userJurisdictions)
+        .where(and(
+          eq(userJurisdictions.id, subscriptionId),
+          eq(userJurisdictions.user_id, req.user.id)
+        ));
+      
+      if (!existingSubscription) {
+        console.log(`Subscription ${subscriptionId} not found for user ${req.user.id}`);
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+      
+      // Delete subscription
+      await db.delete(userJurisdictions)
+        .where(eq(userJurisdictions.id, subscriptionId));
+      
+      console.log(`Deleted jurisdiction subscription ${subscriptionId} for user ${req.user.id}`);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting jurisdiction subscription:", error);
+      res.status(500).json({ 
+        message: "Failed to delete jurisdiction subscription",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
