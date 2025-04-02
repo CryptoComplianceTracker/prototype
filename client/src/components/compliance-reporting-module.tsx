@@ -35,10 +35,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, CalendarIcon, Filter, BarChart, FileCheck, Clock, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, CalendarIcon, Filter, BarChart, FileCheck, Clock, AlertTriangle, Save, Eye } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { type ComplianceReportType, type ComplianceReport, type ReportSchedule } from "@shared/schema";
 
 // Status Badge component with appropriate color based on status
@@ -70,6 +72,15 @@ export default function ComplianceReportingModule() {
   const [reportDialog, setReportDialog] = useState(false);
   const [scheduleDialog, setScheduleDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  // State for View/Edit dialogs
+  const [viewReportDialog, setViewReportDialog] = useState(false);
+  const [editReportDialog, setEditReportDialog] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<ComplianceReport | null>(null);
+  
+  // State for Edit Schedule dialog
+  const [editScheduleDialog, setEditScheduleDialog] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ReportSchedule | null>(null);
 
   // Fetch report types
   const { 
@@ -96,6 +107,28 @@ export default function ComplianceReportingModule() {
   } = useQuery<ReportSchedule[]>({
     queryKey: ['/api/compliance/report-schedules'],
     enabled: true,
+  });
+  
+  // Update report mutation
+  const updateReportMutation = useMutation({
+    mutationFn: async (data: Partial<ComplianceReport> & { id: number }) => {
+      const res = await apiRequest("PATCH", `/api/compliance/reports/${data.id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/compliance/reports'] });
+    }
+  });
+  
+  // Update schedule mutation
+  const updateScheduleMutation = useMutation({
+    mutationFn: async (data: Partial<ReportSchedule> & { id: number }) => {
+      const res = await apiRequest("PATCH", `/api/compliance/report-schedules/${data.id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/compliance/report-schedules'] });
+    }
   });
 
   // Filter report types by category
@@ -497,8 +530,28 @@ export default function ComplianceReportingModule() {
                           <StatusBadge status={report.status} />
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">View</Button>
-                          <Button variant="ghost" size="sm">Edit</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setViewReportDialog(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setEditReportDialog(true);
+                            }}
+                          >
+                            <Save className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -557,8 +610,22 @@ export default function ComplianceReportingModule() {
                           <StatusBadge status={schedule.status || 'pending'} />
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm" className="text-destructive">
+                          <Button 
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSchedule(schedule);
+                              setEditScheduleDialog(true);
+                            }}
+                          >
+                            <Save className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-destructive"
+                          >
                             Pause
                           </Button>
                         </TableCell>
@@ -676,6 +743,343 @@ export default function ComplianceReportingModule() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* View Report Dialog */}
+      <Dialog open={viewReportDialog} onOpenChange={setViewReportDialog}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedReport && reportTypes?.find(type => type.id === selectedReport.report_type_id)?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Review the details of this compliance report.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedReport && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Entity Type</h4>
+                  <p className="capitalize">{selectedReport.entity_type}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Status</h4>
+                  <StatusBadge status={selectedReport.status} />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Jurisdiction</h4>
+                  <p>{selectedReport.jurisdiction_id ? `ID: ${selectedReport.jurisdiction_id}` : "Global"}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Due Date</h4>
+                  <p>{selectedReport.due_date ? new Date(selectedReport.due_date).toLocaleDateString() : "Not set"}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">Report Data</h4>
+                <div className="bg-muted/20 p-4 rounded-md">
+                  <pre className="text-sm whitespace-pre-wrap">
+                    {selectedReport.report_data ? 
+                      JSON.stringify(
+                        typeof selectedReport.report_data === 'string' ? 
+                          JSON.parse(selectedReport.report_data || '{"empty": true}') : 
+                          {"empty": true}
+                        , null, 2) 
+                      : "No data provided"}
+                  </pre>
+                </div>
+              </div>
+              
+              {selectedReport.submission_date && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Submitted</h4>
+                  <p>{new Date(selectedReport.submission_date).toLocaleString()}</p>
+                </div>
+              )}
+              
+              {selectedReport.reviewer_notes && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Notes</h4>
+                  <p className="text-sm text-muted-foreground">{selectedReport.reviewer_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewReportDialog(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              setViewReportDialog(false);
+              setSelectedReport(selectedReport);
+              setEditReportDialog(true);
+            }}>
+              Edit Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Report Dialog */}
+      <Dialog open={editReportDialog} onOpenChange={setEditReportDialog}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Edit Compliance Report</DialogTitle>
+            <DialogDescription>
+              Update the details of this compliance report.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedReport && (
+            <div className="space-y-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="report-status" className="text-sm font-medium">
+                  Status
+                </label>
+                <Select defaultValue={selectedReport.status || "draft"}>
+                  <SelectTrigger id="report-status-value">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="submitted">Submitted</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="needs_review">Needs Review</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="report-due-date" className="text-sm font-medium">
+                  Due Date
+                </label>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <Input 
+                    id="report-due-date"
+                    type="date" 
+                    defaultValue={selectedReport.due_date ? 
+                      new Date(selectedReport.due_date).toISOString().split('T')[0] : 
+                      ""} 
+                  />
+                  <Button variant="outline" size="icon">
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="report-data" className="text-sm font-medium">
+                  Report Data (JSON)
+                </label>
+                <Textarea 
+                  id="report-data"
+                  rows={8}
+                  defaultValue={selectedReport.report_data || '{"empty": true}'}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter valid JSON data for this report.
+                </p>
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="report-comments" className="text-sm font-medium">
+                  Notes
+                </label>
+                <Textarea 
+                  id="report-comments"
+                  rows={3}
+                  defaultValue={selectedReport.reviewer_notes || ""}
+                  placeholder="Add any notes or comments about this report"
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditReportDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={() => {
+                if (!selectedReport) return;
+                
+                // Create form elements to get values
+                const statusSelect = document.querySelector('#report-status-value') as HTMLSelectElement;
+                const dueDateInput = document.querySelector('#report-due-date') as HTMLInputElement;
+                const reportDataTextarea = document.querySelector('#report-data') as HTMLTextAreaElement;
+                const commentsTextarea = document.querySelector('#report-comments') as HTMLTextAreaElement;
+                
+                // Get values and validate
+                const status = statusSelect?.value || selectedReport.status;
+                const due_date = dueDateInput?.value ? new Date(dueDateInput.value) : selectedReport.due_date;
+                let report_data = selectedReport.report_data;
+                
+                try {
+                  // Validate JSON if provided
+                  if (reportDataTextarea?.value) {
+                    JSON.parse(reportDataTextarea.value);
+                    report_data = reportDataTextarea.value;
+                  }
+                  
+                  // Save changes
+                  updateReportMutation.mutate({
+                    id: selectedReport.id,
+                    status,
+                    due_date,
+                    report_data,
+                    reviewer_notes: commentsTextarea?.value || selectedReport.reviewer_notes
+                  });
+                  
+                  // Close dialog
+                  setEditReportDialog(false);
+                } catch (error) {
+                  console.error("Invalid JSON data:", error);
+                  alert("Please ensure report data is valid JSON");
+                }
+              }}
+              disabled={updateReportMutation.isPending}
+            >
+              {updateReportMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={editScheduleDialog} onOpenChange={setEditScheduleDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Report Schedule</DialogTitle>
+            <DialogDescription>
+              Update the recurring schedule for compliance report generation.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSchedule && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="schedule-frequency" className="text-sm font-medium">
+                  Frequency
+                </label>
+                <Select defaultValue={selectedSchedule.frequency}>
+                  <SelectTrigger id="schedule-frequency-value">
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="annually">Annually</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="schedule-next-due-date" className="text-sm font-medium">
+                  Next Due Date
+                </label>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <Input 
+                    id="schedule-next-due-date"
+                    type="date" 
+                    defaultValue={
+                      new Date(selectedSchedule.next_due_date).toISOString().split('T')[0]
+                    } 
+                  />
+                  <Button variant="outline" size="icon">
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="reminders" 
+                    className="h-4 w-4" 
+                    defaultChecked={selectedSchedule.reminders_enabled === true}
+                  />
+                  <label htmlFor="reminders" className="text-sm font-medium">
+                    Enable Reminders
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="auto-gen" 
+                    className="h-4 w-4" 
+                    defaultChecked={selectedSchedule.auto_generate === true}
+                  />
+                  <label htmlFor="auto-gen" className="text-sm font-medium">
+                    Auto-generate Reports
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditScheduleDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={() => {
+                if (!selectedSchedule) return;
+                
+                // Create form elements to get values
+                const frequencySelect = document.querySelector('#schedule-frequency-value') as HTMLSelectElement;
+                const dueDateInput = document.querySelector('#schedule-next-due-date') as HTMLInputElement;
+                const remindersCheckbox = document.querySelector('#reminders') as HTMLInputElement;
+                const autoGenCheckbox = document.querySelector('#auto-gen') as HTMLInputElement;
+                
+                // Get values
+                const frequency = frequencySelect?.value || selectedSchedule.frequency;
+                const next_due_date = dueDateInput?.value ? new Date(dueDateInput.value) : selectedSchedule.next_due_date;
+                const reminders_enabled = remindersCheckbox?.checked ?? !!selectedSchedule.reminders_enabled;
+                const auto_generate = autoGenCheckbox?.checked ?? !!selectedSchedule.auto_generate;
+                
+                // Save changes
+                updateScheduleMutation.mutate({
+                  id: selectedSchedule.id,
+                  frequency,
+                  next_due_date,
+                  reminders_enabled,
+                  auto_generate
+                });
+                
+                // Close dialog
+                setEditScheduleDialog(false);
+              }}
+              disabled={updateScheduleMutation.isPending}
+            >
+              {updateScheduleMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
