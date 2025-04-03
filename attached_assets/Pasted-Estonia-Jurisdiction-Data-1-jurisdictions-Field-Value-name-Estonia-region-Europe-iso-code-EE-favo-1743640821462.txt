@@ -1,0 +1,62 @@
+Estonia — Jurisdiction Data
+1. jurisdictions
+Field	Value
+name	Estonia
+region	Europe
+iso_code	EE
+favorability_score	75
+risk_level	Low
+notes	Estonia is one of the EU’s earliest adopters of crypto licensing frameworks. After regulatory tightening in 2022–2023, Estonia now enforces strict compliance rules for crypto custodians, exchanges, and wallet providers. Legal entities must maintain an actual presence in Estonia with robust AML programs.
+2. regulatory_bodies
+Name	Website	Description
+Estonian Financial Intelligence Unit (FIU)	https://fiu.ee	Estonia's national AML authority, responsible for licensing and oversight of crypto service providers.
+Estonian Ministry of Finance	https://fin.ee	Handles financial sector policies and proposals including crypto law reforms.
+Tax and Customs Board (EMTA)	https://emta.ee	Oversees taxation of crypto assets for individuals and businesses.
+3. laws
+✅ Virtual Currency Service Provider Act (updated 2023)
+type: Licensing, AML
+
+source_url: https://fiu.ee
+
+description: Governs wallet services, custodians, exchanges. Requires AML/KYC programs, risk assessments, and local presence.
+
+✅ EU AMLD (Anti-Money Laundering Directives)
+type: EU alignment
+
+description: Estonia aligns with the latest AMLD standards from the EU, including AMLD5 and AMLD6.
+
+✅ Commercial Code Revisions (2022)
+type: Company law
+
+description: Requires VCSPs to have physical office space, local directors, and minimum share capital (€100,000).
+
+4. compliance_requirements
+Requirement	Description
+FIU VASP License	Required for exchanges, custodians, and wallets. Must submit AML policy, business plan, security protocols.
+Local Office Requirement	Legal entities must have a registered address and operational base in Estonia.
+Local Compliance Officer	Compliance officer must reside in Estonia and demonstrate knowledge of AML law.
+Minimum Capital	€100,000 for custodians and exchanges; verified via bank statement or audit.
+AML/CFT Controls	Includes transaction monitoring, sanctions screening, STR filing, employee vetting.
+KYC Requirements	Full CDD required; anonymous accounts prohibited. Includes PEP and sanctions screening.
+Audit Obligations	Annual audit required by approved auditor for licensed crypto firms.
+5. taxation_rules
+Field	Value
+income_tax_applicable	Yes (crypto received as income is taxed)
+capital_gains_tax	Yes (applies to individuals and businesses)
+vat_applicable	No (crypto exchanges are VAT-exempt)
+description	Cryptocurrency is treated as property. Income from mining, staking, trading is subject to 20% income tax. Holding crypto is not taxable until disposal.
+tax_authority_url	https://www.emta.ee/eng/private-client/income-tax/income-cryptocurrency
+6. reporting_obligations
+Type	Frequency	Description
+Suspicious Transaction Reports (STRs)	As needed	File electronically via FIU portal. Required for all high-risk behavior or fraud.
+Annual Compliance Report	Annually	Submitted to FIU detailing AML efforts, internal audit, customer classifications.
+Customer Risk Profile Logs	Ongoing	Must classify all customers and document rationale. High-risk clients require EDD.
+Annual Financial Audit	Annually	Licensed VCSPs must submit audited financial statements.
+Ownership Change Report	Within 30 days	Notify FIU of changes in UBOs, directors, or compliance officers.
+7. regulatory_updates
+Title	Date	Summary
+Stricter Licensing Rules Implemented	Q1 2023	Estonia raised compliance thresholds, requiring real economic presence and increased capital.
+Mass License Revocations	Q1 2023	Over 1,200 inactive or non-compliant licenses were revoked.
+MiCA Readiness Consultations Begin	Q2 2024	Estonia preparing to align its rules with MiCA, with full implementation in 2025.
+8. tags
+#Estonia, #FIU, #VCSP, #VASP, #EU, #MiCA, #AML, #KYC, #Custody, #Exchange, #AuditRequired, #Taxable, #PhysicalPresence, #LocalCompliance
