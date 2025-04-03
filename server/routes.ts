@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { db } from "./db";
 import { z } from "zod";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, desc } from "drizzle-orm";
 import axios from "axios";
 import { registerTemplateRoutes } from "./templates";
 import {
@@ -418,8 +418,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       console.log(`Fetching compliance reports for user ${req.user.id}...`);
-      const reports = await db.select().from(compliance_reports)
-        .where(eq(compliance_reports.user_id, req.user.id));
+      
+      let reports;
+      
+      // If user is admin, get all reports
+      if (req.user.isAdmin) {
+        reports = await db.select().from(compliance_reports)
+          .orderBy(desc(compliance_reports.created_at));
+        console.log(`Admin user - retrieving all reports`);
+      } else {
+        // Otherwise, get only user's reports
+        reports = await db.select().from(compliance_reports)
+          .where(eq(compliance_reports.user_id, req.user.id))
+          .orderBy(desc(compliance_reports.created_at));
+      }
+      
       console.log(`Successfully retrieved ${reports.length} reports`);
       res.json(reports);
     } catch (error) {
@@ -441,11 +454,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reportId = parseInt(req.params.id);
       console.log(`Fetching compliance report ${reportId} for user ${req.user.id}...`);
       
-      const [report] = await db.select().from(compliance_reports)
-        .where(and(
-          eq(compliance_reports.id, reportId),
-          eq(compliance_reports.user_id, req.user.id)
-        ));
+      let report;
+      
+      // If user is admin, they can see any report
+      if (req.user.isAdmin) {
+        [report] = await db.select().from(compliance_reports)
+          .where(eq(compliance_reports.id, reportId));
+        console.log(`Admin user accessing report ${reportId}`);
+      } else {
+        // Otherwise, users can only see their own reports
+        [report] = await db.select().from(compliance_reports)
+          .where(and(
+            eq(compliance_reports.id, reportId),
+            eq(compliance_reports.user_id, req.user.id)
+          ));
+      }
       
       if (!report) {
         console.log(`Report ${reportId} not found for user ${req.user.id}`);
@@ -510,11 +533,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reportData = complianceReportSchema.parse(req.body);
       console.log(`Updating compliance report ${reportId} for user ${req.user.id}...`);
       
-      const [existingReport] = await db.select().from(compliance_reports)
-        .where(and(
-          eq(compliance_reports.id, reportId),
-          eq(compliance_reports.user_id, req.user.id)
-        ));
+      let existingReport;
+      
+      // If user is admin, they can update any report
+      if (req.user.isAdmin) {
+        [existingReport] = await db.select().from(compliance_reports)
+          .where(eq(compliance_reports.id, reportId));
+        console.log(`Admin user updating report ${reportId}`);
+      } else {
+        // Otherwise, users can only update their own reports
+        [existingReport] = await db.select().from(compliance_reports)
+          .where(and(
+            eq(compliance_reports.id, reportId),
+            eq(compliance_reports.user_id, req.user.id)
+          ));
+      }
       
       if (!existingReport) {
         console.log(`Report ${reportId} not found for user ${req.user.id}`);
@@ -557,8 +590,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       console.log(`Fetching report schedules for user ${req.user.id}...`);
-      const schedules = await db.select().from(report_schedules)
-        .where(eq(report_schedules.user_id, req.user.id));
+      
+      let schedules;
+      
+      // If user is admin, get all schedules
+      if (req.user.isAdmin) {
+        schedules = await db.select().from(report_schedules)
+          .orderBy(desc(report_schedules.created_at));
+        console.log(`Admin user - retrieving all schedules`);
+      } else {
+        // Otherwise, get only user's schedules
+        schedules = await db.select().from(report_schedules)
+          .where(eq(report_schedules.user_id, req.user.id))
+          .orderBy(desc(report_schedules.created_at));
+      }
+      
       console.log(`Successfully retrieved ${schedules.length} schedules`);
       res.json(schedules);
     } catch (error) {
@@ -617,11 +663,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const scheduleData = reportScheduleSchema.parse(req.body);
       console.log(`Updating report schedule ${scheduleId} for user ${req.user.id}...`);
       
-      const [existingSchedule] = await db.select().from(report_schedules)
-        .where(and(
-          eq(report_schedules.id, scheduleId),
-          eq(report_schedules.user_id, req.user.id)
-        ));
+      let existingSchedule;
+      
+      // If user is admin, they can update any schedule
+      if (req.user.isAdmin) {
+        [existingSchedule] = await db.select().from(report_schedules)
+          .where(eq(report_schedules.id, scheduleId));
+        console.log(`Admin user updating schedule ${scheduleId}`);
+      } else {
+        // Otherwise, users can only update their own schedules
+        [existingSchedule] = await db.select().from(report_schedules)
+          .where(and(
+            eq(report_schedules.id, scheduleId),
+            eq(report_schedules.user_id, req.user.id)
+          ));
+      }
       
       if (!existingSchedule) {
         console.log(`Schedule ${scheduleId} not found for user ${req.user.id}`);
