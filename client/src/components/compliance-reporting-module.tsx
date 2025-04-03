@@ -81,6 +81,10 @@ export default function ComplianceReportingModule() {
   // State for Edit Schedule dialog
   const [editScheduleDialog, setEditScheduleDialog] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ReportSchedule | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Fetch report types
   const { 
@@ -159,6 +163,17 @@ export default function ComplianceReportingModule() {
         return dueDate >= now && dueDate <= thirtyDaysFromNow;
       })
     : [];
+    
+  // Compute pagination for reports
+  const indexOfLastReport = currentPage * itemsPerPage;
+  const indexOfFirstReport = indexOfLastReport - itemsPerPage;
+  const currentReports = reports ? reports.slice(indexOfFirstReport, indexOfLastReport) : [];
+  const totalPages = reports ? Math.ceil(reports.length / itemsPerPage) : 0;
+  
+  // Handle page changes
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const goToPrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   // Count reports by status
   const reportCounts = reports 
@@ -509,61 +524,130 @@ export default function ComplianceReportingModule() {
           </div>
 
           {reports && reports.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Report Type</TableHead>
-                    <TableHead>Entity</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map(report => {
-                    // Find report type name
-                    const reportType = reportTypes?.find(type => type.id === report.report_type_id);
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Report Type</TableHead>
+                      <TableHead>Entity</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentReports.map(report => {
+                      // Find report type name
+                      const reportType = reportTypes?.find(type => type.id === report.report_type_id);
+                      return (
+                        <TableRow key={report.id}>
+                          <TableCell className="font-medium">{reportType?.name || "Unknown"}</TableCell>
+                          <TableCell>{report.entity_type.charAt(0).toUpperCase() + report.entity_type.slice(1)}</TableCell>
+                          <TableCell>
+                            {report.due_date ? new Date(report.due_date).toLocaleDateString() : "Not set"}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge status={report.status} />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => {
+                                setSelectedReport(report);
+                                setViewReportDialog(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => {
+                                setSelectedReport(report);
+                                setEditReportDialog(true);
+                              }}
+                            >
+                              <Save className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {indexOfFirstReport + 1} to {Math.min(indexOfLastReport, reports.length)} of {reports.length} reports
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={goToPrevPage}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
+                    // Show page numbers around the current page
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = index + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = index + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + index;
+                    } else {
+                      pageNum = currentPage - 2 + index;
+                    }
+                    
                     return (
-                      <TableRow key={report.id}>
-                        <TableCell className="font-medium">{reportType?.name || "Unknown"}</TableCell>
-                        <TableCell>{report.entity_type.charAt(0).toUpperCase() + report.entity_type.slice(1)}</TableCell>
-                        <TableCell>
-                          {report.due_date ? new Date(report.due_date).toLocaleDateString() : "Not set"}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={report.status} />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => {
-                              setSelectedReport(report);
-                              setViewReportDialog(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => {
-                              setSelectedReport(report);
-                              setEditReportDialog(true);
-                            }}
-                          >
-                            <Save className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        className="w-9"
+                        onClick={() => paginate(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
                     );
                   })}
-                </TableBody>
-              </Table>
-            </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                  <Select 
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1); // Reset to first page when changing items per page
+                    }}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Per page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 per page</SelectItem>
+                      <SelectItem value="10">10 per page</SelectItem>
+                      <SelectItem value="25">25 per page</SelectItem>
+                      <SelectItem value="50">50 per page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center h-64 border rounded-md bg-muted/10">
               <FileCheck className="h-12 w-12 text-muted-foreground mb-4" />
