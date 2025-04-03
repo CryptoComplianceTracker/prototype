@@ -94,11 +94,16 @@ export default function ComplianceReportingModule() {
   // Fetch reports
   const { 
     data: reports, 
-    isLoading: loadingReports 
+    isLoading: loadingReports,
+    error: reportsError
   } = useQuery<ComplianceReport[]>({
     queryKey: ['/api/compliance/reports'],
     enabled: true,
   });
+  
+  // Debug logging for reports
+  console.log('Reports data:', reports);
+  if (reportsError) console.error('Reports error:', reportsError);
 
   // Fetch schedules
   const { 
