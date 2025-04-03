@@ -1,0 +1,62 @@
+Jurisdiction Entry: Singapore
+1. jurisdictions
+Field	Value
+name	Singapore
+region	Asia-Pacific
+iso_code	SG
+favorability_score	90
+risk_level	Low
+notes	Singapore is widely considered a regulatory leader in crypto with the Payment Services Act and MAS Digital Payment Token (DPT) framework. It supports licensed exchanges, custodians, and stablecoin issuers, with strong AML/CFT controls.
+2. regulatory_bodies
+Name	Website	Description
+Monetary Authority of Singapore (MAS)	https://www.mas.gov.sg	Singapore’s central bank and primary financial regulator. Oversees licensing and compliance for DPT service providers under the PSA.
+Accounting and Corporate Regulatory Authority (ACRA)	https://www.acra.gov.sg	Handles business entity registration and corporate compliance.
+Singapore Police Force – Suspicious Transaction Reporting Office (STRO)	https://www.police.gov.sg	National FIU for filing STRs related to money laundering, fraud, and terrorism financing.
+3. laws
+✅ Payment Services Act (PSA)
+type: Licensing, AML
+
+effective_date: 2020-01-28
+
+source_url: MAS PSA Overview
+
+description: Governs licensing for Digital Payment Token (DPT) services including exchanges, custodians, and wallet providers.
+
+✅ AML/CFT Notices 626 & 824
+type: AML
+
+description: Mandatory AML program requirements for all regulated DPT providers. Covers KYC, CDD, ongoing monitoring, STR filing.
+
+✅ MAS Stablecoin Regulatory Framework (2023)
+type: Stablecoin regulation
+
+description: Regulates SCS (Single-Currency Stablecoins), including reserve requirements, redemptions, and audits.
+
+4. compliance_requirements
+Requirement	Description
+DPT License (under PSA)	Required for exchanges, custodians, OTC desks, and payment apps dealing with crypto.
+AML Program	Includes CDD, screening (PEP, sanctions), EDD for high-risk clients, transaction monitoring, recordkeeping.
+Travel Rule Implementation	Must comply with FATF Travel Rule — originator and beneficiary info required for DPT transfers ≥ S$1,500.
+Risk-Based Assessment	Pre-launch risk assessments must be documented and submitted to MAS upon request.
+Ongoing Compliance Officer	Firms must designate a Compliance Officer with adequate AML/CFT training.
+Stablecoin Issuer Requirements	Includes reserve segregation, independent audits, and redemption guarantees.
+5. taxation_rules
+Field	Value
+income_tax_applicable	Yes (if crypto is earned through business or paid as salary)
+capital_gains_tax	No (Singapore has no capital gains tax)
+vat_applicable	No GST on digital payment tokens since 2020
+description	Individuals holding crypto for personal investment are not taxed. Companies must report income from crypto business.
+tax_authority_url	IRAS Digital Token Tax Guide
+6. reporting_obligations
+Type	Frequency	Description
+Suspicious Transaction Reports (STRs)	As needed	Required for any suspected criminal activity or AML breach. Submit to STRO via online portal.
+Regulatory Filings to MAS	Monthly/Quarterly	Volume reports, complaints, AML audit findings, and business activity summaries.
+Incident Reporting (Cyber/Risk Events)	Immediate (within 1 day)	MAS must be informed of hacks, breaches, or major risks affecting DPT services.
+Audit Reports (Stablecoins)	Annual	Required for licensed SCS issuers, covering reserve audits and redemptions.
+7. regulatory_updates
+Title	Date	Summary
+MAS Stablecoin Framework Released	Aug 2023	Introduces regulatory regime for stablecoin issuers (SCS), covering 1:1 backing, audits, and redemption rights.
+Travel Rule Enforcement Begins	Q2 2024	MAS mandates full implementation of FATF-compliant Travel Rule for DPT transfers.
+Licensing Tightened for Custodians	Q3 2023	MAS expanded risk management standards for crypto custodians, including insurance and asset segregation.
+8. tags
+#MAS, #PSA, #DPT, #Stablecoin, #AML, #STR, #TravelRule, #LowRisk, #NoCapitalGains, #APAC, #RegTechFriendly
