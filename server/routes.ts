@@ -2994,8 +2994,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const itemId = parseInt(req.params.itemId);
       console.log(`Updating progress for checklist item ${itemId} by user ${req.user.id}...`);
       
+      // Create data object with required fields
+      const requestData = {
+        ...req.body,
+        user_id: req.user.id,  // Add user_id from authenticated user
+        checklist_item_id: itemId // Add checklist_item_id from URL param
+      };
+      
       // Validate the input data
-      const data = userChecklistProgressSchema.parse(req.body);
+      const data = userChecklistProgressSchema.parse(requestData);
       
       // Get the checklist item to verify it exists and get its jurisdiction
       const [item] = await db.select().from(checklist_items)
