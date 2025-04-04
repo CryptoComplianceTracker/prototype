@@ -82,6 +82,10 @@ export default function ComplianceReportingModule() {
   const [editScheduleDialog, setEditScheduleDialog] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ReportSchedule | null>(null);
   
+  // State for Report Type detail dialog
+  const [reportTypeDetailDialog, setReportTypeDetailDialog] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<ComplianceReportType | null>(null);
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -833,42 +837,138 @@ export default function ComplianceReportingModule() {
         </TabsContent>
       </Tabs>
 
-      {/* Report Types Overview - Three Column List */}
+      {/* Report Types Overview - Card Grid */}
       <div className="mt-12 pt-8 border-t">
         <h2 className="text-2xl font-bold mb-6">Compliance Report Types</h2>
         <p className="text-muted-foreground mb-8">
           Browse all available compliance report types across different regulatory categories
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-10">
           {categories.map(category => (
             <div key={category} className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">{category}</h3>
-              <ul className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {reportTypes
                   ?.filter(type => type.category === category)
-                  .slice(0, 5)
+                  .slice(0, 6)
                   .map(report => (
-                    <li key={report.id} className="space-y-1">
-                      <p className="font-medium">{report.name}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {report.description}
-                      </p>
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {report.frequency}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {report.applies_to}
-                        </Badge>
-                      </div>
-                    </li>
+                    <Card 
+                      key={report.id} 
+                      className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" 
+                      onClick={() => {
+                        setSelectedReportType(report);
+                        setReportTypeDetailDialog(true);
+                      }}
+                    >
+                      <CardHeader className="bg-muted/50 pb-3">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-base line-clamp-1">{report.name}</CardTitle>
+                          {report.template_available && (
+                            <Badge variant="outline" className="text-xs bg-primary/10">Template</Badge>
+                          )}
+                        </div>
+                        <CardDescription className="line-clamp-2 h-10 mt-1">
+                          {report.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-3 pb-3">
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {report.frequency}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {report.applies_to}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
-              </ul>
+              </div>
             </div>
           ))}
         </div>
       </div>
+      
+      {/* Report Type Detail Dialog */}
+      <Dialog open={reportTypeDetailDialog} onOpenChange={setReportTypeDetailDialog}>
+        <DialogContent className="sm:max-w-[700px]">
+          {selectedReportType && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-xl">{selectedReportType.name}</DialogTitle>
+                  {selectedReportType.template_available && (
+                    <Badge className="ml-2">Template Available</Badge>
+                  )}
+                </div>
+                <DialogDescription>
+                  Category: {selectedReportType.category}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="prose prose-sm max-w-none">
+                  <p>{selectedReportType.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Frequency</h4>
+                    <p>{selectedReportType.frequency}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Applies To</h4>
+                    <p>{selectedReportType.applies_to}</p>
+                  </div>
+                </div>
+                
+                {selectedReportType.documentation_url && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-1">Documentation</h4>
+                    <a 
+                      href={selectedReportType.documentation_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center"
+                    >
+                      <FileCheck className="h-4 w-4 mr-1" />
+                      View Documentation
+                    </a>
+                  </div>
+                )}
+              </div>
+              
+              <DialogFooter className="flex justify-between items-center">
+                <Button variant="outline" onClick={() => setReportTypeDetailDialog(false)}>
+                  Close
+                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setReportTypeDetailDialog(false);
+                      setScheduleDialog(true);
+                    }}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Schedule
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setReportTypeDetailDialog(false);
+                      setReportDialog(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Report
+                  </Button>
+                </div>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* View Report Dialog */}
       <Dialog open={viewReportDialog} onOpenChange={setViewReportDialog}>
@@ -914,7 +1014,7 @@ export default function ComplianceReportingModule() {
                       JSON.stringify(
                         typeof selectedReport.report_data === 'string' ? 
                           JSON.parse(selectedReport.report_data || '{"empty": true}') : 
-                          {"empty": true}
+                          selectedReport.report_data
                         , null, 2) 
                       : "No data provided"}
                   </pre>
@@ -1008,7 +1108,9 @@ export default function ComplianceReportingModule() {
                 <Textarea 
                   id="report-data"
                   rows={8}
-                  defaultValue={selectedReport.report_data || '{"empty": true}'}
+                  defaultValue={typeof selectedReport.report_data === 'string' 
+                    ? selectedReport.report_data 
+                    : JSON.stringify(selectedReport.report_data || '{"empty": true}', null, 2)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Enter valid JSON data for this report.
