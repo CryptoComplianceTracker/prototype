@@ -833,6 +833,43 @@ export default function ComplianceReportingModule() {
         </TabsContent>
       </Tabs>
 
+      {/* Report Types Overview - Three Column List */}
+      <div className="mt-12 pt-8 border-t">
+        <h2 className="text-2xl font-bold mb-6">Compliance Report Types</h2>
+        <p className="text-muted-foreground mb-8">
+          Browse all available compliance report types across different regulatory categories
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map(category => (
+            <div key={category} className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">{category}</h3>
+              <ul className="space-y-3">
+                {reportTypes
+                  ?.filter(type => type.category === category)
+                  .slice(0, 5)
+                  .map(report => (
+                    <li key={report.id} className="space-y-1">
+                      <p className="font-medium">{report.name}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {report.description}
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {report.frequency}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {report.applies_to}
+                        </Badge>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* View Report Dialog */}
       <Dialog open={viewReportDialog} onOpenChange={setViewReportDialog}>
         <DialogContent className="sm:max-w-[700px]">
