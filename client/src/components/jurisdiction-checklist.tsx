@@ -124,8 +124,11 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
       console.log(`Successfully updated progress for item ${itemId}`);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update the cache
       queryClient.invalidateQueries({ queryKey: [`/api/jurisdictions/${jurisdictionId}/checklist-progress`] });
+      
+      // Show success toast
       toast({
         title: "Progress updated",
         description: "Your checklist progress has been saved.",
@@ -145,10 +148,14 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
     if (progress) {
       const notes: Record<number, string> = {};
       progress.forEach(item => {
-        if (item.notes) {
+        // Handle both null and empty string cases, storing empty string instead of null
+        if (item.notes !== null && item.notes !== undefined) {
           notes[item.itemId] = item.notes;
+        } else {
+          notes[item.itemId] = ''; // Store empty string for null/undefined to avoid controlled/uncontrolled component warnings
         }
       });
+      console.log('Setting initial notes from progress data:', notes);
       setItemNotes(notes);
     }
   }, [progress]);
@@ -168,10 +175,25 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
   
   // Handle status change
   const handleStatusChange = (itemId: number, status: 'not_started' | 'in_progress' | 'completed') => {
+    // Get the current notes value
+    const currentNotes = itemNotes[itemId] || null;
+    
     updateProgressMutation.mutate({
       itemId,
       status,
-      notes: itemNotes[itemId] || null
+      notes: currentNotes
+    }, {
+      // This onSuccess handler specifically for this mutation will run before the global one
+      onSuccess: (data) => {
+        console.log(`Successfully updated status for item ${itemId} to ${status}:`, data);
+        // Ensure the notes are correctly tracked in local state
+        if (data.notes !== undefined && data.notes !== null) {
+          setItemNotes(prev => ({
+            ...prev,
+            [itemId]: data.notes
+          }));
+        }
+      }
     });
   };
   
@@ -184,10 +206,25 @@ export default function JurisdictionChecklist({ jurisdictionId, jurisdictionName
   const handleNotesSave = (itemId: number) => {
     const currentProgress = progress?.find(p => p.itemId === itemId);
     if (currentProgress) {
+      // Pass the notes value as a separate variable to ensure it's included in the mutate function
+      const currentNotes = itemNotes[itemId] || null;
+      
       updateProgressMutation.mutate({
         itemId,
         status: currentProgress.status,
-        notes: itemNotes[itemId] || null
+        notes: currentNotes
+      }, {
+        // This onSuccess handler specifically for this mutation will be called before the global onSuccess
+        onSuccess: (data) => {
+          console.log(`Successfully saved notes for item ${itemId}:`, data);
+          // Ensure the notes are correctly tracked in local state
+          if (data.notes !== undefined && data.notes !== null) {
+            setItemNotes(prev => ({
+              ...prev,
+              [itemId]: data.notes
+            }));
+          }
+        }
       });
     }
   };
