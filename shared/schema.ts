@@ -911,6 +911,24 @@ export const policy_templates = pgTable("policy_templates", {
   updated_at: timestamp("updated_at").defaultNow()
 });
 
+// Template Studio schema
+export const templates = pgTable("templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  region: text("region").notNull(),
+  description: text("description").notNull(),
+  content: text("content").notNull(),
+  status: text("status").notNull().default('draft'),
+  version: text("version").notNull().default('0.1'),
+  tags: text("tags").array().notNull().default([]),
+  use_count: integer("use_count").notNull().default(0),
+  created_by: text("created_by").notNull(),
+  last_updated: timestamp("last_updated").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull()
+});
+
 export const policies = pgTable("policies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -967,6 +985,16 @@ export const policyTemplateSchema = createInsertSchema(policy_templates)
   .extend({
     content: z.record(z.unknown()),
     metadata: z.record(z.unknown()).optional(),
+  });
+
+// Template Studio schema validation
+export const templateSchema = createInsertSchema(templates)
+  .omit({ id: true, created_at: true, updated_at: true, last_updated: true, use_count: true })
+  .extend({
+    status: z.enum(['draft', 'approved', 'archived'], {
+      required_error: "Status is required",
+    }),
+    tags: z.array(z.string()),
   });
 
 export const policySchema = createInsertSchema(policies)
@@ -1076,6 +1104,10 @@ export type PolicyTag = typeof policy_tags.$inferSelect;
 export type InsertPolicyTag = z.infer<typeof policyTagSchema>;
 export type PolicyApproval = typeof policy_approvals.$inferSelect;
 export type InsertPolicyApproval = z.infer<typeof policyApprovalSchema>;
+
+// Template Studio types
+export type Template = typeof templates.$inferSelect;
+export type InsertTemplate = z.infer<typeof templateSchema>;
 
 // Token Registration Module
 

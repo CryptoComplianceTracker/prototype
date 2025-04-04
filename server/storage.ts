@@ -4,6 +4,7 @@ import {
   jurisdictions, regulatory_bodies, regulations, compliance_requirements, taxation_rules,
   reporting_obligations, regulatory_updates, jurisdiction_tags, jurisdiction_query_keywords, userJurisdictions,
   policy_templates, policies, policy_versions, policy_obligation_mappings, policy_tags, policy_approvals,
+  templates, // Add templates import
   token_registrations, token_registration_documents, token_registration_verifications, token_risk_assessments, token_jurisdiction_approvals,
   type User, type InsertUser, type Transaction, type InsertExchangeInfo, type ExchangeInfo,
   type StablecoinInfo, type InsertStablecoinInfo,
@@ -20,13 +21,14 @@ import {
   type RegulatoryUpdate, type InsertRegulatoryUpdate,
   type JurisdictionTag, type InsertJurisdictionTag,
   type JurisdictionQueryKeyword, type InsertJurisdictionQueryKeyword,
-  type UserJurisdiction, type InsertUserJurisdiction,
+  userJurisdictions as UserJurisdiction, type InsertJurisdiction as InsertUserJurisdiction,
   type PolicyTemplate, type InsertPolicyTemplate,
   type Policy, type InsertPolicy,
   type PolicyVersion, type InsertPolicyVersion,
   type PolicyObligationMapping, type InsertPolicyObligationMapping,
   type PolicyTag, type InsertPolicyTag,
   type PolicyApproval, type InsertPolicyApproval,
+  type Template, type InsertTemplate, // Add Template types
   type TokenRegistration, type InsertTokenRegistration,
   type TokenRegistrationDocument, type InsertTokenRegistrationDocument,
   type TokenRegistrationVerification, type TokenRiskAssessment, type TokenJurisdictionApproval
@@ -158,6 +160,16 @@ export interface IStorage {
   getPolicyTemplate(id: number): Promise<PolicyTemplate | undefined>;
   getPolicyTemplatesByCategory(category: string): Promise<PolicyTemplate[]>;
   getAllPolicyTemplates(): Promise<PolicyTemplate[]>;
+  
+  // Template Studio methods
+  createTemplate(data: InsertTemplate): Promise<Template>;
+  getTemplate(id: number): Promise<Template | undefined>;
+  getTemplatesByCategory(category: string): Promise<Template[]>;
+  getTemplatesByRegion(region: string): Promise<Template[]>;
+  getAllTemplates(): Promise<Template[]>;
+  updateTemplate(id: number, data: Partial<InsertTemplate>): Promise<Template | undefined>;
+  deleteTemplate(id: number): Promise<boolean>;
+  incrementTemplateUseCount(id: number): Promise<void>;
   
   createPolicy(userId: number, data: InsertPolicy): Promise<Policy>;
   getPolicy(id: number): Promise<Policy | undefined>;
@@ -487,6 +499,66 @@ export class DatabaseStorage implements IStorage {
   
   async getAllPolicyTemplates(): Promise<PolicyTemplate[]> {
     return await db.select().from(policy_templates);
+  }
+  
+  // Template Studio methods implementation
+  async createTemplate(data: InsertTemplate): Promise<Template> {
+    const [template] = await db.insert(templates).values({
+      ...data,
+      last_updated: new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
+    }).returning();
+    return template;
+  }
+  
+  async getTemplate(id: number): Promise<Template | undefined> {
+    const [template] = await db.select().from(templates).where(eq(templates.id, id));
+    return template;
+  }
+  
+  async getTemplatesByCategory(category: string): Promise<Template[]> {
+    return await db.select()
+      .from(templates)
+      .where(eq(templates.category, category));
+  }
+  
+  async getTemplatesByRegion(region: string): Promise<Template[]> {
+    return await db.select()
+      .from(templates)
+      .where(eq(templates.region, region));
+  }
+  
+  async getAllTemplates(): Promise<Template[]> {
+    return await db.select().from(templates);
+  }
+  
+  async updateTemplate(id: number, data: Partial<InsertTemplate>): Promise<Template | undefined> {
+    const [updated] = await db.update(templates)
+      .set({
+        ...data,
+        last_updated: new Date(),
+        updated_at: new Date()
+      })
+      .where(eq(templates.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(templates)
+      .where(eq(templates.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+  
+  async incrementTemplateUseCount(id: number): Promise<void> {
+    await db.update(templates)
+      .set({
+        use_count: sql`${templates.use_count} + 1`,
+        last_updated: new Date(),
+        updated_at: new Date()
+      })
+      .where(eq(templates.id, id));
   }
   
   async createPolicy(userId: number, data: InsertPolicy): Promise<Policy> {

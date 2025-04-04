@@ -9,121 +9,18 @@ export function registerTemplateRoutes(app: Express) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // For now, we'll return mock data for the template studio
-    res.json([
-      {
-        id: "tmpl-1",
-        name: "FATF Travel Rule Policy",
-        category: "AML",
-        region: "Global",
-        description: "Standard policy template for implementing the FATF Travel Rule for virtual asset service providers",
-        lastUpdated: "2025-03-01",
-        status: "approved",
-        version: "1.2",
-        content: "# FATF Travel Rule Policy\n\n## 1. Overview\nThis policy outlines procedures for compliance with the Financial Action Task Force (FATF) Travel Rule...",
-        tags: ["FATF", "Travel Rule", "VASP", "International"],
-        useCount: 87,
-        createdBy: "Global Compliance Team"
-      },
-      {
-        id: "tmpl-2",
-        name: "Customer Due Diligence Procedure",
-        category: "KYC",
-        region: "Global",
-        description: "Comprehensive procedures for customer onboarding and ongoing due diligence",
-        lastUpdated: "2025-02-15",
-        status: "approved",
-        version: "2.1",
-        content: "# Customer Due Diligence Procedure\n\n## 1. Purpose\nThis procedure establishes the requirements for customer identification, verification, and risk assessment...",
-        tags: ["KYC", "CDD", "Onboarding", "Risk Assessment"],
-        useCount: 132,
-        createdBy: "Global Compliance Team"
-      },
-      {
-        id: "tmpl-3",
-        name: "EU 6AMLD Compliance Framework",
-        category: "AML",
-        region: "European Union",
-        description: "Framework for compliance with the EU's 6th Anti-Money Laundering Directive",
-        lastUpdated: "2025-01-20",
-        status: "approved",
-        version: "1.3",
-        content: "# EU 6AMLD Compliance Framework\n\n## 1. Introduction\nThis framework addresses requirements under the 6th Anti-Money Laundering Directive...",
-        tags: ["EU", "6AMLD", "Europe"],
-        useCount: 43,
-        createdBy: "EU Compliance Team"
-      },
-      {
-        id: "tmpl-4",
-        name: "Transaction Monitoring Guidelines",
-        category: "Monitoring",
-        region: "Global",
-        description: "Guidelines for implementing effective transaction monitoring systems",
-        lastUpdated: "2025-02-28",
-        status: "draft",
-        version: "0.9",
-        content: "# Transaction Monitoring Guidelines\n\n## 1. Objective\nThese guidelines outline best practices for transaction monitoring to detect suspicious activity...",
-        tags: ["Monitoring", "Transactions", "Alerts"],
-        useCount: 28,
-        createdBy: "Risk Operations"
-      },
-      {
-        id: "tmpl-5",
-        name: "Crypto Asset Risk Classification Matrix",
-        category: "Risk",
-        region: "Global",
-        description: "Matrix for classifying crypto assets based on risk factors",
-        lastUpdated: "2025-03-10",
-        status: "approved",
-        version: "1.0",
-        content: "# Crypto Asset Risk Classification Matrix\n\n## 1. Approach\nThis document provides a standardized approach to classifying crypto assets by risk level...",
-        tags: ["Risk", "Classification", "Assets"],
-        useCount: 64,
-        createdBy: "Risk Management Team"
-      },
-      {
-        id: "tmpl-6",
-        name: "Singapore MAS PS-N02 Compliance",
-        category: "Regulation",
-        region: "Singapore",
-        description: "Compliance framework for MAS Payment Services Notice PSN02",
-        lastUpdated: "2025-02-05",
-        status: "approved",
-        version: "1.1",
-        content: "# Singapore MAS PS-N02 Compliance\n\n## 1. Scope\nThis document outlines specific requirements for Digital Payment Token services under MAS Notice PSN02...",
-        tags: ["Singapore", "MAS", "PSN02", "DPT"],
-        useCount: 12,
-        createdBy: "APAC Compliance Team"
-      },
-      {
-        id: "tmpl-7",
-        name: "Sanctions Screening Procedures",
-        category: "Sanctions",
-        region: "Global",
-        description: "Procedures for effective sanctions screening and compliance",
-        lastUpdated: "2025-02-10",
-        status: "approved",
-        version: "2.0",
-        content: "# Sanctions Screening Procedures\n\n## 1. Purpose\nThis document establishes procedures for screening customers against international and domestic sanctions lists...",
-        tags: ["Sanctions", "Screening", "OFAC", "UN"],
-        useCount: 98,
-        createdBy: "Global Compliance Team"
-      },
-      {
-        id: "tmpl-8",
-        name: "Suspicious Activity Report Filing Guide",
-        category: "Reporting",
-        region: "United States",
-        description: "Comprehensive guide for filing SARs with FinCEN",
-        lastUpdated: "2025-01-15",
-        status: "approved",
-        version: "1.4",
-        content: "# Suspicious Activity Report Filing Guide\n\n## 1. Reporting Requirements\nThis guide outlines the requirements and procedures for filing Suspicious Activity Reports (SARs) with FinCEN...",
-        tags: ["SAR", "FinCEN", "US", "Reporting"],
-        useCount: 56,
-        createdBy: "US Compliance Team"
-      }
-    ]);
+    try {
+      console.log('Fetching all templates from database...');
+      const templates = await storage.getAllTemplates();
+      console.log(`Successfully retrieved ${templates.length} templates`);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({
+        message: "Failed to fetch templates",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   });
 
   // Get a specific template by ID
@@ -132,26 +29,33 @@ export function registerTemplateRoutes(app: Express) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     
-    const id = req.params.id;
-    
-    // For demonstration purposes, we'll return a mock template
-    if (id === "tmpl-1") {
-      res.json({
-        id: "tmpl-1",
-        name: "FATF Travel Rule Policy",
-        category: "AML",
-        region: "Global",
-        description: "Standard policy template for implementing the FATF Travel Rule for virtual asset service providers",
-        lastUpdated: "2025-03-01",
-        status: "approved",
-        version: "1.2",
-        content: "# FATF Travel Rule Policy\n\n## 1. Overview\nThis policy outlines procedures for compliance with the Financial Action Task Force (FATF) Travel Rule...\n\n## 2. Purpose\nTo establish standards for transmitting required originator and beneficiary information during virtual asset transfers.\n\n## 3. Scope\nThis policy applies to all virtual asset transfers conducted by [ENTITY_NAME] that meet the threshold requirements.\n\n## 4. Regulatory Background\nThe FATF Recommendation 16, known as the 'Travel Rule', requires VASPs and financial institutions to include and transmit originator and beneficiary information during virtual asset transfers.\n\n## 5. Requirements\n- Collect and verify required information for both originators and beneficiaries\n- Securely transmit this information to counterparty VASPs\n- Maintain records of all transmissions\n- Implement screening measures against sanctioned individuals and entities\n\n## 6. Implementation Procedures\n### 6.1 Technical Implementation\n[ENTITY_NAME] will utilize [PROTOCOL_NAME] for secure transmission of Travel Rule data.\n\n### 6.2 Threshold\nTravel Rule requirements apply to all virtual asset transfers valued at USD/EUR 1,000 or more.\n\n### 6.3 Required Information\nFor Originators:\n- Name\n- Account number/wallet address\n- Physical address, national identity number, or date and place of birth\n\nFor Beneficiaries:\n- Name\n- Account number/wallet address\n\n## 7. Compliance Review\nThis policy will be reviewed [REVIEW_FREQUENCY] to ensure alignment with evolving regulatory requirements and industry standards.\n\n## 8. Training\nAll relevant staff will receive training on Travel Rule requirements and implementation procedures.\n\n## 9. Record Keeping\nAll Travel Rule data and transmissions will be securely stored for a minimum of five years.\n\n## 10. Responsibility\n[COMPLIANCE_OFFICER_TITLE] is responsible for overseeing implementation and ongoing compliance with this policy.",
-        tags: ["FATF", "Travel Rule", "VASP", "International"],
-        useCount: 87,
-        createdBy: "Global Compliance Team"
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      console.log(`Fetching template with ID: ${id}`);
+      const template = await storage.getTemplate(id);
+      
+      if (!template) {
+        console.log(`Template with ID ${id} not found`);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      console.log(`Successfully retrieved template with ID: ${id}`);
+      
+      // Increment the use count for this template
+      await storage.incrementTemplateUseCount(id);
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({
+        message: "Failed to fetch template",
+        details: error instanceof Error ? error.message : "Unknown error"
       });
-    } else {
-      res.status(404).json({ message: "Template not found" });
     }
   });
   
@@ -217,6 +121,179 @@ export function registerTemplateRoutes(app: Express) {
       { id: "usr-4", name: "Lisa Rodriguez", role: "Risk Manager", department: "Risk" },
       { id: "usr-5", name: "David Kim", role: "Compliance Director", department: "Compliance" }
     ]);
+  });
+  
+  // Create a new template
+  app.post("/api/templates", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      console.log('Creating new template:', req.body);
+      
+      if (!req.body.name || !req.body.category || !req.body.content) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          details: "Name, category, and content are required fields" 
+        });
+      }
+      
+      // Set default values for optional fields
+      const templateData = {
+        ...req.body,
+        status: req.body.status || "draft",
+        version: req.body.version || "1.0",
+        use_count: 0,
+        created_by: req.user?.id || 0,
+        updated_at: new Date(),
+        created_at: new Date()
+      };
+      
+      const template = await storage.createTemplate(templateData);
+      console.log(`Successfully created template with ID: ${template.id}`);
+      
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating template:", error);
+      res.status(500).json({
+        message: "Failed to create template",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Update an existing template
+  app.put("/api/templates/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      console.log(`Updating template with ID: ${id}`);
+      
+      // Verify the template exists
+      const existingTemplate = await storage.getTemplate(id);
+      
+      if (!existingTemplate) {
+        console.log(`Template with ID ${id} not found`);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Update the template with the provided data
+      const templateData = {
+        ...req.body,
+        updated_at: new Date()
+      };
+      
+      const updatedTemplate = await storage.updateTemplate(id, templateData);
+      
+      if (!updatedTemplate) {
+        return res.status(500).json({ message: "Failed to update template" });
+      }
+      
+      console.log(`Successfully updated template with ID: ${id}`);
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({
+        message: "Failed to update template",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Delete a template
+  app.delete("/api/templates/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      console.log(`Deleting template with ID: ${id}`);
+      
+      // Verify the template exists
+      const existingTemplate = await storage.getTemplate(id);
+      
+      if (!existingTemplate) {
+        console.log(`Template with ID ${id} not found`);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Delete the template
+      const success = await storage.deleteTemplate(id);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete template" });
+      }
+      
+      console.log(`Successfully deleted template with ID: ${id}`);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({
+        message: "Failed to delete template",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get templates by category
+  app.get("/api/templates/category/:category", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const category = req.params.category;
+      
+      console.log(`Fetching templates for category: ${category}`);
+      const templates = await storage.getTemplatesByCategory(category);
+      
+      console.log(`Successfully retrieved ${templates.length} templates for category: ${category}`);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates by category:", error);
+      res.status(500).json({
+        message: "Failed to fetch templates by category",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get templates by region
+  app.get("/api/templates/region/:region", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const region = req.params.region;
+      
+      console.log(`Fetching templates for region: ${region}`);
+      const templates = await storage.getTemplatesByRegion(region);
+      
+      console.log(`Successfully retrieved ${templates.length} templates for region: ${region}`);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates by region:", error);
+      res.status(500).json({
+        message: "Failed to fetch templates by region",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   });
   
   // Backward compatibility with existing endpoint to avoid breaking changes

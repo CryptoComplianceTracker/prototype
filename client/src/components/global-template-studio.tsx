@@ -60,18 +60,19 @@ import {
 } from "@/components/ui/table";
 
 interface Template {
-  id: string;
+  id: number;
   name: string;
   category: string;
   region: string;
   description: string;
-  lastUpdated: string;
   status: "approved" | "draft" | "archived";
   version: string;
   content: string;
-  tags: string[];
-  useCount: number;
-  createdBy: string;
+  tags: string[] | null;
+  use_count: number;
+  created_by: number;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface TemplateCategory {
@@ -91,126 +92,9 @@ export default function GlobalTemplateStudio() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch templates
+  // Fetch templates from the database
   const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
-    queryKey: ["/api/templates"],
-    queryFn: async () => {
-      // For now, return mock data; will be replaced with actual API call
-      return [
-        {
-          id: "tmpl-1",
-          name: "FATF Travel Rule Policy",
-          category: "AML",
-          region: "Global",
-          description: "Standard policy template for implementing the FATF Travel Rule for virtual asset service providers",
-          lastUpdated: "2025-03-01",
-          status: "approved",
-          version: "1.2",
-          content: "# FATF Travel Rule Policy\n\n## 1. Overview\nThis policy outlines procedures for compliance with the Financial Action Task Force (FATF) Travel Rule...",
-          tags: ["FATF", "Travel Rule", "VASP", "International"],
-          useCount: 87,
-          createdBy: "Global Compliance Team"
-        },
-        {
-          id: "tmpl-2",
-          name: "Customer Due Diligence Procedure",
-          category: "KYC",
-          region: "Global",
-          description: "Comprehensive procedures for customer onboarding and ongoing due diligence",
-          lastUpdated: "2025-02-15",
-          status: "approved",
-          version: "2.1",
-          content: "# Customer Due Diligence Procedure\n\n## 1. Purpose\nThis procedure establishes the requirements for customer identification, verification, and risk assessment...",
-          tags: ["KYC", "CDD", "Onboarding", "Risk Assessment"],
-          useCount: 132,
-          createdBy: "Global Compliance Team"
-        },
-        {
-          id: "tmpl-3",
-          name: "EU 6AMLD Compliance Framework",
-          category: "AML",
-          region: "European Union",
-          description: "Framework for compliance with the EU's 6th Anti-Money Laundering Directive",
-          lastUpdated: "2025-01-20",
-          status: "approved",
-          version: "1.3",
-          content: "# EU 6AMLD Compliance Framework\n\n## 1. Introduction\nThis framework addresses requirements under the 6th Anti-Money Laundering Directive...",
-          tags: ["EU", "6AMLD", "Europe"],
-          useCount: 43,
-          createdBy: "EU Compliance Team"
-        },
-        {
-          id: "tmpl-4",
-          name: "Transaction Monitoring Guidelines",
-          category: "Monitoring",
-          region: "Global",
-          description: "Guidelines for implementing effective transaction monitoring systems",
-          lastUpdated: "2025-02-28",
-          status: "draft",
-          version: "0.9",
-          content: "# Transaction Monitoring Guidelines\n\n## 1. Objective\nThese guidelines outline best practices for transaction monitoring to detect suspicious activity...",
-          tags: ["Monitoring", "Transactions", "Alerts"],
-          useCount: 28,
-          createdBy: "Risk Operations"
-        },
-        {
-          id: "tmpl-5",
-          name: "Crypto Asset Risk Classification Matrix",
-          category: "Risk",
-          region: "Global",
-          description: "Matrix for classifying crypto assets based on risk factors",
-          lastUpdated: "2025-03-10",
-          status: "approved",
-          version: "1.0",
-          content: "# Crypto Asset Risk Classification Matrix\n\n## 1. Approach\nThis document provides a standardized approach to classifying crypto assets by risk level...",
-          tags: ["Risk", "Classification", "Assets"],
-          useCount: 64,
-          createdBy: "Risk Management Team"
-        },
-        {
-          id: "tmpl-6",
-          name: "Singapore MAS PS-N02 Compliance",
-          category: "Regulation",
-          region: "Singapore",
-          description: "Compliance framework for MAS Payment Services Notice PSN02",
-          lastUpdated: "2025-02-05",
-          status: "approved",
-          version: "1.1",
-          content: "# Singapore MAS PS-N02 Compliance\n\n## 1. Scope\nThis document outlines specific requirements for Digital Payment Token services under MAS Notice PSN02...",
-          tags: ["Singapore", "MAS", "PSN02", "DPT"],
-          useCount: 12,
-          createdBy: "APAC Compliance Team"
-        },
-        {
-          id: "tmpl-7",
-          name: "Sanctions Screening Procedures",
-          category: "Sanctions",
-          region: "Global",
-          description: "Procedures for effective sanctions screening and compliance",
-          lastUpdated: "2025-02-10",
-          status: "approved",
-          version: "2.0",
-          content: "# Sanctions Screening Procedures\n\n## 1. Purpose\nThis document establishes procedures for screening customers against international and domestic sanctions lists...",
-          tags: ["Sanctions", "Screening", "OFAC", "UN"],
-          useCount: 98,
-          createdBy: "Global Compliance Team"
-        },
-        {
-          id: "tmpl-8",
-          name: "Suspicious Activity Report Filing Guide",
-          category: "Reporting",
-          region: "United States",
-          description: "Comprehensive guide for filing SARs with FinCEN",
-          lastUpdated: "2025-01-15",
-          status: "approved",
-          version: "1.4",
-          content: "# Suspicious Activity Report Filing Guide\n\n## 1. Reporting Requirements\nThis guide outlines the requirements and procedures for filing Suspicious Activity Reports (SARs) with FinCEN...",
-          tags: ["SAR", "FinCEN", "US", "Reporting"],
-          useCount: 56,
-          createdBy: "US Compliance Team"
-        }
-      ];
-    }
+    queryKey: ["/api/templates"]
   });
 
   // Template categories 
@@ -250,9 +134,8 @@ export default function GlobalTemplateStudio() {
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: Partial<Template>) => {
-      // This would be an API call in a real app
-      console.log("Creating template:", templateData);
-      return { id: `tmpl-${Date.now()}`, ...templateData };
+      const response = await apiRequest("POST", "/api/templates", templateData);
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -296,10 +179,9 @@ export default function GlobalTemplateStudio() {
       content: formData.get("content") as string,
       status: "draft" as const,
       version: "0.1",
-      lastUpdated: new Date().toISOString().split('T')[0],
       tags: (formData.get("tags") as string).split(",").map(tag => tag.trim()),
-      useCount: 0,
-      createdBy: "Current User" // Would come from auth in real app
+      use_count: 0
+      // created_by will be set by the server based on the authenticated user
     };
     
     createTemplateMutation.mutate(templateData);
@@ -308,11 +190,15 @@ export default function GlobalTemplateStudio() {
   // Implementation of template clone functionality
   const handleCloneTemplate = (template: Template) => {
     const clonedTemplate = {
-      ...template,
       name: `${template.name} (Copy)`,
+      category: template.category,
+      region: template.region,
+      description: template.description,
+      content: template.content,
       status: "draft" as const,
       version: "0.1",
-      lastUpdated: new Date().toISOString().split('T')[0]
+      tags: template.tags,
+      use_count: 0
     };
     
     createTemplateMutation.mutate(clonedTemplate);
@@ -492,7 +378,7 @@ export default function GlobalTemplateStudio() {
                           </div>
                           <div className="flex items-center">
                             <FileText className="mr-1 h-4 w-4" />
-                            Used {template.useCount} times
+                            Used {template.use_count} times
                           </div>
                         </div>
                         
@@ -727,22 +613,22 @@ export default function GlobalTemplateStudio() {
                     </div>
                     <div>
                       <h4 className="text-sm font-medium">Last Updated</h4>
-                      <p className="text-sm text-muted-foreground">{templateToView.lastUpdated}</p>
+                      <p className="text-sm text-muted-foreground">{templateToView.updated_at ? new Date(templateToView.updated_at).toLocaleDateString() : 'Not available'}</p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium">Created By</h4>
-                      <p className="text-sm text-muted-foreground">{templateToView.createdBy}</p>
+                      <p className="text-sm text-muted-foreground">User #{templateToView.created_by}</p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium">Usage Count</h4>
-                      <p className="text-sm text-muted-foreground">{templateToView.useCount}</p>
+                      <p className="text-sm text-muted-foreground">{templateToView.use_count}</p>
                     </div>
                   </div>
                   
                   <div>
                     <h4 className="text-sm font-medium mb-2">Tags</h4>
                     <div className="flex flex-wrap gap-1">
-                      {templateToView.tags.map((tag, i) => (
+                      {(templateToView.tags || []).map((tag, i) => (
                         <Badge key={i} variant="secondary">
                           {tag}
                         </Badge>
@@ -880,7 +766,7 @@ export default function GlobalTemplateStudio() {
                   <Input
                     id="edit-tags"
                     name="tags"
-                    defaultValue={templateToEdit.tags.join(", ")}
+                    defaultValue={(templateToEdit.tags || []).join(", ")}
                   />
                 </div>
                 
