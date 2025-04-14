@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Tabs,
   TabsList,
@@ -19,11 +19,43 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, FileDown, Search } from "lucide-react";
+import { 
+  Copy, 
+  ExternalLink, 
+  FileDown, 
+  Search, 
+  Download,
+  Loader2 
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { generateSimplePDF } from "@/lib/pdf-generator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function DocumentationPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+  const [showPdfDialog, setShowPdfDialog] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleGeneratePDF = async () => {
+    try {
+      setIsPdfGenerating(true);
+      await generateSimplePDF('dara-platform-documentation.pdf');
+      setIsPdfGenerating(false);
+      setShowPdfDialog(true);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setIsPdfGenerating(false);
+    }
+  };
 
   return (
     <div className="container py-8 max-w-7xl">
@@ -43,11 +75,54 @@ export default function DocumentationPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <FileDown className="h-4 w-4" />
-          Download PDF
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={handleGeneratePDF}
+          disabled={isPdfGenerating}
+        >
+          {isPdfGenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <FileDown className="h-4 w-4" />
+              Download PDF
+            </>
+          )}
         </Button>
       </div>
+      
+      {/* PDF Success Dialog */}
+      <Dialog open={showPdfDialog} onOpenChange={setShowPdfDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>PDF Generated Successfully</DialogTitle>
+            <DialogDescription>
+              Your documentation has been converted to a PDF file and downloaded to your device.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-6">
+            <div className="rounded-lg bg-muted p-8 flex flex-col items-center">
+              <FileDown className="h-16 w-16 text-primary mb-4" />
+              <p className="text-center text-sm text-muted-foreground">
+                dara-platform-documentation.pdf
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setShowPdfDialog(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* Sidebar Navigation */}
@@ -115,7 +190,7 @@ export default function DocumentationPage() {
         </div>
 
         {/* Main Documentation Content */}
-        <div className="md:col-span-4">
+        <div className="md:col-span-4" ref={contentRef}>
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="overview">Overview</TabsTrigger>
