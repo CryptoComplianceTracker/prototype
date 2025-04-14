@@ -48,12 +48,15 @@ export default function DocumentationPage() {
   const handleGeneratePDF = async () => {
     try {
       setIsPdfGenerating(true);
+      // Show toast or alert to inform the user that this might take some time
+      alert('Generating PDF of all documentation tabs. This may take a minute - please wait until completion.');
       await generateSimplePDF('dara-platform-documentation.pdf');
       setIsPdfGenerating(false);
       setShowPdfDialog(true);
     } catch (error) {
       console.error('Error generating PDF:', error);
       setIsPdfGenerating(false);
+      alert('There was an error generating the PDF. Please try again.');
     }
   };
 

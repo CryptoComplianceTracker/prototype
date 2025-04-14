@@ -124,7 +124,7 @@ export async function generatePDF(element: HTMLElement, filename: string = 'dara
 }
 
 /**
- * Simplified PDF generation that captures the entire page
+ * Comprehensive PDF generation that captures all documentation tabs
  */
 export async function generateSimplePDF(filename: string = 'dara-documentation.pdf'): Promise<void> {
   try {
@@ -146,8 +146,8 @@ export async function generateSimplePDF(filename: string = 'dara-documentation.p
     document.body.appendChild(loadingElement);
     
     // Get the documentation content element
-    const element = document.querySelector('.md\\:col-span-4') as HTMLElement;
-    if (!element) {
+    const docContainer = document.querySelector('.md\\:col-span-4') as HTMLElement;
+    if (!docContainer) {
       throw new Error('Documentation content not found');
     }
     
@@ -163,9 +163,6 @@ export async function generateSimplePDF(filename: string = 'dara-documentation.p
       creator: 'DARA Platform'
     });
     
-    // Get all tab contents
-    const tabContents = Array.from(element.querySelectorAll('[role="tabpanel"]'));
-    
     // Add a cover page
     pdf.setFontSize(24);
     pdf.setFont('helvetica', 'bold');
@@ -176,32 +173,74 @@ export async function generateSimplePDF(filename: string = 'dara-documentation.p
     pdf.text('Comprehensive guide to the DARA Crypto Regulatory Compliance Platform', 105, 110, { align: 'center' });
     pdf.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 120, { align: 'center' });
     
-    // Process each tab content
-    for (let i = 0; i < tabContents.length; i++) {
-      const tabContent = tabContents[i] as HTMLElement;
-      if (tabContent.style.display !== 'none') { // Only process visible tab
+    // Get all tab triggers to know which tabs to activate
+    const tabTriggers = Array.from(docContainer.querySelectorAll('[role="tab"]'));
+    
+    // Store original active tab to restore it later
+    const originalActiveTab = docContainer.querySelector('[role="tab"][data-state="active"]');
+    
+    // For each tab, activate it and process its content
+    for (let tabIndex = 0; tabIndex < tabTriggers.length; tabIndex++) {
+      // Activate this tab to make its content visible
+      const tabTrigger = tabTriggers[tabIndex] as HTMLElement;
+      const tabValue = tabTrigger.getAttribute('data-value') || '';
+      
+      // First add a section divider page
+      pdf.addPage();
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      
+      // Get the tab text content
+      const tabName = tabTrigger.textContent || `Section ${tabIndex + 1}`;
+      pdf.text(tabName, 105, 100, { align: 'center' });
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('DARA Platform Documentation', 105, 115, { align: 'center' });
+      
+      // Click the tab to make its content visible in the DOM
+      tabTrigger.click();
+      
+      // Force a small delay to ensure the tab content is rendered
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Now find the content associated with this tab
+      const tabContent = docContainer.querySelector(`[role="tabpanel"][data-state="active"]`) as HTMLElement;
+      
+      if (tabContent) {
         // Get all cards in this tab
         const cards = Array.from(tabContent.querySelectorAll('.card'));
         
-        for (let j = 0; j < cards.length; j++) {
-          const card = cards[j] as HTMLElement;
+        for (let cardIndex = 0; cardIndex < cards.length; cardIndex++) {
+          const card = cards[cardIndex] as HTMLElement;
           
-          // Add a new page for each card (except first one on first tab)
-          if (!(i === 0 && j === 0)) {
-            pdf.addPage();
-          } else {
-            // If it's the first card on first tab, add a page after cover
-            pdf.addPage();
-          }
+          // Add a new page for each card
+          pdf.addPage();
           
           // Add header
           pdf.setFontSize(10);
           pdf.setFont('helvetica', 'normal');
-          pdf.text('DARA Platform Documentation', 10, 10);
-          pdf.text(`Page ${pdf.getNumberOfPages() - 1}`, 180, 10, { align: 'right' });
+          pdf.text(`DARA Platform Documentation - ${tabName}`, 10, 10);
+          pdf.text(`Page ${pdf.getNumberOfPages() - 2}`, 180, 10, { align: 'right' });
           pdf.line(10, 12, 200, 12);
           
           try {
+            // Get card title for debugging
+            const cardTitle = card.querySelector('.card-title')?.textContent || `Card ${cardIndex}`;
+            console.log(`Processing card: ${cardTitle} in tab: ${tabName}`);
+            
+            // Make sure any accordion items are expanded for PDF capture
+            const accordionItems = card.querySelectorAll('[data-state="closed"]');
+            accordionItems.forEach(item => {
+              // Force open any closed accordion items
+              const trigger = item.querySelector('[data-orientation="vertical"]');
+              if (trigger) {
+                (trigger as HTMLElement).click();
+              }
+            });
+            
+            // Allow time for accordion animations to complete
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
             // Capture the card as an image
             const canvas = await html2canvas(card, {
               scale: 1.5, // Higher scale for better quality
@@ -239,6 +278,11 @@ export async function generateSimplePDF(filename: string = 'dara-documentation.p
           }
         }
       }
+    }
+    
+    // Restore the original active tab
+    if (originalActiveTab) {
+      (originalActiveTab as HTMLElement).click();
     }
     
     // Remove loading indicator
