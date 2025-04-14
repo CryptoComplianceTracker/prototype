@@ -55,14 +55,22 @@ export function NavBar() {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container px-4 md:px-6 lg:px-8 mx-auto flex h-14 items-center justify-between">
         <div className="flex items-center gap-12 text-sm">
-          <Link href="/">
-            <a className="flex items-center space-x-2">
-              <span className="text-2xl font-bold tracking-tight hover:text-primary transition-colors">DARA</span>
-            </a>
-          </Link>
+          <Button 
+            variant="ghost"
+            className="flex items-center space-x-2 p-0"
+            onClick={() => window.location.href = '/'}
+          >
+            <span className="text-2xl font-bold tracking-tight hover:text-primary transition-colors">DARA</span>
+          </Button>
           {user && (
             <>
-              <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+              <Button 
+                variant="ghost" 
+                className="hover:text-primary transition-colors p-0"
+                onClick={() => window.location.href = '/dashboard'}
+              >
+                Dashboard
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="px-3 flex items-center gap-1">
@@ -72,24 +80,27 @@ export function NavBar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[300px]">
                   {/* Token Registration as first item */}
-                  <DropdownMenuItem asChild>
-                    <Link href="/tokens/register">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Token Registration</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Register and classify tokenized assets</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild 
+                    onClick={() => window.location.href = '/tokens/register'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">Token Registration</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">Register and classify tokenized assets</span>
+                    </div>
                   </DropdownMenuItem>
                   
                   {/* Other registration types */}
                   {registrationTypes.filter(type => type.id !== 'token').map(type => (
-                    <DropdownMenuItem key={type.id} asChild>
-                      <Link href={type.formRoute}>
-                        <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                          <div className="font-medium group-hover:text-primary">{type.name}</div>
-                          <span className="text-sm text-muted-foreground group-hover:text-primary/70">{type.description}</span>
-                        </div>
-                      </Link>
+                    <DropdownMenuItem 
+                      key={type.id} 
+                      asChild
+                      onClick={() => window.location.href = type.formRoute}
+                    >
+                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                        <div className="font-medium group-hover:text-primary">{type.name}</div>
+                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">{type.description}</span>
+                      </div>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -102,37 +113,41 @@ export function NavBar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[250px]">
-                  <DropdownMenuItem asChild>
-                    <Link href="/compliance-dashboard">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Compliance Dashboard</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Manage all compliance activities</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild
+                    onClick={() => window.location.href = '/compliance-dashboard'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">Compliance Dashboard</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">Manage all compliance activities</span>
+                    </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/compliance-reporting">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Reporting</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance report management</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild
+                    onClick={() => window.location.href = '/compliance-reporting'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">Reporting</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">Compliance report management</span>
+                    </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/compliance-news">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Crypto News</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Regulatory news updates</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild
+                    onClick={() => window.location.href = '/compliance-news'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">Crypto News</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">Regulatory news updates</span>
+                    </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/template-studio">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Template Studio</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Policy template library</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild
+                    onClick={() => window.location.href = '/template-studio'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">Template Studio</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">Policy template library</span>
+                    </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -144,39 +159,49 @@ export function NavBar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[250px]">
-                  <DropdownMenuItem asChild>
-                    <Link href="/jurisdictions">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">Browse Jurisdictions</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">View all available jurisdictions</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild
+                    onClick={() => window.location.href = '/jurisdictions'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">Browse Jurisdictions</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">View all available jurisdictions</span>
+                    </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/my-jurisdictions">
-                      <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1">
-                        <div className="font-medium group-hover:text-primary">My Jurisdictions</div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary/70">Manage your subscribed jurisdictions</span>
-                      </div>
-                    </Link>
+                  <DropdownMenuItem 
+                    asChild
+                    onClick={() => window.location.href = '/my-jurisdictions'}
+                  >
+                    <div className="w-full group transition-all duration-200 ease-in-out hover:translate-x-1 cursor-pointer">
+                      <div className="font-medium group-hover:text-primary">My Jurisdictions</div>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary/70">Manage your subscribed jurisdictions</span>
+                    </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               
               {user?.isAdmin && (
-                <Link href="/admin" className="hover:text-primary transition-colors text-primary/70">Admin</Link>
+                <Button 
+                  variant="ghost" 
+                  className="hover:text-primary transition-colors text-primary/70 p-0"
+                  onClick={() => window.location.href = '/admin'}
+                >
+                  Admin
+                </Button>
               )}
             </>
           )}
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/documentation">
-            <Button variant="ghost" className="hidden sm:inline-flex">
-              <FileText className="mr-2 h-4 w-4" />
-              Documentation
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            className="hidden sm:inline-flex"
+            onClick={() => window.location.href = '/documentation'}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Documentation
+          </Button>
           
           {user ? (
             <>
@@ -197,9 +222,12 @@ export function NavBar() {
               </Button>
             </>
           ) : (
-            <Link href="/auth">
-              <Button variant="default">Login</Button>
-            </Link>
+            <Button 
+              variant="default" 
+              onClick={() => window.location.href = '/auth'}
+            >
+              Login
+            </Button>
           )}
         </div>
       </div>
