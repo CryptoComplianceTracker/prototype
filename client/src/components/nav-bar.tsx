@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { connectWallet } from "@/lib/web3";
-import { Wallet, ChevronDown } from "lucide-react";
+import { Wallet, ChevronDown, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { registrationTypes } from "@/lib/registration-types";
 import { useWeb3Wallet } from "@/hooks/use-web3-wallet";
@@ -171,6 +171,13 @@ export function NavBar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Link href="/documentation">
+            <Button variant="ghost" className="hidden sm:inline-flex">
+              <FileText className="mr-2 h-4 w-4" />
+              Documentation
+            </Button>
+          </Link>
+          
           {user ? (
             <>
               <Button

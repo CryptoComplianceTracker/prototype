@@ -30,6 +30,7 @@ import TokenDetailsPage from "@/pages/token-details-page";
 import AdminTokenListingPage from "@/pages/admin-token-listing-page";
 import UserJurisdictionsPage from "@/pages/user-jurisdictions-page";
 import JurisdictionChecklistPage from "@/pages/jurisdiction-checklist-page";
+import DocumentationPage from "@/pages/documentation-page";
 
 function Router() {
   return (
@@ -63,6 +64,9 @@ function Router() {
           <ProtectedRoute path="/jurisdictions" component={JurisdictionsListModal} />
           <ProtectedRoute path="/my-jurisdictions" component={UserJurisdictionsPage} />
           <ProtectedRoute path="/jurisdictions/:jurisdictionId/checklist" component={JurisdictionChecklistPage} />
+          
+          {/* Documentation Route - Public Access */}
+          <Route path="/documentation" component={DocumentationPage} />
 
           {/* Registration View Routes */}
           <Route path="/:type-view/:id" component={RegistrationView} />
